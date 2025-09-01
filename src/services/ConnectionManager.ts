@@ -43,6 +43,7 @@ export class ConnectionManager {
 
     private async loadConnections(): Promise<void> {
         const stored = this.context.globalState.get<DatabaseConnection[]>(ConnectionManager.STORAGE_KEY);
+        console.log('stored :', stored);
         if (stored) {
             this.connections = stored;
         }

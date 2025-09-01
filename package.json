@@ -57,6 +57,21 @@
         "command": "phpDaoGenerator.deleteConnection",
         "title": "Delete Connection",
         "icon": "$(trash)"
+      },
+      {
+        "command": "phpDaoGenerator.connect",
+        "title": "Connect",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "phpDaoGenerator.disconnect",
+        "title": "Disconnect",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "phpDaoGenerator.openTableSelection",
+        "title": "Generate DAO",
+        "icon": "$(code)"
       }
     ],
     "menus": {
@@ -75,12 +90,27 @@
       "view/item/context": [
         {
           "command": "phpDaoGenerator.editConnection",
-          "when": "view == phpDaoConnections && viewItem == connection",
+          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
           "group": "inline"
         },
         {
           "command": "phpDaoGenerator.deleteConnection",
-          "when": "view == phpDaoConnections && viewItem == connection",
+          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
+          "group": "inline"
+        },
+        {
+          "command": "phpDaoGenerator.connect",
+          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
+          "group": "inline"
+        },
+        {
+          "command": "phpDaoGenerator.disconnect",
+          "when": "view == phpDaoConnections && viewItem == connectedConnection",
+          "group": "inline"
+        },
+        {
+          "command": "phpDaoGenerator.openTableSelection",
+          "when": "view == phpDaoConnections && viewItem == database",
           "group": "inline"
         }
       ]

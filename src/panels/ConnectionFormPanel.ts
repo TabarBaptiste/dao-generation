@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { ConnectionFormData } from '../types/Connection';
+import { DatabaseService } from '../services/DatabaseService';
 
 export class ConnectionFormPanel {
+    private databaseService = new DatabaseService();
     private panel: vscode.WebviewPanel | undefined;
 
     public async show(existingData?: ConnectionFormData): Promise<ConnectionFormData | undefined> {
@@ -19,7 +21,7 @@ export class ConnectionFormPanel {
             this.panel.webview.html = this.getWebviewContent(existingData);
 
             // Handle messages from the webview
-            this.panel.webview.onDidReceiveMessage((message) => {
+            this.panel.webview.onDidReceiveMessage(async (message) => {
                 switch (message.command) {
                     case 'submit':
                         resolve(message.data);
@@ -29,6 +31,12 @@ export class ConnectionFormPanel {
                         resolve(undefined);
                         this.panel?.dispose();
                         break;
+                    case 'testConnection':
+                        await this.handleTestConnection(message.data);
+                        break;
+                    case 'loadDatabases':
+                        await this.handleLoadDatabases(message.data);
+                        break;
                 }
             });
 
@@ -36,6 +44,62 @@ export class ConnectionFormPanel {
                 resolve(undefined);
             });
         });
+    }
+
+    private async handleTestConnection(data: any): Promise<void> {
+        try {
+            const connectionData = {
+                id: 'temp',
+                name: data.name,
+                host: data.host,
+                port: parseInt(data.port),
+                username: data.username,
+                password: data.password,
+                database: data.database,
+                type: data.type as 'mysql' | 'mariadb'
+            };
+
+            const success = await this.databaseService.testConnection(connectionData);
+            
+            this.panel?.webview.postMessage({
+                command: 'testConnectionResult',
+                success,
+                message: success ? 'Connection successful!' : 'Connection failed. Please check your credentials.'
+            });
+        } catch (error) {
+            this.panel?.webview.postMessage({
+                command: 'testConnectionResult',
+                success: false,
+                message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            });
+        }
+    }
+
+    private async handleLoadDatabases(data: any): Promise<void> {
+        try {
+            const connectionData = {
+                id: 'temp',
+                name: data.name,
+                host: data.host,
+                port: parseInt(data.port),
+                username: data.username,
+                password: data.password,
+                type: data.type as 'mysql' | 'mariadb'
+            };
+
+            const databases = await this.databaseService.getDatabases(connectionData);
+            
+            this.panel?.webview.postMessage({
+                command: 'databasesLoaded',
+                databases
+            });
+        } catch (error) {
+            this.panel?.webview.postMessage({
+                command: 'databasesLoaded',
+                databases: [],
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
     }
 
     private getWebviewContent(existingData?: ConnectionFormData): string {
@@ -158,6 +222,74 @@ export class ConnectionFormPanel {
             margin-top: 5px;
         }
         
+        .database-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .database-input-group select {
+            flex: 1;
+        }
+        
+        .btn-load-db {
+            padding: 8px 10px;
+            border: 1px solid var(--vscode-input-border);
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-load-db:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+        
+        .btn-load-db:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .test-connection {
+            margin-bottom: 20px;
+        }
+        
+        .btn-test {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-test:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+        
+        .status-success {
+            background-color: var(--vscode-inputValidation-infoBackground);
+            border: 1px solid var(--vscode-inputValidation-infoBorder);
+            color: var(--vscode-inputValidation-infoForeground);
+        }
+        
+        .status-error {
+            background-color: var(--vscode-inputValidation-errorBackground);
+            border: 1px solid var(--vscode-inputValidation-errorBorder);
+            color: var(--vscode-inputValidation-errorForeground);
+        }
+        
         .icon {
             display: inline-block;
             width: 16px;
@@ -213,8 +345,18 @@ export class ConnectionFormPanel {
             
             <div class="form-group">
                 <label for="database">Database</label>
-                <input type="text" id="database" name="database" value="${data.database}">
-                <div class="help-text">Optional - Leave empty to see all databases</div>
+                <div class="database-input-group">
+                    <select id="database" name="database">
+                        <option value="">Select a database...</option>
+                    </select>
+                    <button type="button" id="loadDbBtn" class="btn-load-db" title="Load databases">🔄</button>
+                </div>
+                <div class="help-text">Click the refresh button to load available databases</div>
+            </div>
+            
+            <div class="test-connection">
+                <button type="button" id="testBtn" class="btn-test">Test Connection</button>
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
             </div>
             
             <div class="buttons">
@@ -226,8 +368,28 @@ export class ConnectionFormPanel {
 
     <script>
         const vscode = acquireVsCodeApi();
+        let availableDatabases = [];
         
-        document.getElementById('connectionForm').addEventListener('submit', (e) => {
+        // Event listeners
+        document.getElementById('connectionForm').addEventListener('submit', handleSubmit);
+        document.getElementById('testBtn').addEventListener('click', testConnection);
+        document.getElementById('loadDbBtn').addEventListener('click', loadDatabases);
+        
+        // Handle messages from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+            
+            switch (message.command) {
+                case 'testConnectionResult':
+                    handleTestResult(message.success, message.message);
+                    break;
+                case 'databasesLoaded':
+                    handleDatabasesLoaded(message.databases, message.error);
+                    break;
+            }
+        });
+        
+        function handleSubmit(e) {
             e.preventDefault();
             
             const formData = new FormData(e.target);
@@ -243,7 +405,7 @@ export class ConnectionFormPanel {
             
             // Basic validation
             if (!data.name || !data.host || !data.port || !data.username || !data.password) {
-                alert('Please fill in all required fields');
+                showStatus('Please fill in all required fields', false);
                 return;
             }
             
@@ -251,7 +413,110 @@ export class ConnectionFormPanel {
                 command: 'submit',
                 data: data
             });
-        });
+        }
+        
+        function testConnection() {
+            const data = getFormData();
+            if (!validateRequiredFields(data)) {
+                showStatus('Please fill in all required fields first', false);
+                return;
+            }
+            
+            const testBtn = document.getElementById('testBtn');
+            testBtn.textContent = 'Testing...';
+            testBtn.disabled = true;
+            
+            vscode.postMessage({
+                command: 'testConnection',
+                data: data
+            });
+        }
+        
+        function loadDatabases() {
+            const data = getFormData();
+            if (!validateRequiredFields(data)) {
+                showStatus('Please fill in connection details first', false);
+                return;
+            }
+            
+            const loadBtn = document.getElementById('loadDbBtn');
+            loadBtn.textContent = '⏳';
+            loadBtn.disabled = true;
+            
+            vscode.postMessage({
+                command: 'loadDatabases',
+                data: data
+            });
+        }
+        
+        function handleTestResult(success, message) {
+            const testBtn = document.getElementById('testBtn');
+            testBtn.textContent = 'Test Connection';
+            testBtn.disabled = false;
+            
+            showStatus(message, success);
+        }
+        
+        function handleDatabasesLoaded(databases, error) {
+            const loadBtn = document.getElementById('loadDbBtn');
+            const databaseSelect = document.getElementById('database');
+            
+            loadBtn.textContent = '🔄';
+            loadBtn.disabled = false;
+            
+            if (error) {
+                showStatus('Failed to load databases: ' + error, false);
+                return;
+            }
+            
+            // Clear existing options except the first one
+            databaseSelect.innerHTML = '<option value="">Select a database...</option>';
+            
+            // Add database options
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db;
+                option.textContent = db;
+                databaseSelect.appendChild(option);
+            });
+            
+            // Set selected value if it was previously selected
+            const currentValue = '${data.database}';
+            if (currentValue && databases.includes(currentValue)) {
+                databaseSelect.value = currentValue;
+            }
+            
+            availableDatabases = databases;
+            showStatus(\`Loaded \${databases.length} database(s)\`, true);
+        }
+        
+        function getFormData() {
+            return {
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                host: document.getElementById('host').value,
+                port: document.getElementById('port').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                database: document.getElementById('database').value
+            };
+        }
+        
+        function validateRequiredFields(data) {
+            return data.name && data.host && data.port && data.username && data.password;
+        }
+        
+        function showStatus(message, isSuccess) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-message ' + (isSuccess ? 'status-success' : 'status-error');
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
         
         function cancel() {
             vscode.postMessage({
@@ -261,6 +526,12 @@ export class ConnectionFormPanel {
         
         // Focus on first input
         document.getElementById('name').focus();
+        
+        // Pre-select database if editing
+        const preselectedDb = '${data.database}';
+        if (preselectedDb) {
+            document.getElementById('database').innerHTML += \`<option value="\${preselectedDb}" selected>\${preselectedDb}</option>\`;
+        }
     </script>
 </body>
 </html>`;
