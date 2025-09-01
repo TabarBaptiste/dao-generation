@@ -91,8 +91,8 @@ function updateTablesList(tables) {
 function showLoading() {
     tableList.innerHTML = '<div class="loading">Chargement des tables...</div>';
     generateBtn.disabled = true;
-    selectAllBtn.disabled = true;
-    selectNoneBtn.disabled = true;
+    selectAllBtn.disabled = false;
+    selectNoneBtn.disabled = false;
 }
 
 function showError(errorMessage) {

@@ -3,11 +3,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { DatabaseConnection } from '../types/Connection';
 import { DatabaseService } from '../services/DatabaseService';
+import { DaoGeneratorService } from '../services/DaoGeneratorService';
 
 export class TableSelectionPanel {
     private static currentPanel: TableSelectionPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
+    private readonly daoGenerator: DaoGeneratorService;
     
     private constructor(
         panel: vscode.WebviewPanel,
@@ -17,6 +19,7 @@ export class TableSelectionPanel {
         private readonly extensionUri: vscode.Uri
     ) {
         this._panel = panel;
+        this.daoGenerator = new DaoGeneratorService(databaseService);
         this._update();
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
@@ -76,7 +79,7 @@ export class TableSelectionPanel {
                         await this.sendInitialData();
                         break;
                     case 'generate':
-                        vscode.window.showInformationMessage(`Génération DAO demandée pour ${message.selectedTables.length} table(s) (fonctionnalité à implémenter)`);
+                        await this.handleGenerate(message.selectedTables, message.mode);
                         return;
                 }
             },
@@ -112,6 +115,21 @@ export class TableSelectionPanel {
                 command: 'showError',
                 error: error instanceof Error ? error.message : 'Erreur inconnue'
             });
+        }
+    }
+
+    private async handleGenerate(selectedTables: string[], mode: 'save' | 'overwrite'): Promise<void> {
+        try {
+            vscode.window.showInformationMessage(`Génération de ${selectedTables.length} DAO en cours...`);
+            
+            await this.daoGenerator.generateDaoFiles(
+                this.connection,
+                this.database,
+                selectedTables,
+                { mode }
+            );
+        } catch (error) {
+            vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
         }
     }
 

@@ -44,6 +44,7 @@ body {
 .table-list {
     max-height: 400px;
     overflow-y: auto;
+    /* border: 1px solid white; */
     border: 1px solid var(--vscode-panel-border);
     border-radius: 4px;
     padding: 10px;

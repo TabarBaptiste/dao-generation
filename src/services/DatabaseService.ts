@@ -74,7 +74,7 @@ export class DatabaseService {
         try {
             // Use a temporary connection like getDatabases does
             const conn = await this.createConnection(connection);
-            
+
             // Use SHOW TABLES FROM database instead of USE + SHOW TABLES
             const [rows] = await conn.execute(`SHOW TABLES FROM \`${database}\``);
 
@@ -90,13 +90,13 @@ export class DatabaseService {
 
     public async getTableInfo(connection: DatabaseConnection, database: string, tableName: string): Promise<TableInfo> {
         try {
-            const conn = this.connections.get(connection.id);
-            if (!conn) {
-                throw new Error('Connection not established');
-            }
+            // Use a temporary connection like the other methods
+            const conn = await this.createConnection(connection);
 
             // Use DESCRIBE database.table instead of USE + DESCRIBE
             const [rows] = await conn.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
+
+            await conn.end();
 
             const columns: ColumnInfo[] = (rows as any[]).map(row => ({
                 name: row.Field,
