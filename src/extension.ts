@@ -1,26 +1,50 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { DatabaseConnectionProvider } from './providers/DatabaseConnectionProvider';
+import { ConnectionManager } from './services/ConnectionManager';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	console.log('PHP DAO Generator extension is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "dao-generation" is now active!');
+	// Initialize services
+	const connectionManager = new ConnectionManager(context);
+	const connectionProvider = new DatabaseConnectionProvider(connectionManager);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('dao-generation.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from DAO Generation!');
+	// Register tree data provider
+	vscode.window.createTreeView('phpDaoConnections', {
+		treeDataProvider: connectionProvider,
+		showCollapseAll: true
 	});
 
-	context.subscriptions.push(disposable);
+	// Register commands
+	const addConnectionCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.addConnection',
+		() => connectionProvider.addConnection()
+	);
+
+	const refreshConnectionsCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.refreshConnections',
+		() => connectionProvider.refresh()
+	);
+
+	const editConnectionCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.editConnection',
+		(item) => connectionProvider.editConnection(item)
+	);
+
+	const deleteConnectionCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.deleteConnection',
+		(item) => connectionProvider.deleteConnection(item)
+	);
+
+	// Add to subscriptions
+	context.subscriptions.push(
+		addConnectionCommand,
+		refreshConnectionsCommand,
+		editConnectionCommand,
+		deleteConnectionCommand
+	);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+	console.log('PHP DAO Generator extension is deactivated');
+}

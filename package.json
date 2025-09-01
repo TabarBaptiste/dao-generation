@@ -1,49 +1,106 @@
 {
-  "name": "dao-generation",
-  "displayName": "DAO Generation",
-  "description": "Génère automatiquement des classes DAO PHP (attributs, getters/setters, CRUD) à partir de tables SQL.",
+  "name": "php-dao-generator",
+  "displayName": "PHP DAO Generator",
+  "description": "Generate PHP DAO classes from SQL database tables",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.54.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "phpDaoGenerator",
+          "name": "PHP DAO Generator",
+          "when": "true"
+        }
+      ],
+      "php-dao-explorer": [
+        {
+          "id": "phpDaoConnections",
+          "name": "Database Connections",
+          "when": "true"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "php-dao-explorer",
+          "title": "PHP DAO Generator",
+          "icon": "$(database)"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "dao-generation.helloWorld",
-        "title": "Hello World"
+        "command": "phpDaoGenerator.addConnection",
+        "title": "Add Database Connection",
+        "icon": "$(add)"
+      },
+      {
+        "command": "phpDaoGenerator.refreshConnections",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "phpDaoGenerator.editConnection",
+        "title": "Edit Connection",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "phpDaoGenerator.deleteConnection",
+        "title": "Delete Connection",
+        "icon": "$(trash)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "phpDaoGenerator.addConnection",
+          "when": "view == phpDaoConnections",
+          "group": "navigation"
+        },
+        {
+          "command": "phpDaoGenerator.refreshConnections",
+          "when": "view == phpDaoConnections",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "phpDaoGenerator.editConnection",
+          "when": "view == phpDaoConnections && viewItem == connection",
+          "group": "inline"
+        },
+        {
+          "command": "phpDaoGenerator.deleteConnection",
+          "when": "view == phpDaoConnections && viewItem == connection",
+          "group": "inline"
+        }
+      ]
+    }
   },
   "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
-    "@types/vscode": "^1.54.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
+    "@types/node": "^16.18.126",
+    "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.32.0",
-    "esbuild": "^0.25.8",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.2",
-    "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "mysql2": "^3.14.4"
   }
 }
