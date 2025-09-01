@@ -9,13 +9,33 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:daoFormView"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "daoGeneratorContainer",
+          "title": "DAO Gen",
+          "icon": "./resources/img/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "daoGeneratorContainer": [
+        {
+          "id": "daoFormView",
+          "name": "DAO Projects",
+          "icon": "./resources/img/icon.png"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "dao-generation.helloWorld",
-        "title": "Hello World"
+        "command": "daoGenerator.newProject",
+        "title": "Nouveau projet DAO"
       }
     ]
   },
