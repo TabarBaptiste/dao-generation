@@ -26,6 +26,9 @@ export class DaoGeneratorService {
                 return;
             }
 
+            // Afficher un message de confirmation avec le chemin de destination
+            vscode.window.showInformationMessage(`Génération des DAO dans: ${outputFolder}`);
+
             let generatedCount = 0;
             let skippedCount = 0;
             const errors: string[] = [];
@@ -39,7 +42,7 @@ export class DaoGeneratorService {
                     const daoContent = this.generateDaoContent(tableName, tableInfo, database);
                     
                     // Nom du fichier DAO
-                    const fileName = this.toPascalCase(tableName) + 'DAO.php';
+                    const fileName = 'DAO' + this.toPascalCase(tableName) + '.php';
                     const filePath = path.join(outputFolder, fileName);
                     
                     // Vérifier si le fichier existe déjà
@@ -58,7 +61,7 @@ export class DaoGeneratorService {
             }
 
             // Afficher le résultat
-            this.showGenerationResult(generatedCount, skippedCount, errors);
+            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder);
             
         } catch (error) {
             vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -70,29 +73,91 @@ export class DaoGeneratorService {
             return suggestedPath;
         }
 
-        // Utiliser le workspace ouvert ou demander à l'utilisateur
+        // Vérifier d'abord si on est déjà dans un workspace wamp64
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (workspaceFolders && workspaceFolders.length > 0) {
             const workspaceRoot = workspaceFolders[0].uri.fsPath;
-            const daoFolder = path.join(workspaceRoot, 'dao');
             
-            // Créer le dossier dao s'il n'existe pas
-            if (!fs.existsSync(daoFolder)) {
-                fs.mkdirSync(daoFolder, { recursive: true });
+            // Vérifier si le workspace est sous D:\wamp64\www
+            if (workspaceRoot.toLowerCase().startsWith('d:\\wamp64\\www\\')) {
+                const daoPath = path.join(workspaceRoot, 'local', '__classes', 'DAO');
+                
+                try {
+                    // Créer le dossier DAO s'il n'existe pas
+                    if (!fs.existsSync(daoPath)) {
+                        fs.mkdirSync(daoPath, { recursive: true });
+                        vscode.window.showInformationMessage(`Dossier créé automatiquement: ${daoPath}`);
+                    }
+                    
+                    return daoPath;
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+                }
             }
-            
-            return daoFolder;
         }
 
-        // Sinon, demander à l'utilisateur de choisir un dossier
-        const result = await vscode.window.showOpenDialog({
-            canSelectFiles: false,
-            canSelectFolders: true,
-            canSelectMany: false,
-            openLabel: 'Sélectionner le dossier de destination'
-        });
+        // Chemin par défaut : D:\wamp64\www
+        const defaultWampPath = 'D:\\wamp64\\www';
+        
+        // Vérifier si le chemin wamp existe
+        if (fs.existsSync(defaultWampPath)) {
+            // Demander à l'utilisateur de choisir un sous-dossier dans wamp64\www
+            const result = await vscode.window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: 'Sélectionner le projet dans wamp64\\www',
+                defaultUri: vscode.Uri.file(defaultWampPath),
+                title: 'Choisir le dossier de projet pour les DAO'
+            });
 
-        return result && result[0] ? result[0].fsPath : undefined;
+            if (result && result[0]) {
+                const selectedPath = result[0].fsPath;
+                
+                // Créer la structure local/__classes/DAO
+                const daoPath = path.join(selectedPath, 'local', '__classes', 'DAO');
+                
+                try {
+                    // Créer le dossier DAO s'il n'existe pas
+                    if (!fs.existsSync(daoPath)) {
+                        fs.mkdirSync(daoPath, { recursive: true });
+                        vscode.window.showInformationMessage(`Dossier créé: ${daoPath}`);
+                    }
+                    
+                    return daoPath;
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+                }
+            }
+        } else {
+            // Si wamp64 n'existe pas, utiliser l'ancien comportement
+            vscode.window.showWarningMessage('Le dossier D:\\wamp64\\www n\'existe pas. Utilisation du workspace ou sélection manuelle.');
+            
+            // Utiliser le workspace ouvert ou demander à l'utilisateur
+            if (workspaceFolders && workspaceFolders.length > 0) {
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+                const daoFolder = path.join(workspaceRoot, 'dao');
+                
+                // Créer le dossier dao s'il n'existe pas
+                if (!fs.existsSync(daoFolder)) {
+                    fs.mkdirSync(daoFolder, { recursive: true });
+                }
+                
+                return daoFolder;
+            }
+
+            // Sinon, demander à l'utilisateur de choisir un dossier
+            const result = await vscode.window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: 'Sélectionner le dossier de destination'
+            });
+
+            return result && result[0] ? result[0].fsPath : undefined;
+        }
+
+        return undefined;
     }
 
     private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string): string {
@@ -437,15 +502,19 @@ ${this.generateFindAllAssignments(columns)}
         return str.replace(/(^\w|_\w)/g, (match) => match.replace('_', '').toUpperCase());
     }
 
-    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[]): void {
+    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string): void {
         let message = `Génération terminée: ${generatedCount} fichier(s) créé(s)`;
         
         if (skippedCount > 0) {
             message += `, ${skippedCount} fichier(s) ignoré(s) (déjà existants)`;
         }
         
+        if (outputFolder) {
+            message += `\nDossier de destination: ${outputFolder}`;
+        }
+        
         if (errors.length > 0) {
-            message += `, ${errors.length} erreur(s)`;
+            message += `\n${errors.length} erreur(s) rencontrée(s)`;
             vscode.window.showWarningMessage(message);
             
             // Afficher les erreurs dans le canal de sortie
@@ -453,8 +522,23 @@ ${this.generateFindAllAssignments(columns)}
             outputChannel.show();
             outputChannel.appendLine('Erreurs lors de la génération:');
             errors.forEach(error => outputChannel.appendLine('- ' + error));
+            if (outputFolder) {
+                outputChannel.appendLine(`\nDossier de destination: ${outputFolder}`);
+            }
         } else {
             vscode.window.showInformationMessage(message);
+        }
+        
+        // Proposer d'ouvrir le dossier de destination
+        if (outputFolder && generatedCount > 0) {
+            vscode.window.showInformationMessage(
+                `${generatedCount} fichier(s) DAO créé(s) avec succès!`,
+                'Ouvrir le dossier'
+            ).then(selection => {
+                if (selection === 'Ouvrir le dossier') {
+                    vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(outputFolder));
+                }
+            });
         }
     }
 }
