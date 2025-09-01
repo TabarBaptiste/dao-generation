@@ -52,7 +52,8 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     constructor(
         private connectionManager: ConnectionManager,
-        private databaseService: DatabaseService
+        private databaseService: DatabaseService,
+        private extensionUri: vscode.Uri
     ) { }
 
     refresh(): void {
@@ -220,7 +221,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     public async openTableSelection(item: DatabaseConnectionTreeItem): Promise<void> {
         if (item.itemType === 'database' && item.databaseName) {
             try {
-                await TableSelectionPanel.createOrShow(item.connection, item.databaseName, this.databaseService);
+                await TableSelectionPanel.createOrShow(item.connection, item.databaseName, this.databaseService, this.extensionUri);
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to open table selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }

@@ -9,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Initialize services
 	const databaseService = new DatabaseService();
 	const connectionManager = new ConnectionManager(context);
-	const connectionProvider = new DatabaseConnectionProvider(connectionManager, databaseService);
+	const connectionProvider = new DatabaseConnectionProvider(connectionManager, databaseService, context.extensionUri);
 
 	// Register tree data provider
 	vscode.window.createTreeView('phpDaoConnections', {
