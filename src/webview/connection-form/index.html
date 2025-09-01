@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}} 'unsafe-inline';">
+    <title>Database Connection</title>
+    <link rel="stylesheet" type="text/css" href="{{cssUri}}">
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span class="icon">🗄️</span>
+            <span id="formTitle">Database Connection</span>
+        </h1>
+        
+        <form id="connectionForm">
+            <div class="form-group">
+                <label for="name">Connection Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required>
+                <div class="help-text">A friendly name to identify this connection</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="type">Database Type <span class="required">*</span></label>
+                <select id="type" name="type" required>
+                    <option value="mysql">MySQL</option>
+                    <option value="mariadb">MariaDB</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="host">Host <span class="required">*</span></label>
+                    <input type="text" id="host" name="host" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="port">Port <span class="required">*</span></label>
+                    <input type="number" id="port" name="port" min="1" max="65535" value="3306" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">Username <span class="required">*</span></label>
+                <input type="text" id="username" name="username" value="chautard" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="database">Database</label>
+                <div class="database-input-group">
+                    <select id="database" name="database">
+                        <option value="">Select a database...</option>
+                    </select>
+                    <button type="button" id="loadDbBtn" class="btn-load-db" title="Load databases">🔄</button>
+                </div>
+                <div class="help-text">Click the refresh button to load available databases</div>
+            </div>
+            
+            <div class="test-connection">
+                <button type="button" id="testBtn" class="btn-test">Test Connection</button>
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
+            </div>
+            
+            <div class="buttons">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary" id="submitBtn">Create</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="{{jsUri}}"></script>
+</body>
+</html>

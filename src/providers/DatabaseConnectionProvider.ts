@@ -123,7 +123,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     public async addConnection(): Promise<void> {
         const panel = new ConnectionFormPanel();
-        const formData = await panel.show();
+        const formData = await panel.show(undefined, this.extensionUri);
 
         if (formData) {
             await this.connectionManager.addConnection({
@@ -152,7 +152,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             password: connection.password,
             database: connection.database || '',
             type: connection.type
-        });
+        }, this.extensionUri);
 
         if (formData) {
             await this.connectionManager.updateConnection(connection.id, {

@@ -1,0 +1,219 @@
+body {
+    font-family: var(--vscode-font-family);
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    padding: 20px;
+    margin: 0;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--vscode-foreground);
+}
+
+input, select {
+    width: 100%;
+    padding: 8px 12px;
+    /* border: 1px solid white; */
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border-radius: 2px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+}
+
+.required {
+    color: var(--vscode-errorForeground);
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--vscode-panel-border);
+}
+
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 13px;
+    min-width: 80px;
+}
+
+.btn-primary {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.btn-primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.btn-primary:disabled {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-secondary {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.btn-secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+h1 {
+    color: var(--vscode-foreground);
+    margin-bottom: 30px;
+    font-size: 18px;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+}
+
+.help-text {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 5px;
+}
+
+.database-input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.database-input-group select {
+    flex: 1;
+}
+
+.btn-load-db {
+    padding: 8px 10px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+}
+
+.btn-load-db:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.btn-load-db:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.test-connection {
+    margin-bottom: 20px;
+}
+
+.btn-test {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-test:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.btn-test:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.status-message {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    display: none;
+}
+
+.status-success {
+    background-color: var(--vscode-inputValidation-infoBackground);
+    border: 1px solid var(--vscode-inputValidation-infoBorder);
+    color: var(--vscode-inputValidation-infoForeground);
+}
+
+.status-error {
+    background-color: var(--vscode-inputValidation-errorBackground);
+    border: 1px solid var(--vscode-inputValidation-errorBorder);
+    color: var(--vscode-inputValidation-errorForeground);
+}
+
+.icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Form validation styles */
+input:invalid {
+    border-color: var(--vscode-inputValidation-errorBorder);
+}
+
+input:valid {
+    border-color: var(--vscode-input-border);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-load-db.spinning {
+    animation: spin 1s linear infinite;
+}
