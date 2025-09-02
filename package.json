@@ -20,8 +20,12 @@
     "orm",
     "code-generation"
   ],
-  "activationEvents": [],
-  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:phpDaoConnections",
+    "onCommand:phpDaoGenerator.addConnection"
+  ],
+  "main": "./dist/extension.js",
   "contributes": {
     "views": {
       "explorer": [
@@ -134,11 +138,11 @@
     "url": "https://github.com/TabarBaptiste/dao-generation"
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build:esbuild",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "watch:esbuild": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
-    "build:esbuild": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "watch:esbuild": "node esbuild.js --watch",
+    "build:esbuild": "node esbuild.js --production",
     "package": "vsce package",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js"
@@ -150,6 +154,7 @@
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
     "glob": "^11.0.3",
     "typescript": "^5.9.2"

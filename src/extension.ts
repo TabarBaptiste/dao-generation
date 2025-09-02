@@ -4,7 +4,8 @@ import { ConnectionManager } from './services/ConnectionManager';
 import { DatabaseService } from './services/DatabaseService';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('PHP DAO Generator extension is now active!');
+	console.log('PHP DAO Generator extension activated successfully!');
+	// vscode.window.showInformationMessage('PHP DAO Generator extension activated successfully!');
 
 	// Initialize services
 	const databaseService = new DatabaseService();

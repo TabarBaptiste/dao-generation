@@ -34,8 +34,8 @@ async function main() {
 		sourcemap: !production,
 		sourcesContent: false,
 		platform: 'node',
-		outfile: 'out/extension.js',
-		external: ['vscode'],
+		outfile: 'dist/extension.js',
+		external: ['vscode', 'mysql2'],
 		logLevel: 'silent',
 		plugins: [
 			/* add to the end of plugins array */
