@@ -10,7 +10,7 @@ interface DaoGenerationOptions {
 }
 
 export class DaoGeneratorService {
-    constructor(private databaseService: DatabaseService) {}
+    constructor(private databaseService: DatabaseService) { }
 
     public async generateDaoFiles(
         connection: DatabaseConnection,
@@ -38,15 +38,15 @@ export class DaoGeneratorService {
                 try {
                     // Récupérer les informations de la table
                     const tableInfo = await this.databaseService.getTableInfo(connection, database, tableName);
-                    
+
                     // Générer le contenu du DAO
                     const daoContent = this.generateDaoContent(tableName, tableInfo, database);
-                    
+
                     // Nom du fichier DAO
                     const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
                     const fileName = 'DAO' + this.toPascalCase(tableNameWithoutPrefix) + '.php';
                     const filePath = path.join(outputFolder, fileName);
-                    
+
                     // Vérifier si le fichier existe déjà
                     if (fs.existsSync(filePath)) {
                         if (options.mode === 'save') {
@@ -62,11 +62,11 @@ export class DaoGeneratorService {
                         }
                         // Mode Écraser: ne pas créer de backup, continuer directement
                     }
-                    
+
                     // Écrire le fichier (nouveau ou remplacement)
                     fs.writeFileSync(filePath, daoContent, 'utf8');
                     generatedCount++;
-                    
+
                 } catch (error) {
                     errors.push(`Erreur pour la table ${tableName}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
                 }
@@ -74,7 +74,7 @@ export class DaoGeneratorService {
 
             // Afficher le résultat
             this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount);
-            
+
         } catch (error) {
             vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
         }
@@ -88,7 +88,7 @@ export class DaoGeneratorService {
         // Chemin par défaut : D:\wamp64\www
         const defaultWampPath = 'D:\\wamp64\\www';
         let defaultUri: vscode.Uri | undefined;
-        
+
         // Déterminer le chemin par défaut pour la boîte de dialogue
         if (fs.existsSync(defaultWampPath)) {
             defaultUri = vscode.Uri.file(defaultWampPath);
@@ -113,19 +113,19 @@ export class DaoGeneratorService {
 
         if (result && result[0]) {
             const selectedPath = result[0].fsPath;
-            
+
             // Vérifier si le dossier sélectionné est dans wamp64\www
             if (selectedPath.toLowerCase().startsWith('d:\\wamp64\\www\\')) {
                 // Créer la structure local/__classes/DAO pour les projets wamp
                 const daoPath = path.join(selectedPath, 'local', '__classes', 'DAO');
-                
+
                 try {
                     // Créer le dossier DAO s'il n'existe pas
                     if (!fs.existsSync(daoPath)) {
                         fs.mkdirSync(daoPath, { recursive: true });
                         vscode.window.showInformationMessage(`Structure DAO créée: ${daoPath}`);
                     }
-                    
+
                     return daoPath;
                 } catch (error) {
                     vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -134,14 +134,14 @@ export class DaoGeneratorService {
             } else {
                 // Pour les autres projets, créer un sous-dossier DAO
                 const daoPath = path.join(selectedPath, 'DAO');
-                
+
                 try {
                     // Créer le dossier DAO s'il n'existe pas
                     if (!fs.existsSync(daoPath)) {
                         fs.mkdirSync(daoPath, { recursive: true });
                         vscode.window.showInformationMessage(`Dossier DAO créé: ${daoPath}`);
                     }
-                    
+
                     return daoPath;
                 } catch (error) {
                     vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -154,89 +154,57 @@ export class DaoGeneratorService {
     }
 
     private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string): string {
-        const className = this.toPascalCase(tableName) + 'DAO';
+        const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
+        const className = 'DAO' + this.toPascalCase(tableNameWithoutPrefix);
         const attributes = this.generateAttributes(tableInfo.columns);
         const mappingArray = this.generateMappingArray(tableInfo.columns);
-        const constructor = this.generateConstructor(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
         const primaryKey = this.findPrimaryKey(tableInfo.columns);
 
         return `<?php
-
-/**
- * DAO pour la table ${tableName}
- * Générée automatiquement par PHP DAO Generator
- * Base de données: ${database}
- * Table: ${tableName}
+/** 
+ * Classe d'acces aux donnees -> table ${tableName}
+ * @version	1.00
+ * @date	${new Date().toISOString().slice(0, 10)}
+ * @Create	Généré automatiquement par PHP DAO Generator
+ * @BDD	    orv
+ * @table	rv_civilite
  */
-class ${className} {
-    // Mapping des attributs pour l'accès aux données
-    private $_t;
-    
+
+class ${className} extends Debug {
+	//Déclaration et initialisation des variables
+	private $_t;
 ${attributes}
 
     /**
-     * Constructeur
-     * @param int $id ID de l'enregistrement à charger (0 pour un nouvel objet)
-     * @param bool $debug Mode debug pour affichage des requêtes SQL
+     * @param int $id
+     * @param bool $debug
      */
-    public function __construct($id = 0, $debug = false) {
-        $this->_t = ${mappingArray};
-        
-        if ($id > 0) {
-            $this->read($id);
-        }
-    }
+	public function __construct($id = 0, $debug = false) {
+		// Creation d'un tableau cle/valeur pour automatiser le mapping Objet Relationnel
+		$this->_t = array(
+${mappingArray}
+		);
+		$this->setDebug($debug);
+		if ($debug)
+            Dump($this->_t, '$this->_t');
+
+		$this->read($id, $debug);
+	}
+
+	//Accesseurs
 
 ${accessors}
 
+	// Getter Setter pour t
+	public function setT($value) { $this->_t = $value; }
+	public function addT($key,$value) { $this->_t[$key] = $value; }
+	public function delT($key) { unset($this->_t[$key]); }
+	public function getT() { return $this->_t; }
+
 ${crudMethods}
-
-    /**
-     * Méthode privée pour exécuter une requête
-     * @param string $sql Requête SQL
-     * @param array $params Paramètres de la requête
-     * @param bool $debug Mode debug
-     * @return mixed Résultat de la requête
-     */
-    private function executeQuery($sql, $params = [], $debug = false) {
-        try {
-            // TODO: Adapter selon votre système de base de données
-            // Exemple avec PDO (à adapter selon vos besoins)
-            $pdo = $this->getConnection();
-            
-            if ($debug) {
-                error_log("SQL: " . $sql);
-                error_log("Params: " . print_r($params, true));
-            }
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            return $stmt;
-        } catch (Exception $e) {
-            if ($debug) {
-                error_log("Erreur SQL: " . $e->getMessage());
-            }
-            throw $e;
-        }
-    }
-
-    /**
-     * Méthode pour obtenir la connexion à la base de données
-     * TODO: À implémenter selon votre architecture
-     * @return PDO
-     */
-    private function getConnection() {
-        // TODO: Retourner votre connexion PDO
-        // Exemple:
-        // return DatabaseManager::getInstance()->getConnection();
-        throw new Exception("Méthode getConnection() à implémenter");
-    }
-}
-
-?>`;
+}`;
     }
 
     private generateAttributes(columns: ColumnInfo[]): string {
@@ -248,16 +216,15 @@ ${crudMethods}
      * ${comment}
      * @var ${phpType}
      */
-    protected $${column.name};`;
+    protected $_${column.name};`;
         }).join('\n\n');
     }
 
     private generateMappingArray(columns: ColumnInfo[]): string {
-        const mappings = columns.map(column => {
-            return `            '${column.name}' => '${column.name}'`;
-        });
-        
-        return `[\n${mappings.join(',\n')}\n        ]`;
+        return columns.map(column => {
+            const setterName = 'set' + this.toPascalCase(column.name);
+            return `			'${column.name}' => '${setterName}'`;
+        }).join(',\n');
     }
 
     private generateConstructor(columns: ColumnInfo[]): string {
@@ -270,175 +237,113 @@ ${crudMethods}
             const methodName = this.toPascalCase(column.name);
             const phpType = this.mapSqlTypeToPhpType(column.type);
             const comment = this.generateColumnComment(column);
-            
+
             return `    /**
-     * Getter pour ${column.name}
      * ${comment}
      * @return ${phpType}
      */
-    public function get${methodName}() {
-        return $this->${column.name};
-    }
+    public function get${methodName}() { return $this->_${column.name}; }
 
     /**
-     * Setter pour ${column.name}
      * ${comment}
      * @param ${phpType} $value
      * @return void
      */
-    public function set${methodName}($value) {
-        $this->${column.name} = $value;
-    }`;
+    public function set${methodName}($value) { $this->_${column.name}=$value; }`;
         }).join('\n\n');
     }
 
     private generateCrudMethods(tableName: string, columns: ColumnInfo[], database: string): string {
         const primaryKey = this.findPrimaryKey(columns);
         const pkName = primaryKey ? primaryKey.name : 'id';
-        
-        const columnsForInsert = columns.filter(col => col.extra !== 'auto_increment');
-        const insertColumns = columnsForInsert.map(col => col.name).join(', ');
-        const insertPlaceholders = columnsForInsert.map(() => '?').join(', ');
-        const insertValues = columnsForInsert.map(col => `$this->${col.name}`).join(', ');
-        
-        const updateSet = columns
-            .filter(col => col.key !== 'PRI')
-            .map(col => `${col.name} = ?`)
-            .join(', ');
-        const updateValues = columns
-            .filter(col => col.key !== 'PRI')
-            .map(col => `$this->${col.name}`)
-            .join(', ');
+        const pkMethodName = this.toPascalCase(pkName);
+
+        const columnsForInsert = columns.filter(col => col.extra !== 'auto_increment' && col.key !== 'PRI');
 
         return `    /**
-     * Lire un enregistrement par son ID
+	 * Lecture d'un enregistrement et transfert dans l'objet
      * @param int $id ID de l'enregistrement
      * @return bool True si trouvé, false sinon
      */
-    public function read($id) {
-        $sql = "SELECT * FROM \`${database}\`.\`${tableName}\` WHERE \`${pkName}\` = ?";
-        $stmt = $this->executeQuery($sql, [$id]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-${this.generateReadAssignments(columns)}
-            return true;
-        }
-        
-        return false;
-    }
+	public function read($id = NULL) {
+		global $_dbBridge;
+
+		if ($id !== null) $this->set${pkMethodName}($id);
+
+		if ($this->get${pkMethodName}() > 0) {
+			// Recuperation des autres champs de la table
+			$tRetour = array();
+			$strSQL = 'SELECT * FROM ' . PREFIX_SESSION . '${tableName} WHERE ${pkName} = ' . $this->get${pkMethodName}();
+			$tRetour = $_dbBridge->fetchRow($strSQL);
+			if ($this->getDebug())
+                Dump($tRetour, $strSQL);
+
+			foreach($this->_t as $key => $value) {
+				// On teste pour voir si la cle existe ds le tableau resultant de la requête
+				if (array_key_exists($key, $this->_t))
+					$this->$value($tRetour[$key]);
+			}
+		}
+	}
 
     /**
-     * Insérer un nouvel enregistrement
+     * Écriture d'un enregistrement à partir du contenu de l'objet
      * @return bool True si succès, false sinon
      */
-    public function insert() {
-        $sql = "INSERT INTO \`${database}\`.\`${tableName}\` (${insertColumns}) VALUES (${insertPlaceholders})";
-        $stmt = $this->executeQuery($sql, [${insertValues}]);
-        
-        if ($stmt->rowCount() > 0) {
-${primaryKey && primaryKey.extra === 'auto_increment' ? `            $this->${pkName} = $this->getConnection()->lastInsertId();` : ''}
-            return true;
-        }
-        
-        return false;
-    }
+	public function insert() {
+		global $_dbBridge;
+
+		$bind = array();
+		foreach($this->_t as $key => $value) {
+			// On teste pour voir si la cle existe ds le tableau resultant de la requête
+			if (array_key_exists($key, $this->_t) && $key != '${pkName}') {
+				$function = 'get'.substr($value, 3);
+				$bind[$key] = $this->$function();
+			}
+		}
+
+		try {
+			$_dbBridge->insert(PREFIX_SESSION . '${tableName}', $bind);
+			return $_dbBridge->lastInsertId();
+		}catch (Exception $e) {
+			if ($this->getDebug()) 
+                Dump($e->getMessage(), 'Exception');
+			return false;
+		}
+	}
+
 
     /**
-     * Mettre à jour l'enregistrement
+     * Mise à jour d'un enregistrement à partir du contenu de l'objet
      * @return bool True si succès, false sinon
      */
     public function update() {
-        $sql = "UPDATE \`${database}\`.\`${tableName}\` SET ${updateSet} WHERE \`${pkName}\` = ?";
-        $stmt = $this->executeQuery($sql, [${updateValues}, $this->${pkName}]);
-        
-        return $stmt->rowCount() > 0;
-    }
+		global $_dbBridge;
+
+		$bind = array();
+		foreach ($this->_t as $key => $value) {
+			$function = 'get' . substr($value, 3);
+			$bind[$key] = $this->$function();
+		}
+		return $_dbBridge->update(PREFIX_SESSION . '${tableName}', $bind, '${pkName} = ' . $bind['${pkName}']);
+	}
 
     /**
-     * Supprimer un enregistrement
-     * @param int $id ID de l'enregistrement à supprimer
+     * Suppression d'un enregistrement
      * @return bool True si succès, false sinon
      */
-    public function delete($id) {
-        $sql = "DELETE FROM \`${database}\`.\`${tableName}\` WHERE \`${pkName}\` = ?";
-        $stmt = $this->executeQuery($sql, [$id]);
-        
-        return $stmt->rowCount() > 0;
-    }
+	public function delete($id=NULL) {
+		global $_dbBridge;
 
-    /**
-     * Supprimer l'enregistrement courant
-     * @return bool True si succès, false sinon
-     */
-    public function deleteThis() {
-        if ($this->${pkName}) {
-            return $this->delete($this->${pkName});
-        }
-        return false;
-    }
-
-    /**
-     * Lister tous les enregistrements
-     * @param string $orderBy Champ pour l'ordre (optionnel)
-     * @param string $direction ASC ou DESC (optionnel)
-     * @param int $limit Limite de résultats (optionnel)
-     * @return array Tableau d'objets ${this.toPascalCase(tableName)}DAO
-     */
-    public static function findAll($orderBy = null, $direction = 'ASC', $limit = null) {
-        $sql = "SELECT * FROM \`${database}\`.\`${tableName}\`";
-        
-        if ($orderBy) {
-            $sql .= " ORDER BY \`$orderBy\` $direction";
-        }
-        
-        if ($limit) {
-            $sql .= " LIMIT $limit";
-        }
-        
-        // TODO: Adapter selon votre architecture pour les méthodes statiques
-        $pdo = self::getStaticConnection();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-        
-        $results = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $obj = new self();
-${this.generateFindAllAssignments(columns)}
-            $results[] = $obj;
-        }
-        
-        return $results;
-    }
-
-    /**
-     * Méthode statique pour obtenir la connexion à la base de données
-     * TODO: À implémenter selon votre architecture
-     * @return PDO
-     */
-    private static function getStaticConnection() {
-        // TODO: Retourner votre connexion PDO statique
-        // Exemple:
-        // return DatabaseManager::getInstance()->getConnection();
-        throw new Exception("Méthode getStaticConnection() à implémenter");
-    }`;
-    }
-
-    private generateReadAssignments(columns: ColumnInfo[]): string {
-        return columns.map(column => {
-            return `            $this->${column.name} = $row['${column.name}'];`;
-        }).join('\n');
-    }
-
-    private generateFindAllAssignments(columns: ColumnInfo[]): string {
-        return columns.map(column => {
-            return `            $obj->${column.name} = $row['${column.name}'];`;
-        }).join('\n');
+		if ($id !== null) $this->set${pkMethodName}($id);
+		if ($this->get${pkMethodName}() > 0)
+			return $_dbBridge->delete(PREFIX_SESSION . '${tableName}', '${pkName} = ' . $this->get${pkMethodName}());
+	}`;
     }
 
     private generateColumnComment(column: ColumnInfo): string {
-        let comment = `Colonne ${column.name} (${column.type})`;
-        
+        let comment = `${column.name} (${column.type})`;
+
         if (column.key === 'PRI') {
             comment += ' - Clé primaire';
         } else if (column.key === 'UNI') {
@@ -446,43 +351,43 @@ ${this.generateFindAllAssignments(columns)}
         } else if (column.key === 'MUL') {
             comment += ' - Index multiple';
         }
-        
+
         if (!column.nullable) {
             comment += ' - Non null';
         }
-        
+
         if (column.default !== null) {
             comment += ` - Défaut: ${column.default}`;
         }
-        
+
         if (column.extra) {
             comment += ` - ${column.extra}`;
         }
-        
+
         return comment;
     }
 
     private mapSqlTypeToPhpType(sqlType: string): string {
         const type = sqlType.toLowerCase();
-        
-        if (type.includes('int') || type.includes('tinyint') || type.includes('smallint') || 
+
+        if (type.includes('int') || type.includes('tinyint') || type.includes('smallint') ||
             type.includes('mediumint') || type.includes('bigint')) {
             return 'int';
         }
-        
-        if (type.includes('decimal') || type.includes('float') || type.includes('double') || 
+
+        if (type.includes('decimal') || type.includes('float') || type.includes('double') ||
             type.includes('real') || type.includes('numeric')) {
             return 'float';
         }
-        
+
         if (type.includes('bool') || type.includes('boolean')) {
             return 'bool';
         }
-        
+
         if (type.includes('date') || type.includes('time') || type.includes('year')) {
             return 'string';
         }
-        
+
         // Par défaut, string
         return 'string';
     }
@@ -502,34 +407,42 @@ ${this.generateFindAllAssignments(columns)}
 
         const fileDir = path.dirname(filePath);
         const fileName = path.basename(filePath, '.php');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19); // Format: YYYY-MM-DDTHH-mm-ss
-        
+        const timestamp = new Date().toLocaleString('fr-FR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).replace(/[\/\s:]/g, '-'); // Format: DD-MM-YYYY-HH-mm-ss
+
         // Créer le dossier backup s'il n'existe pas
         const backupDir = path.join(fileDir, 'backup');
         if (!fs.existsSync(backupDir)) {
             fs.mkdirSync(backupDir, { recursive: true });
         }
-        
+
         // Nom du fichier de backup
         const backupFileName = `${fileName}_backup_${timestamp}.php`;
         const backupFilePath = path.join(backupDir, backupFileName);
-        
+
         try {
             // Copier le fichier existant vers le backup
             const originalContent = fs.readFileSync(filePath, 'utf8');
-            
+
             // Ajouter un commentaire en en-tête du backup
             const backupContent = `<?php
-            /**
-             * !BACKUP automatique créé le ${new Date().toLocaleString('fr-FR')}
-             * Fichier original: ${path.basename(filePath)}
-             * Généré par PHP DAO Generator Extension
-             */
+/**
+ * BACKUP automatique créé le ${new Date().toLocaleString('fr-FR')}
+ * Fichier original: ${path.basename(filePath)}
+ * Généré par PHP DAO Generator Extension
+ */
 
-            ${originalContent.replace(/^<\?php\s*/, '')}`;
+${originalContent.replace(/^<\?php\s*/, '')}`;
 
             fs.writeFileSync(backupFilePath, backupContent, 'utf8');
-            
+
         } catch (error) {
             throw new Error(`Impossible de créer le backup: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
         }
@@ -537,26 +450,26 @@ ${this.generateFindAllAssignments(columns)}
 
     private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string, backupCount: number = 0): void {
         let message = `Génération terminée: ${generatedCount} fichier(s) créé(s)`;
-        
+
         if (backupCount > 0) {
             message += `, ${backupCount} backup(s) créé(s)`;
         }
-        
+
         if (skippedCount > 0) {
             message += `, ${skippedCount} fichier(s) ignoré(s) (erreurs)`;
         }
-        
+
         if (outputFolder) {
             message += `\nDossier de destination: ${outputFolder}`;
             if (backupCount > 0) {
                 message += `\nDossier des backups: ${path.join(outputFolder, 'backup')}`;
             }
         }
-        
+
         if (errors.length > 0) {
             message += `\n${errors.length} erreur(s) rencontrée(s)`;
             vscode.window.showWarningMessage(message);
-            
+
             // Afficher les erreurs dans le canal de sortie
             const outputChannel = vscode.window.createOutputChannel('DAO Generator');
             outputChannel.show();
@@ -571,14 +484,14 @@ ${this.generateFindAllAssignments(columns)}
         } else {
             vscode.window.showInformationMessage(message);
         }
-        
+
         // Proposer d'ouvrir le dossier de destination
         if (outputFolder && generatedCount > 0) {
             const actions = ['Ouvrir le dossier'];
             if (backupCount > 0) {
                 actions.push('Voir les backups');
             }
-            
+
             vscode.window.showInformationMessage(
                 `${generatedCount} fichier(s) DAO créé(s) avec succès!${backupCount > 0 ? ` (${backupCount} backup(s) créé(s))` : ''}`,
                 ...actions
