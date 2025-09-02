@@ -39,13 +39,13 @@ export class DaoGeneratorService {
                     // Récupérer les informations de la table
                     const tableInfo = await this.databaseService.getTableInfo(connection, database, tableName);
 
-                    // Générer le contenu du DAO
-                    const daoContent = this.generateDaoContent(tableName, tableInfo, database);
-
                     // Nom du fichier DAO
                     const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
                     const fileName = 'DAO' + this.toPascalCase(tableNameWithoutPrefix) + '.php';
                     const filePath = path.join(outputFolder, fileName);
+
+                    // Générer le contenu du DAO (après avoir défini filePath)
+                    const daoContent = this.generateDaoContent(tableName, tableInfo, database, filePath);
 
                     // Vérifier si le fichier existe déjà
                     if (fs.existsSync(filePath)) {
@@ -153,7 +153,7 @@ export class DaoGeneratorService {
         return undefined;
     }
 
-    private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string): string {
+    private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string, filePath?: string): string {
         const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
         const className = 'DAO' + this.toPascalCase(tableNameWithoutPrefix);
         const attributes = this.generateAttributes(tableInfo.columns);
@@ -161,15 +161,21 @@ export class DaoGeneratorService {
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
         const primaryKey = this.findPrimaryKey(tableInfo.columns);
+        
+        // Déterminer la version à utiliser
+        let version = '1.00';
+        if (filePath && fs.existsSync(filePath)) {
+            version = this.getNextVersion(filePath);
+        }
 
         return `<?php
 /** 
- * Classe d'acces aux donnees -> table ${tableName}
- * @version	1.00
+ * Classe d'accès aux données -> table ${tableName}
+ * @version	${version}
  * @date	${new Date().toISOString().slice(0, 10)}
  * @Create	Généré automatiquement par PHP DAO Generator
- * @BDD	    orv
- * @table	rv_civilite
+ * @BDD	    ${database}
+ * @table	${tableName}
  */
 
 class ${className} extends Debug {
@@ -211,7 +217,7 @@ ${crudMethods}
         return columns.map(column => {
             const phpType = this.mapSqlTypeToPhpType(column.type);
             const comment = this.generateColumnComment(column);
-            
+
             return `    /**
      * ${comment}
      * @var ${phpType}
@@ -225,11 +231,6 @@ ${crudMethods}
             const setterName = 'set' + this.toPascalCase(column.name);
             return `			'${column.name}' => '${setterName}'`;
         }).join(',\n');
-    }
-
-    private generateConstructor(columns: ColumnInfo[]): string {
-        // Le constructeur est déjà généré dans generateDaoContent
-        return '';
     }
 
     private generateAccessors(columns: ColumnInfo[]): string {
@@ -257,8 +258,6 @@ ${crudMethods}
         const primaryKey = this.findPrimaryKey(columns);
         const pkName = primaryKey ? primaryKey.name : 'id';
         const pkMethodName = this.toPascalCase(pkName);
-
-        const columnsForInsert = columns.filter(col => col.extra !== 'auto_increment' && col.key !== 'PRI');
 
         return `    /**
 	 * Lecture d'un enregistrement et transfert dans l'objet
@@ -398,6 +397,36 @@ ${crudMethods}
 
     private toPascalCase(str: string): string {
         return str.replace(/(^\w|_\w)/g, (match) => match.replace('_', '').toUpperCase());
+    }
+
+    /**
+     * Extrait la version actuelle d'un fichier DAO existant
+     * @param filePath Chemin vers le fichier DAO
+     * @returns La version actuelle (ex: "1.00")
+     */
+    private getCurrentVersion(filePath: string): string {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const versionMatch = content.match(/@version\s+(\d+\.\d+)/);
+            return versionMatch ? versionMatch[1] : '1.00';
+        } catch (error) {
+            return '1.00';
+        }
+    }
+
+    /**
+     * Calcule la version suivante selon le pattern 1.00 → 1.10 → 1.20
+     * @param filePath Chemin vers le fichier DAO existant
+     * @returns La version incrémentée
+     */
+    private getNextVersion(filePath: string): string {
+        const currentVersion = this.getCurrentVersion(filePath);
+        const [major, minor] = currentVersion.split('.').map(Number);
+        
+        // Incrémenter la partie mineure de 10
+        const newMinor = minor + 10;
+        
+        return `${major}.${newMinor.toString().padStart(2, '0')}`;
     }
 
     private async createBackup(filePath: string): Promise<void> {
