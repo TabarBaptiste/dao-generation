@@ -31,6 +31,7 @@ export class DaoGeneratorService {
 
             let generatedCount = 0;
             let skippedCount = 0;
+            let backupCount = 0;
             const errors: string[] = [];
 
             for (const tableName of tableNames) {
@@ -47,12 +48,22 @@ export class DaoGeneratorService {
                     const filePath = path.join(outputFolder, fileName);
                     
                     // Vérifier si le fichier existe déjà
-                    if (fs.existsSync(filePath) && options.mode === 'save') {
-                        skippedCount++;
-                        continue;
+                    if (fs.existsSync(filePath)) {
+                        if (options.mode === 'save') {
+                            // Mode Sauvegarder: créer un backup et continuer
+                            try {
+                                await this.createBackup(filePath);
+                                backupCount++;
+                            } catch (backupError) {
+                                errors.push(`Erreur lors du backup pour ${tableName}: ${backupError instanceof Error ? backupError.message : 'Erreur inconnue'}`);
+                                skippedCount++;
+                                continue;
+                            }
+                        }
+                        // Mode Écraser: ne pas créer de backup, continuer directement
                     }
                     
-                    // Écrire le fichier
+                    // Écrire le fichier (nouveau ou remplacement)
                     fs.writeFileSync(filePath, daoContent, 'utf8');
                     generatedCount++;
                     
@@ -62,7 +73,7 @@ export class DaoGeneratorService {
             }
 
             // Afficher le résultat
-            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder);
+            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount);
             
         } catch (error) {
             vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -484,15 +495,62 @@ ${this.generateFindAllAssignments(columns)}
         return str.replace(/(^\w|_\w)/g, (match) => match.replace('_', '').toUpperCase());
     }
 
-    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string): void {
+    private async createBackup(filePath: string): Promise<void> {
+        if (!fs.existsSync(filePath)) {
+            return; // Le fichier n'existe pas, pas besoin de backup
+        }
+
+        const fileDir = path.dirname(filePath);
+        const fileName = path.basename(filePath, '.php');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19); // Format: YYYY-MM-DDTHH-mm-ss
+        
+        // Créer le dossier backup s'il n'existe pas
+        const backupDir = path.join(fileDir, 'backup');
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+        
+        // Nom du fichier de backup
+        const backupFileName = `${fileName}_backup_${timestamp}.php`;
+        const backupFilePath = path.join(backupDir, backupFileName);
+        
+        try {
+            // Copier le fichier existant vers le backup
+            const originalContent = fs.readFileSync(filePath, 'utf8');
+            
+            // Ajouter un commentaire en en-tête du backup
+            const backupContent = `<?php
+            /**
+             * !BACKUP automatique créé le ${new Date().toLocaleString('fr-FR')}
+             * Fichier original: ${path.basename(filePath)}
+             * Généré par PHP DAO Generator Extension
+             */
+
+            ${originalContent.replace(/^<\?php\s*/, '')}`;
+
+            fs.writeFileSync(backupFilePath, backupContent, 'utf8');
+            
+        } catch (error) {
+            throw new Error(`Impossible de créer le backup: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+        }
+    }
+
+    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string, backupCount: number = 0): void {
         let message = `Génération terminée: ${generatedCount} fichier(s) créé(s)`;
         
+        if (backupCount > 0) {
+            message += `, ${backupCount} backup(s) créé(s)`;
+        }
+        
         if (skippedCount > 0) {
-            message += `, ${skippedCount} fichier(s) ignoré(s) (déjà existants)`;
+            message += `, ${skippedCount} fichier(s) ignoré(s) (erreurs)`;
         }
         
         if (outputFolder) {
             message += `\nDossier de destination: ${outputFolder}`;
+            if (backupCount > 0) {
+                message += `\nDossier des backups: ${path.join(outputFolder, 'backup')}`;
+            }
         }
         
         if (errors.length > 0) {
@@ -506,6 +564,9 @@ ${this.generateFindAllAssignments(columns)}
             errors.forEach(error => outputChannel.appendLine('- ' + error));
             if (outputFolder) {
                 outputChannel.appendLine(`\nDossier de destination: ${outputFolder}`);
+                if (backupCount > 0) {
+                    outputChannel.appendLine(`Dossier des backups: ${path.join(outputFolder, 'backup')}`);
+                }
             }
         } else {
             vscode.window.showInformationMessage(message);
@@ -513,12 +574,20 @@ ${this.generateFindAllAssignments(columns)}
         
         // Proposer d'ouvrir le dossier de destination
         if (outputFolder && generatedCount > 0) {
+            const actions = ['Ouvrir le dossier'];
+            if (backupCount > 0) {
+                actions.push('Voir les backups');
+            }
+            
             vscode.window.showInformationMessage(
-                `${generatedCount} fichier(s) DAO créé(s) avec succès!`,
-                'Ouvrir le dossier'
+                `${generatedCount} fichier(s) DAO créé(s) avec succès!${backupCount > 0 ? ` (${backupCount} backup(s) créé(s))` : ''}`,
+                ...actions
             ).then(selection => {
                 if (selection === 'Ouvrir le dossier') {
                     vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(outputFolder));
+                } else if (selection === 'Voir les backups') {
+                    const backupFolder = path.join(outputFolder, 'backup');
+                    vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(backupFolder));
                 }
             });
         }
