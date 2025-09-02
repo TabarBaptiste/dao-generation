@@ -4,11 +4,21 @@
   "publisher": "Baptiste-TABAR-LABONNE",
   "description": "Generate PHP DAO classes from SQL database tables",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "php",
+    "dao",
+    "database",
+    "mysql",
+    "generator",
+    "orm",
+    "code-generation"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
@@ -119,14 +129,17 @@
       ]
     }
   },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/TabarBaptiste/dao-generation"
-    },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TabarBaptiste/dao-generation"
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "watch:esbuild": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "build:esbuild": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "package": "vsce package",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js"
   },
@@ -136,7 +149,9 @@
     "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.32.0",
+    "glob": "^11.0.3",
     "typescript": "^5.9.2"
   },
   "dependencies": {
