@@ -66,7 +66,6 @@ export class DatabaseService {
     }
 
     public async getTables(connection: DatabaseConnection, database: string): Promise<string[]> {
-        console.log('database :', database);
         if (!database) {
             return [];
         }

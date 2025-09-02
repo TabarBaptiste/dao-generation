@@ -42,7 +42,8 @@ export class DaoGeneratorService {
                     const daoContent = this.generateDaoContent(tableName, tableInfo, database);
                     
                     // Nom du fichier DAO
-                    const fileName = 'DAO' + this.toPascalCase(tableName) + '.php';
+                    const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
+                    const fileName = 'DAO' + this.toPascalCase(tableNameWithoutPrefix) + '.php';
                     const filePath = path.join(outputFolder, fileName);
                     
                     // Vérifier si le fichier existe déjà
@@ -73,88 +74,69 @@ export class DaoGeneratorService {
             return suggestedPath;
         }
 
-        // Vérifier d'abord si on est déjà dans un workspace wamp64
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (workspaceFolders && workspaceFolders.length > 0) {
-            const workspaceRoot = workspaceFolders[0].uri.fsPath;
-            
-            // Vérifier si le workspace est sous D:\wamp64\www
-            if (workspaceRoot.toLowerCase().startsWith('d:\\wamp64\\www\\')) {
-                const daoPath = path.join(workspaceRoot, 'local', '__classes', 'DAO');
-                
-                try {
-                    // Créer le dossier DAO s'il n'existe pas
-                    if (!fs.existsSync(daoPath)) {
-                        fs.mkdirSync(daoPath, { recursive: true });
-                        vscode.window.showInformationMessage(`Dossier créé automatiquement: ${daoPath}`);
-                    }
-                    
-                    return daoPath;
-                } catch (error) {
-                    vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-                }
-            }
-        }
-
         // Chemin par défaut : D:\wamp64\www
         const defaultWampPath = 'D:\\wamp64\\www';
+        let defaultUri: vscode.Uri | undefined;
         
-        // Vérifier si le chemin wamp existe
+        // Déterminer le chemin par défaut pour la boîte de dialogue
         if (fs.existsSync(defaultWampPath)) {
-            // Demander à l'utilisateur de choisir un sous-dossier dans wamp64\www
-            const result = await vscode.window.showOpenDialog({
-                canSelectFiles: false,
-                canSelectFolders: true,
-                canSelectMany: false,
-                openLabel: 'Sélectionner le projet dans wamp64\\www',
-                defaultUri: vscode.Uri.file(defaultWampPath),
-                title: 'Choisir le dossier de projet pour les DAO'
-            });
+            defaultUri = vscode.Uri.file(defaultWampPath);
+        } else {
+            // Si wamp64 n'existe pas, essayer d'utiliser le workspace
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length > 0) {
+                defaultUri = workspaceFolders[0].uri;
+            }
+            // Sinon, defaultUri reste undefined et la boîte s'ouvrira sans chemin spécifique
+        }
 
-            if (result && result[0]) {
-                const selectedPath = result[0].fsPath;
-                
-                // Créer la structure local/__classes/DAO
+        // Toujours demander à l'utilisateur de choisir le dossier de projet
+        const result = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: 'Sélectionner le projet pour les DAO',
+            defaultUri: defaultUri,
+            title: 'Choisir le dossier de projet pour générer les DAO'
+        });
+
+        if (result && result[0]) {
+            const selectedPath = result[0].fsPath;
+            
+            // Vérifier si le dossier sélectionné est dans wamp64\www
+            if (selectedPath.toLowerCase().startsWith('d:\\wamp64\\www\\')) {
+                // Créer la structure local/__classes/DAO pour les projets wamp
                 const daoPath = path.join(selectedPath, 'local', '__classes', 'DAO');
                 
                 try {
                     // Créer le dossier DAO s'il n'existe pas
                     if (!fs.existsSync(daoPath)) {
                         fs.mkdirSync(daoPath, { recursive: true });
-                        vscode.window.showInformationMessage(`Dossier créé: ${daoPath}`);
+                        vscode.window.showInformationMessage(`Structure DAO créée: ${daoPath}`);
                     }
                     
                     return daoPath;
                 } catch (error) {
                     vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+                    return undefined;
+                }
+            } else {
+                // Pour les autres projets, créer un sous-dossier DAO
+                const daoPath = path.join(selectedPath, 'DAO');
+                
+                try {
+                    // Créer le dossier DAO s'il n'existe pas
+                    if (!fs.existsSync(daoPath)) {
+                        fs.mkdirSync(daoPath, { recursive: true });
+                        vscode.window.showInformationMessage(`Dossier DAO créé: ${daoPath}`);
+                    }
+                    
+                    return daoPath;
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+                    return selectedPath; // Retourner le dossier original si on ne peut pas créer le sous-dossier
                 }
             }
-        } else {
-            // Si wamp64 n'existe pas, utiliser l'ancien comportement
-            vscode.window.showWarningMessage('Le dossier D:\\wamp64\\www n\'existe pas. Utilisation du workspace ou sélection manuelle.');
-            
-            // Utiliser le workspace ouvert ou demander à l'utilisateur
-            if (workspaceFolders && workspaceFolders.length > 0) {
-                const workspaceRoot = workspaceFolders[0].uri.fsPath;
-                const daoFolder = path.join(workspaceRoot, 'dao');
-                
-                // Créer le dossier dao s'il n'existe pas
-                if (!fs.existsSync(daoFolder)) {
-                    fs.mkdirSync(daoFolder, { recursive: true });
-                }
-                
-                return daoFolder;
-            }
-
-            // Sinon, demander à l'utilisateur de choisir un dossier
-            const result = await vscode.window.showOpenDialog({
-                canSelectFiles: false,
-                canSelectFolders: true,
-                canSelectMany: false,
-                openLabel: 'Sélectionner le dossier de destination'
-            });
-
-            return result && result[0] ? result[0].fsPath : undefined;
         }
 
         return undefined;
