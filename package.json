@@ -1,6 +1,7 @@
 {
   "name": "php-dao-generator",
   "displayName": "PHP DAO Generator",
+  "publisher": "Baptiste-TABAR-LABONNE",
   "description": "Generate PHP DAO classes from SQL database tables",
   "version": "0.0.1",
   "engines": {
@@ -17,14 +18,16 @@
         {
           "id": "phpDaoGenerator",
           "name": "PHP DAO Generator",
-          "when": "true"
+          "when": "true",
+          "icon": "$(database)"
         }
       ],
       "php-dao-explorer": [
         {
           "id": "phpDaoConnections",
           "name": "Database Connections",
-          "when": "true"
+          "when": "true",
+          "icon": "$(database)"
         }
       ]
     },
@@ -116,10 +119,16 @@
       ]
     }
   },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/TabarBaptiste/dao-generation"
+    },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
