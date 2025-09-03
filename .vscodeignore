@@ -26,3 +26,4 @@ eslint.config.mjs
 **/*.map
 **/*.ts
 **/.vscode-test.*
+docs/**
