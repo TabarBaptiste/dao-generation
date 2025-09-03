@@ -48,7 +48,7 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
 - Cliquez sur **Test Connection** pour vérifier l’accès.
 - Puis sur **Create**.
 
-![Add Serveur](assets/img/add_serveur.png)
+<!-- ![Add Serveur](assets/img/add_serveur.png) -->
 
 ➡️ Le serveur apparaît dans la sidebar.
 
@@ -61,7 +61,7 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
 - Déroulez un serveur connecté
 - Cliquez sur une base de données → ouvre l’onglet **Génération DAO**.
 
-![Generation DAO](assets/img/generation_dao.png)
+<!-- ![Generation DAO](assets/img/generation_dao.png) -->
 
 ### 5. Génération DAO
 - Sélectionnez les tables à inclure ou exclure.
@@ -79,8 +79,8 @@ Un explorateur de fichiers s’ouvre :
 ## ⚙️ Options de génération
 
 - **Sauvegarder** :  
-- Un backup est créé dans `backup/`
-- Puis un nouveau DAO est généré
+  - Un backup est créé dans `backup/`
+  - Puis un nouveau DAO est généré
 
 - **Écraser** :  
-- Écrase directement l’ancien fichier DAO
+  - Écrase directement l’ancien fichier DAO

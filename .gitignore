@@ -3,3 +3,5 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+assets/img/add_serveur.png
+assets/img/generation_dao.png

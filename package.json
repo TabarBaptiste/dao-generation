@@ -3,11 +3,12 @@
   "displayName": "PHP DAO Generator",
   "publisher": "Baptiste-TABAR-LABONNE",
   "description": "Generate PHP DAO classes from SQL database tables",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
+  "icon": "assets/img/logo2.png",
   "categories": [
     "Other"
   ],
@@ -21,9 +22,7 @@
     "code-generation"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:phpDaoConnections",
-    "onCommand:phpDaoGenerator.addConnection"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
