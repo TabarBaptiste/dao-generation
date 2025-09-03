@@ -262,7 +262,7 @@ ${crudMethods}
         return `    /**
 	 * Lecture d'un enregistrement et transfert dans l'objet
      * @param int $id ID de l'enregistrement
-     * @return bool True si trouvé, false sinon
+     * @return void
      */
 	public function read($id = NULL) {
 		global $_dbBridge;

@@ -42,6 +42,12 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
         } else if (itemType === 'table') {
             this.contextValue = 'table';
             this.iconPath = new vscode.ThemeIcon('table');
+            // Set command to open table selection on click
+            this.command = {
+                command: 'phpDaoGenerator.openTableSelection',
+                title: 'Generate DAO',
+                arguments: [this]
+            };
         }
     }
 }
@@ -219,12 +225,21 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     }
 
     public async openTableSelection(item: DatabaseConnectionTreeItem): Promise<void> {
+        let databaseName: string;
+        
         if (item.itemType === 'database' && item.databaseName) {
-            try {
-                await TableSelectionPanel.createOrShow(item.connection, item.databaseName, this.databaseService, this.extensionUri);
-            } catch (error) {
-                vscode.window.showErrorMessage(`Failed to open table selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            }
+            databaseName = item.databaseName;
+        } else if (item.itemType === 'table' && item.databaseName) {
+            databaseName = item.databaseName;
+        } else {
+            vscode.window.showErrorMessage('Unable to determine database for table selection.');
+            return;
+        }
+
+        try {
+            await TableSelectionPanel.createOrShow(item.connection, databaseName, this.databaseService, this.extensionUri);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to open table selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

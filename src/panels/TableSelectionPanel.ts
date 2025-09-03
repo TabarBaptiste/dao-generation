@@ -34,13 +34,21 @@ export class TableSelectionPanel {
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        // If we already have a panel, show it
-        if (TableSelectionPanel.currentPanel) {
+        // If we already have a panel for this exact same database, update it
+        console.log('TableSelectionPanel.currentPanel :', TableSelectionPanel.currentPanel);
+        if (TableSelectionPanel.currentPanel && 
+            TableSelectionPanel.currentPanel.database === database &&
+            TableSelectionPanel.currentPanel.connection.id === connection.id) {
             TableSelectionPanel.currentPanel._panel.reveal(column);
             return;
         }
 
-        // Otherwise, create a new panel
+        // Dispose existing panel if it exists
+        if (TableSelectionPanel.currentPanel) {
+            TableSelectionPanel.currentPanel.dispose();
+        }
+
+        // Create a new panel
         const panel = vscode.window.createWebviewPanel(
             'tableSelection',
             `Tables - ${database}`,
