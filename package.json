@@ -8,7 +8,7 @@
   "engines": {
     "vscode": "^1.74.0"
   },
-  "icon": "assets/img/logo2.png",
+  "icon": "assets/img/logo.png",
   "categories": [
     "Other"
   ],
@@ -144,9 +144,13 @@
     "build:esbuild": "node esbuild.js --production",
     "package": "vsce package",
     "pretest": "npm run compile",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "release": "semantic-release"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^12.0.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^16.18.126",
     "@types/vscode": "^1.74.0",
@@ -156,6 +160,7 @@
     "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
     "glob": "^11.0.3",
+    "semantic-release": "^24.2.7",
     "typescript": "^5.9.2"
   },
   "dependencies": {

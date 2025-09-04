@@ -21,6 +21,14 @@ export class ConnectionFormPanel {
                 }
             );
 
+            // Add icon to the panel
+            if (extensionUri) {
+                this.panel.iconPath = {
+                    light: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png'),
+                    dark: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png')
+                };
+            }
+
             this.panel.webview.html = this.getWebviewContent(existingData, extensionUri);
 
             // Handle messages from the webview

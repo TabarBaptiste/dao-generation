@@ -60,6 +60,12 @@ export class TableSelectionPanel {
             }
         );
 
+        // Add icon to the panel using built-in icons
+        panel.iconPath = {
+            light: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png'),
+            dark: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png')
+        };
+
         TableSelectionPanel.currentPanel = new TableSelectionPanel(panel, connection, database, databaseService, extensionUri);
     }
 
