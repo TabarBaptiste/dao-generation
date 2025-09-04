@@ -72,7 +72,7 @@ function updateTablesList(tables) {
     const tableItems = tables.map(table => `
         <div class="table-item">
             <label>
-                <input type="checkbox" value="${escapeHtml(table)}" checked> ${escapeHtml(table)}
+                <input type="checkbox" value="${escapeHtml(table)}"> ${escapeHtml(table)}
             </label>
         </div>
     `).join('');
