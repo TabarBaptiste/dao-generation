@@ -54,6 +54,16 @@ export function activate(context: vscode.ExtensionContext) {
 		(item) => connectionProvider.openTableSelection(item)
 	);
 
+	const exportConnectionsCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.exportConnections',
+		() => connectionProvider.exportConnections()
+	);
+
+	const importConnectionsCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.importConnections',
+		() => connectionProvider.importConnections()
+	);
+
 	// Add to subscriptions
 	context.subscriptions.push(
 		addConnectionCommand,
@@ -62,7 +72,9 @@ export function activate(context: vscode.ExtensionContext) {
 		deleteConnectionCommand,
 		connectCommand,
 		disconnectCommand,
-		openTableSelectionCommand
+		openTableSelectionCommand,
+		exportConnectionsCommand,
+		importConnectionsCommand
 	);
 
 	// Cleanup on deactivation
