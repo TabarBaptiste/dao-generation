@@ -14,7 +14,7 @@ export interface DatabaseConnection {
 export interface ConnectionFormData {
     name: string;
     host: string;
-    port: string;
+    port: number;
     username: string;
     password: string;
     database: string;

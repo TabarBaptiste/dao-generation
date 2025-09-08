@@ -48,6 +48,19 @@ function setupEventListeners() {
     formElements.loadDbBtn.addEventListener('click', loadDatabases);
     formElements.cancelBtn.addEventListener('click', cancel);
     
+    // Prevent exponential notation in port field
+    formElements.port.addEventListener('keydown', function(e) {
+        // Block e, E, +, - keys
+        if (['e', 'E', '+', '-'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+    
+    formElements.port.addEventListener('input', function(e) {
+        // Remove any exponential notation characters that might have been pasted
+        e.target.value = e.target.value.replace(/[eE\+\-]/g, '');
+    });
+    
     // Listen for messages from the extension
     window.addEventListener('message', event => {
         const message = event.data;
@@ -175,7 +188,7 @@ function getFormData() {
         name: formElements.name.value.trim(),
         type: formElements.type.value,
         host: formElements.host.value.trim(),
-        port: formElements.port.value,
+        port: parseInt(formElements.port.value, 10),
         username: formElements.username.value.trim(),
         password: formElements.password.value,
         database: formElements.database.value
@@ -183,7 +196,7 @@ function getFormData() {
 }
 
 function validateRequiredFields(data) {
-    return data.name && data.host && data.port && data.username && data.password;
+    return data.name && data.host && data.port && !isNaN(data.port) && data.port > 0 && data.port <= 65535 && data.username && data.password;
 }
 
 function showStatus(message, isSuccess) {

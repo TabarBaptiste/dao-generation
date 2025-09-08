@@ -71,7 +71,7 @@ export class ConnectionFormPanel {
                 id: 'temp',
                 name: data.name,
                 host: data.host,
-                port: parseInt(data.port),
+                port: data.port,
                 username: data.username,
                 password: data.password,
                 database: data.database,
@@ -100,7 +100,7 @@ export class ConnectionFormPanel {
                 id: 'temp',
                 name: data.name,
                 host: data.host,
-                port: parseInt(data.port),
+                port: data.port,
                 username: data.username,
                 password: data.password,
                 type: data.type as 'mysql' | 'mariadb'

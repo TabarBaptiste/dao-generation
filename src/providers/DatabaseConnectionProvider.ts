@@ -135,7 +135,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             await this.connectionManager.addConnection({
                 name: formData.name,
                 host: formData.host,
-                port: parseInt(formData.port, 10),
+                port: formData.port,
                 username: formData.username,
                 password: formData.password,
                 database: formData.database || undefined,
@@ -153,7 +153,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         const formData = await panel.show({
             name: connection.name,
             host: connection.host,
-            port: connection.port.toString(),
+            port: connection.port,
             username: connection.username,
             password: connection.password,
             database: connection.database || '',
@@ -164,7 +164,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             await this.connectionManager.updateConnection(connection.id, {
                 name: formData.name,
                 host: formData.host,
-                port: parseInt(formData.port, 10),
+                port: formData.port,
                 username: formData.username,
                 password: formData.password,
                 database: formData.database || undefined,

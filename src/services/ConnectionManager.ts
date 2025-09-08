@@ -20,7 +20,7 @@ export class ConnectionManager {
         const newConnection: DatabaseConnection = {
             ...connection,
             id: this.generateId(),
-            isConnected: false
+            isConnected: true
         };
 
         this.connections.push(newConnection);
