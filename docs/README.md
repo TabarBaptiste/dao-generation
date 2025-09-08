@@ -220,5 +220,3 @@ Chaque fichier de documentation suit un template cohérent :
 - Services injectés via constructeur (pas d'instanciation directe)
 - Interfaces TypeScript pour contrats stables
 - Séparation claire présentation/logique/données
-
-Cette documentation évolue avec le code. N'hésitez pas à la maintenir à jour lors de vos modifications ! 🔄
