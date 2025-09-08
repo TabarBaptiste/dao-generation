@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.1...v1.1.2) (2025-09-08)
+
+
+### Bug Fixes
+
+* Corrige le traitement du port pour éviter la notation exponentielle et ajuste le type de données ([3321ea0](https://github.com/TabarBaptiste/dao-generation/commit/3321ea096f9b9235f0803ac0e1126288052cd22b))
+
 ## [1.1.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.0...v1.1.1) (2025-09-08)
 
 
