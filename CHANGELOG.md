@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.3...v1.1.4) (2025-09-08)
+
+
+### Bug Fixes
+
+* Sélection du premier fichier généré dans l'explorateur de fichier et Suppression du préfixe de la table pour les requêtes SQL ([b2d078e](https://github.com/TabarBaptiste/dao-generation/commit/b2d078eefb95b240829b235cfd50bd54103c92b1))
+
 ## [1.1.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.2...v1.1.3) (2025-09-08)
 
 
