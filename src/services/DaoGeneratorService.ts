@@ -33,6 +33,7 @@ export class DaoGeneratorService {
             let skippedCount = 0;
             let backupCount = 0;
             const errors: string[] = [];
+            const generatedFiles: string[] = [];
 
             for (const tableName of tableNames) {
                 try {
@@ -66,6 +67,7 @@ export class DaoGeneratorService {
                     // Écrire le fichier (nouveau ou remplacement)
                     fs.writeFileSync(filePath, daoContent, 'utf8');
                     generatedCount++;
+                    generatedFiles.push(filePath);
 
                 } catch (error) {
                     errors.push(`Erreur pour la table ${tableName}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -73,7 +75,7 @@ export class DaoGeneratorService {
             }
 
             // Afficher le résultat
-            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount);
+            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount, generatedFiles);
 
         } catch (error) {
             vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -159,7 +161,7 @@ export class DaoGeneratorService {
         const attributes = this.generateAttributes(tableInfo.columns);
         const mappingArray = this.generateMappingArray(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
-        const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
+        const crudMethods = this.generateCrudMethods(tableNameWithoutPrefix, tableInfo.columns, database);
         const primaryKey = this.findPrimaryKey(tableInfo.columns);
         
         // Déterminer la version à utiliser
@@ -254,7 +256,7 @@ ${crudMethods}
         }).join('\n\n');
     }
 
-    private generateCrudMethods(tableName: string, columns: ColumnInfo[], database: string): string {
+    private generateCrudMethods(tableNameWithoutPrefix: string, columns: ColumnInfo[], database: string): string {
         const primaryKey = this.findPrimaryKey(columns);
         const pkName = primaryKey ? primaryKey.name : 'id';
         const pkMethodName = this.toPascalCase(pkName);
@@ -272,7 +274,7 @@ ${crudMethods}
 		if ($this->get${pkMethodName}() > 0) {
 			// Recuperation des autres champs de la table
 			$tRetour = array();
-			$strSQL = 'SELECT * FROM ' . PREFIX_SESSION . '${tableName} WHERE ${pkName} = ' . $this->get${pkMethodName}();
+			$strSQL = 'SELECT * FROM ' . PREFIX_SESSION . '${tableNameWithoutPrefix} WHERE ${pkName} = ' . $this->get${pkMethodName}();
 			$tRetour = $_dbBridge->fetchRow($strSQL);
 			if ($this->getDebug())
                 Dump($tRetour, $strSQL);
@@ -302,7 +304,7 @@ ${crudMethods}
 		}
 
 		try {
-			$_dbBridge->insert(PREFIX_SESSION . '${tableName}', $bind);
+			$_dbBridge->insert(PREFIX_SESSION . '${tableNameWithoutPrefix}', $bind);
 			return $_dbBridge->lastInsertId();
 		}catch (Exception $e) {
 			if ($this->getDebug()) 
@@ -324,7 +326,7 @@ ${crudMethods}
 			$function = 'get' . substr($value, 3);
 			$bind[$key] = $this->$function();
 		}
-		return $_dbBridge->update(PREFIX_SESSION . '${tableName}', $bind, '${pkName} = ' . $bind['${pkName}']);
+		return $_dbBridge->update(PREFIX_SESSION . '${tableNameWithoutPrefix}', $bind, '${pkName} = ' . $bind['${pkName}']);
 	}
 
     /**
@@ -336,7 +338,7 @@ ${crudMethods}
 
 		if ($id !== null) $this->set${pkMethodName}($id);
 		if ($this->get${pkMethodName}() > 0)
-			return $_dbBridge->delete(PREFIX_SESSION . '${tableName}', '${pkName} = ' . $this->get${pkMethodName}());
+			return $_dbBridge->delete(PREFIX_SESSION . '${tableNameWithoutPrefix}', '${pkName} = ' . $this->get${pkMethodName}());
 	}`;
     }
 
@@ -477,7 +479,7 @@ ${originalContent.replace(/^<\?php\s*/, '')}`;
         }
     }
 
-    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string, backupCount: number = 0): void {
+    private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string, backupCount: number = 0, generatedFiles: string[] = []): void {
         let message = `Génération terminée: ${generatedCount} fichier(s) créé(s)`;
 
         if (backupCount > 0) {
@@ -526,10 +528,17 @@ ${originalContent.replace(/^<\?php\s*/, '')}`;
                 ...actions
             ).then(selection => {
                 if (selection === 'Ouvrir le dossier') {
-                    vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(outputFolder));
+                    // Si on a des fichiers générés, sélectionner le premier fichier
+                    if (generatedFiles.length > 0) {
+                        vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(generatedFiles[0]));
+                    } else {
+                        // Sinon ouvrir le dossier
+                        vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(outputFolder));
+                    }
                 } else if (selection === 'Voir les backups') {
                     const backupFolder = path.join(outputFolder, 'backup');
                     vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(backupFolder));
+                    // vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(backupFolder), { forceNewWindow: false });
                 }
             });
         }
