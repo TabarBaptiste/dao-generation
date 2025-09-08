@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.0...v1.1.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* Changement des icônes pour l'importation et l'exportation des connexions ([a024664](https://github.com/TabarBaptiste/dao-generation/commit/a024664411317e5fb606b572524778ddfbaa7ae8))
+* Changement des icônes pour l'importation et l'exportation des connexions ([9010ee0](https://github.com/TabarBaptiste/dao-generation/commit/9010ee0375ddfd1d10145c84fbe101bbb1cadc0d))
+
 # [1.1.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.0.0...v1.1.0) (2025-09-08)
 
 
