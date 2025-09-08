@@ -3,7 +3,7 @@
   "displayName": "PHP DAO Generator",
   "publisher": "Baptiste-TABAR-LABONNE",
   "description": "Generate PHP DAO classes from SQL database tables",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
@@ -95,7 +95,7 @@
         "icon": "$(export)"
       },
       {
-        "command": "phpDaoGenerator.importConnections", 
+        "command": "phpDaoGenerator.importConnections",
         "title": "Import Connections",
         "icon": "$(import)"
       }
@@ -119,7 +119,7 @@
         },
         {
           "command": "phpDaoGenerator.importConnections",
-          "when": "view == phpDaoConnections", 
+          "when": "view == phpDaoConnections",
           "group": "navigation"
         }
       ],
