@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.0.0...v1.1.0) (2025-09-08)
+
+
+### Bug Fixes
+
+* Ajout de la documentation pour DatabaseService et Types ([a747ccd](https://github.com/TabarBaptiste/dao-generation/commit/a747ccd91edfbc6f8c160943ed753637d7478ac7))
+* mise à jour de la version de Node.js à 22.x dans le workflow de publication ([961c088](https://github.com/TabarBaptiste/dao-generation/commit/961c088aa1c046db729f2bad7ba7e28e81c8a000))
+* retirer la sélection par défaut des cases à cocher dans la liste des tables ([9962e71](https://github.com/TabarBaptiste/dao-generation/commit/9962e71f7bb63ad9c3e420095a9507415269e2ce))
+
+
+### Features
+
+* ajout de la fonctionnalité d'importation et d'exportation avec chiffrement des mots de passe ([4f63c4c](https://github.com/TabarBaptiste/dao-generation/commit/4f63c4c2953a49ed321d4bec82236bdad97edb44))
+
 # 1.0.0 (2025-09-04)
 
 
