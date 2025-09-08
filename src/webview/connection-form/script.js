@@ -61,6 +61,10 @@ function setupEventListeners() {
         e.target.value = e.target.value.replace(/[eE\+\-]/g, '');
     });
     
+    // Auto-generate connection name based on host and database
+    formElements.host.addEventListener('input', updateConnectionName);
+    formElements.database.addEventListener('change', updateConnectionName);
+    
     // Listen for messages from the extension
     window.addEventListener('message', event => {
         const message = event.data;
@@ -181,6 +185,9 @@ function handleDatabasesLoaded(databases, error) {
     
     availableDatabases = databases;
     showStatus(`Loaded ${databases.length} database(s)`, true);
+    
+    // Update connection name if field is empty
+    updateConnectionName();
 }
 
 function getFormData() {
@@ -227,6 +234,24 @@ function cancel() {
     vscode.postMessage({
         command: 'cancel'
     });
+}
+
+// Auto-generate connection name based on host and database
+function updateConnectionName() {
+    // if (formElements.name.value.trim() === '') {
+        const host = formElements.host.value.trim();
+        const database = formElements.database.value.trim();
+        
+        if (host) {
+            if (database) {
+                formElements.name.value = `${host}.${database}`;
+            } else {
+                formElements.name.value = host;
+            }
+        } else {
+            formElements.name.value = '';
+        }
+    // }
 }
 
 // Form validation helpers
