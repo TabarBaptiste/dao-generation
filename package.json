@@ -88,6 +88,16 @@
         "command": "phpDaoGenerator.openTableSelection",
         "title": "Generate DAO",
         "icon": "$(code)"
+      },
+      {
+        "command": "phpDaoGenerator.exportConnections",
+        "title": "Export Connections",
+        "icon": "$(export)"
+      },
+      {
+        "command": "phpDaoGenerator.importConnections", 
+        "title": "Import Connections",
+        "icon": "$(import)"
       }
     ],
     "menus": {
@@ -100,6 +110,16 @@
         {
           "command": "phpDaoGenerator.refreshConnections",
           "when": "view == phpDaoConnections",
+          "group": "navigation"
+        },
+        {
+          "command": "phpDaoGenerator.exportConnections",
+          "when": "view == phpDaoConnections",
+          "group": "navigation"
+        },
+        {
+          "command": "phpDaoGenerator.importConnections",
+          "when": "view == phpDaoConnections", 
           "group": "navigation"
         }
       ],

@@ -242,4 +242,13 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             vscode.window.showErrorMessage(`Failed to open table selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
+
+    public async exportConnections(): Promise<void> {
+        await this.connectionManager.exportConnections();
+    }
+
+    public async importConnections(): Promise<void> {
+        await this.connectionManager.importConnections();
+        this.refresh(); // Refresh the tree view to show imported connections
+    }
 }
