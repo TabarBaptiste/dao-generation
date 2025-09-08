@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.2...v1.1.3) (2025-09-08)
+
+
+### Bug Fixes
+
+* Désactiver le champ 'Connection Name' et ajouter la génération automatique du nom de connexion resolved [#1](https://github.com/TabarBaptiste/dao-generation/issues/1) ([67928c9](https://github.com/TabarBaptiste/dao-generation/commit/67928c9b46e2b048ded5bb2d20e78ce1010074c5))
+
 ## [1.1.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.1...v1.1.2) (2025-09-08)
 
 
