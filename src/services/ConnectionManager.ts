@@ -55,8 +55,8 @@ export class ConnectionManager {
                     // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
                     if (conn.encryptedPassword && conn.passwordIv) {
                         const decryptedPassword = this.decryptPassword(
-                            conn.encryptedPassword, 
-                            conn.passwordIv, 
+                            conn.encryptedPassword,
+                            conn.passwordIv,
                             ConnectionManager.ENCRYPTION_KEY
                         );
                         return {
@@ -112,15 +112,26 @@ export class ConnectionManager {
         return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
 
+    /**
+     * Vérifie si deux connexions sont identiques (même serveur, même base de données)
+     */
+    private isSameConnection(conn1: DatabaseConnection, conn2: DatabaseConnection): boolean {
+        return conn1.host === conn2.host &&
+            conn1.port === conn2.port &&
+            conn1.username === conn2.username &&
+            conn1.database === conn2.database &&
+            conn1.type === conn2.type;
+    }
+
     private encryptPassword(password: string, masterKey: string): { encrypted: string, iv: string } {
         const algorithm = 'aes-256-cbc';
         const key = crypto.scryptSync(masterKey, 'salt', 32);
         const iv = crypto.randomBytes(16);
-        
+
         const cipher = crypto.createCipheriv(algorithm, key, iv);
         let encrypted = cipher.update(password, 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        
+
         return {
             encrypted: encrypted,
             iv: iv.toString('hex')
@@ -131,11 +142,11 @@ export class ConnectionManager {
         const algorithm = 'aes-256-cbc';
         const key = crypto.scryptSync(masterKey, 'salt', 32);
         const ivBuffer = Buffer.from(iv, 'hex');
-        
+
         const decipher = crypto.createDecipheriv(algorithm, key, ivBuffer);
         let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        
+
         return decrypted;
     }
 
@@ -199,7 +210,7 @@ export class ConnectionManager {
             if (saveUri) {
                 const jsonContent = JSON.stringify(exportData, null, 2);
                 await vscode.workspace.fs.writeFile(saveUri, Buffer.from(jsonContent, 'utf8'));
-                
+
                 const encryptionStatus = useEncryption ? ' (passwords encrypted)' : ' (passwords in plain text)';
                 vscode.window.showInformationMessage(`Successfully exported ${this.connections.length} connection(s) to ${saveUri.fsPath}${encryptionStatus}`);
             }
@@ -229,7 +240,7 @@ export class ConnectionManager {
             const fileUri = openUri[0];
             const fileContent = await vscode.workspace.fs.readFile(fileUri);
             const jsonContent = Buffer.from(fileContent).toString('utf8');
-            
+
             let importData: any;
             try {
                 importData = JSON.parse(jsonContent);
@@ -266,7 +277,7 @@ export class ConnectionManager {
             for (const conn of importData.connections) {
                 try {
                     // Basic validation
-                    if (!conn.name || !conn.host || !conn.port || !conn.username || 
+                    if (!conn.name || !conn.host || !conn.port || !conn.username ||
                         !conn.type || !['mysql', 'mariadb'].includes(conn.type)) {
                         errors.push(`Invalid connection format: ${conn.name || 'unnamed'}`);
                         continue;
@@ -298,18 +309,26 @@ export class ConnectionManager {
             }
 
             if (validConnections.length === 0) {
-                const errorMessage = errors.length > 0 
+                const errorMessage = errors.length > 0
                     ? `No valid connections found. Errors:\n${errors.join('\n')}`
                     : 'No valid connections found in the import file';
                 throw new Error(errorMessage);
             }
 
             // Ask user if they want to replace existing connections or merge
-            let shouldReplace = false;
+            let importMode = 'merge';
             if (this.connections.length > 0) {
                 const choice = await vscode.window.showQuickPick([
-                    { label: 'Merge', description: 'Add imported connections to existing ones', value: 'merge' },
-                    { label: 'Replace', description: 'Replace all existing connections with imported ones', value: 'replace' }
+                    {
+                        label: 'Merge (Smart)',
+                        description: 'Add new connections and update existing ones (no duplicates)',
+                        value: 'merge'
+                    },
+                    {
+                        label: 'Replace (Smart)',
+                        description: 'Replace only the connections being imported (others are kept)',
+                        value: 'replace'
+                    }
                 ], {
                     placeHolder: 'Choose import mode'
                 });
@@ -317,11 +336,11 @@ export class ConnectionManager {
                 if (!choice) {
                     return; // User cancelled
                 }
-                
-                shouldReplace = choice.value === 'replace';
+
+                importMode = choice.value;
             }
 
-            // Import connections
+            // Import connections avec gestion intelligente des doublons
             const importedConnections: DatabaseConnection[] = validConnections.map((conn: any) => ({
                 ...conn,
                 id: this.generateId(),
@@ -329,17 +348,96 @@ export class ConnectionManager {
                 lastConnected: undefined
             }));
 
-            if (shouldReplace) {
-                this.connections = importedConnections;
+            let addedCount = 0;
+            let updatedCount = 0;
+            let skippedCount = 0;
+            let autoUpdateRemaining = false;
+
+            if (importMode === 'replace') {
+                // Mode Replace (Smart): Remplacer seulement les connexions importées
+                for (const importedConn of importedConnections) {
+                    const existingIndex = this.connections.findIndex(conn =>
+                        this.isSameConnection(conn, importedConn)
+                    );
+
+                    if (existingIndex !== -1) {
+                        // Remplacer la connexion existante en gardant l'ID original
+                        this.connections[existingIndex] = {
+                            ...importedConn,
+                            id: this.connections[existingIndex].id
+                        };
+                        updatedCount++;
+                    } else {
+                        // Ajouter la nouvelle connexion
+                        this.connections.push(importedConn);
+                        addedCount++;
+                    }
+                }
             } else {
-                this.connections.push(...importedConnections);
+                // Mode Merge (Smart): Ajouter seulement les nouvelles, mettre à jour les existantes
+                for (const importedConn of importedConnections) {
+                    const existingIndex = this.connections.findIndex(conn =>
+                        this.isSameConnection(conn, importedConn)
+                    );
+
+                    if (existingIndex !== -1) {
+                        // Connexion existante trouvée
+                        if (!autoUpdateRemaining) {
+                            // Demander si on veut mettre à jour la connexion existante
+                            const updateChoice = await vscode.window.showQuickPick([
+                                { label: 'Yes', description: 'Update this connection', value: 'yes' },
+                                { label: 'No', description: 'Keep the existing connection', value: 'no' },
+                                { label: 'Yes to all', description: 'Update this and all remaining duplicates', value: 'yesAll' }
+                            ], {
+                                placeHolder: `Connection "${importedConn.name}" already exists. Update it?`
+                            });
+
+                            if (!updateChoice) {
+                                skippedCount++;
+                                continue;
+                            }
+
+                            if (updateChoice.value === 'yesAll') {
+                                autoUpdateRemaining = true;
+                            }
+
+                            if (updateChoice.value === 'yes' || updateChoice.value === 'yesAll') {
+                                // Mettre à jour la connexion existante en gardant l'ID original
+                                this.connections[existingIndex] = {
+                                    ...importedConn,
+                                    id: this.connections[existingIndex].id
+                                };
+                                updatedCount++;
+                            } else {
+                                skippedCount++;
+                            }
+                        } else {
+                            // Mode auto-update activé
+                            this.connections[existingIndex] = {
+                                ...importedConn,
+                                id: this.connections[existingIndex].id
+                            };
+                            updatedCount++;
+                        }
+                    } else {
+                        // Ajouter la nouvelle connexion
+                        this.connections.push(importedConn);
+                        addedCount++;
+                    }
+                }
             }
 
             await this.saveConnections();
 
-            let message = `Successfully imported ${importedConnections.length} connection(s)`;
+            let message = `Successfully imported connections: ${addedCount} added`;
+            if (updatedCount > 0) {
+                message += `, ${updatedCount} updated`;
+            }
+            if (skippedCount > 0) {
+                message += `, ${skippedCount} skipped`;
+            }
             if (errors.length > 0) {
-                message += ` (${errors.length} connections skipped due to errors)`;
+                message += ` (${errors.length} connections had errors)`;
             }
             if (isEncrypted) {
                 message += ` (passwords were decrypted)`;
