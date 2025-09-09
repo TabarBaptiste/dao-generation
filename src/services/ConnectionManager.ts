@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 
 export class ConnectionManager {
     private static readonly STORAGE_KEY = 'phpDaoGenerator.connections';
+    private static readonly ENCRYPTION_KEY = 'phpDaoGenerator_storage_key_v1'; // Clé pour le stockage local
     private connections: DatabaseConnection[] = [];
 
     constructor(private context: vscode.ExtensionContext) {
@@ -45,15 +46,66 @@ export class ConnectionManager {
     }
 
     private async loadConnections(): Promise<void> {
-        const stored = this.context.globalState.get<DatabaseConnection[]>(ConnectionManager.STORAGE_KEY);
-        console.log('stored :', stored);
+        const stored = this.context.globalState.get<any[]>(ConnectionManager.STORAGE_KEY);
+        console.log('dao stored :', stored);
         if (stored) {
-            this.connections = stored;
+            // Déchiffrer les mots de passe lors du chargement
+            this.connections = stored.map(conn => {
+                try {
+                    // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
+                    if (conn.encryptedPassword && conn.passwordIv) {
+                        const decryptedPassword = this.decryptPassword(
+                            conn.encryptedPassword, 
+                            conn.passwordIv, 
+                            ConnectionManager.ENCRYPTION_KEY
+                        );
+                        return {
+                            ...conn,
+                            password: decryptedPassword,
+                            encryptedPassword: undefined,
+                            passwordIv: undefined
+                        };
+                    }
+                    // Si pas de chiffrement, retourner tel quel (rétrocompatibilité)
+                    return conn;
+                } catch (error) {
+                    console.error('Failed to decrypt password for connection:', conn.name, error);
+                    // En cas d'erreur de déchiffrement, garder la connexion mais sans mot de passe
+                    return {
+                        ...conn,
+                        password: '',
+                        encryptedPassword: undefined,
+                        passwordIv: undefined
+                    };
+                }
+            });
         }
     }
 
     private async saveConnections(): Promise<void> {
-        await this.context.globalState.update(ConnectionManager.STORAGE_KEY, this.connections);
+        // Chiffrer les mots de passe avant la sauvegarde
+        const connectionsToSave = this.connections.map(conn => {
+            try {
+                const encrypted = this.encryptPassword(conn.password, ConnectionManager.ENCRYPTION_KEY);
+                return {
+                    ...conn,
+                    password: undefined, // Supprimer le mot de passe en clair
+                    encryptedPassword: encrypted.encrypted,
+                    passwordIv: encrypted.iv
+                };
+            } catch (error) {
+                console.error('Failed to encrypt password for connection:', conn.name, error);
+                // En cas d'erreur de chiffrement, sauvegarder sans mot de passe
+                return {
+                    ...conn,
+                    password: undefined,
+                    encryptedPassword: undefined,
+                    passwordIv: undefined
+                };
+            }
+        });
+
+        await this.context.globalState.update(ConnectionManager.STORAGE_KEY, connectionsToSave);
     }
 
     private generateId(): string {

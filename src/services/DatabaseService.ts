@@ -24,7 +24,7 @@ export class DatabaseService {
             const conn = await this.createConnection(connection);
             this.connections.set(connection.id, conn);
 
-            console.log(`Connected to ${connection.name}`);
+            console.log(`dao Connected to ${connection.name}`);
         } catch (error) {
             console.error(`Failed to connect to ${connection.name}:`, error);
             throw error;
@@ -37,7 +37,7 @@ export class DatabaseService {
             try {
                 await conn.end();
                 this.connections.delete(connectionId);
-                console.log(`Disconnected from connection ${connectionId}`);
+                console.log(`dao Disconnected from connection ${connectionId}`);
             } catch (error) {
                 console.error(`Error disconnecting from ${connectionId}:`, error);
             }
