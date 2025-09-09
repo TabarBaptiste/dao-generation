@@ -122,6 +122,7 @@ const isValid = await databaseService.testConnection({
 - **DatabaseConnectionProvider** : Déconnexion manuelle
 - **Nettoyage automatique** : Avant création de nouvelles connexions
 
+<!-- 
 ---
 
 ### `isConnected(connectionId: string): boolean`
@@ -137,6 +138,7 @@ const isValid = await databaseService.testConnection({
 **Utilisation** :
 - **Interface utilisateur** : Affichage des états de connexion
 - **Logique conditionnelle** : Décisions basées sur l'état des connexions
+-->
 
 ---
 
