@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.4...v1.1.5) (2025-09-09)
+
+
+### Bug Fixes
+
+* Mot de passe crypté ([041b3f8](https://github.com/TabarBaptiste/dao-generation/commit/041b3f8b8508e82272c9e2b4535c0c91d799db64))
+
 ## [1.1.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.3...v1.1.4) (2025-09-08)
 
 
