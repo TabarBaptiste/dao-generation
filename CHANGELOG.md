@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.5...v1.2.0) (2025-09-09)
+
+
+### Features
+
+* Ajout de la gestion intelligente des doublons lors de l'importation de connexions resolved [#12](https://github.com/TabarBaptiste/dao-generation/issues/12) ([1714d9a](https://github.com/TabarBaptiste/dao-generation/commit/1714d9af0c0df3e9f489683cba667b07ca8a1b96))
+
 ## [1.1.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.4...v1.1.5) (2025-09-09)
 
 
