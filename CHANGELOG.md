@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.3.0...v1.4.0) (2025-09-10)
+
+
+### Features
+
+* Ajout de la fonctionnalité de tri des connexions par mode alphabétique ou date resolved [#11](https://github.com/TabarBaptiste/dao-generation/issues/11) ([15eff03](https://github.com/TabarBaptiste/dao-generation/commit/15eff03151021ee62c057f33c297ecb2ecd2f61e))
+
 # [1.2.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.5...v1.2.0) (2025-09-09)
 
 
