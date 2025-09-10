@@ -1,10 +1,3 @@
-# [1.3.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.2.0...v1.3.0) (2025-09-10)
-
-
-### Features
-
-* Ajout de l'URL des bugs dans package.json ([17759cd](https://github.com/TabarBaptiste/dao-generation/commit/17759cd63c0117c68e9a00f11e53695deb7db37f))
-
 # [1.2.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.1.5...v1.2.0) (2025-09-09)
 
 

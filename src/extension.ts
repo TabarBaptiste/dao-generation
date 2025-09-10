@@ -64,6 +64,11 @@ export function activate(context: vscode.ExtensionContext) {
 		() => connectionProvider.importConnections()
 	);
 
+	const toggleSortCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.toggleSort',
+		() => connectionProvider.toggleSortMode()
+	);
+
 	// Add to subscriptions
 	context.subscriptions.push(
 		addConnectionCommand,
@@ -74,7 +79,8 @@ export function activate(context: vscode.ExtensionContext) {
 		disconnectCommand,
 		openTableSelectionCommand,
 		exportConnectionsCommand,
-		importConnectionsCommand
+		importConnectionsCommand,
+		toggleSortCommand
 	);
 
 	// Cleanup on deactivation

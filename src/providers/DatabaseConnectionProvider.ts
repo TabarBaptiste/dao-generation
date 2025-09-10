@@ -55,6 +55,8 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
 export class DatabaseConnectionProvider implements vscode.TreeDataProvider<DatabaseConnectionTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void> = new vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<DatabaseConnectionTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    
+    private sortMode: 'alphabetical' | 'date' = 'date';
 
     constructor(
         private connectionManager: ConnectionManager,
@@ -66,16 +68,50 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         this._onDidChangeTreeData.fire();
     }
 
+    /**
+     * Trie les connexions selon le mode de tri actuel
+     */
+    private sortConnections(connections: DatabaseConnection[]): DatabaseConnection[] {
+        const sorted = [...connections]; // Copie pour éviter de muter l'original
+        
+        if (this.sortMode === 'alphabetical') {
+            // Tri alphabétique par nom
+            return sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        } else {
+            // Tri par date d'ajout (ordre par défaut du tableau, ou par ID si disponible)
+            return sorted.sort((a, b) => {
+                // Extraire le timestamp de l'ID (format: conn_timestamp_randomstring)
+                const timestampA = parseInt(a.id.split('_')[1]) || 0;
+                const timestampB = parseInt(b.id.split('_')[1]) || 0;
+                return timestampB - timestampA; // Plus récent en premier
+            });
+        }
+    }
+
+    /**
+     * Bascule entre les modes de tri et rafraîchit la vue
+     */
+    public toggleSortMode(): void {
+        this.sortMode = this.sortMode === 'alphabetical' ? 'date' : 'alphabetical';
+        
+        // Afficher le mode de tri actuel
+        const sortModeText = this.sortMode === 'alphabetical' ? 'alphabétique' : 'date d\'ajout';
+        vscode.window.showInformationMessage(`Connexions triées par ${sortModeText}`);
+        
+        this.refresh();
+    }
+
     getTreeItem(element: DatabaseConnectionTreeItem): vscode.TreeItem {
         return element;
     }
 
     getChildren(element?: DatabaseConnectionTreeItem): Thenable<DatabaseConnectionTreeItem[]> {
         if (!element) {
-            // Root level - return all connections
+            // Root level - return all connections with sorting
             const connections = this.connectionManager.getConnections();
+            const sortedConnections = this.sortConnections(connections);
             return Promise.resolve(
-                connections.map(conn => new DatabaseConnectionTreeItem(
+                sortedConnections.map((conn: DatabaseConnection) => new DatabaseConnectionTreeItem(
                     conn, 
                     conn.isConnected ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                     'connection'

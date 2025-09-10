@@ -7,14 +7,26 @@ Elle facilite la connexion à vos serveurs, l’exploration des bases, et la gé
 
 ## 🚀 Installation
 
-1. Téléchargez l’extension depuis la [Marketplace VSCode](https://marketplace.visualstudio.com/items?itemName=Baptiste-TABAR-LABONNE.php-dao-generator) ou installez le fichier `.vsix` manuellement :
+<!-- 1. Téléchargez l’extension depuis la [Marketplace VSCode](https://marketplace.visualstudio.com/items?itemName=Baptiste-TABAR-LABONNE.php-dao-generator) ou installez le fichier `.vsix` manuellement :
    - Ouvrez VSCode
    - Allez dans `Extensions (Ctrl+Shift+X)`
    - Cliquez sur les `...` en haut à droite
    - Sélectionnez **Installer depuis un VSIX...**
    - Récupérez dans `S:\03-Domaine Developpement\Outils\Config Dev Poste Windows 11\Developpement\VsCode\php-dao-generator-x.x.x.vsix`
 
-2. Une nouvelle icône **PHP DAO Generator** apparaît dans la barre latérale gauche de VSCode.
+2. Une nouvelle icône **PHP DAO Generator** apparaît dans la barre latérale gauche de VSCode. -->
+
+### Depuis la Marketplace
+
+1. Ouvrir VS Code → `Extensions` (Ctrl+Shift+X)
+2. Rechercher **PHP DAO Generator** et cliquer sur `Install`.
+
+### Installer un `.vsix` localement
+
+1. Se rendre sur les [releases GitHub](https://github.com/TabarBaptiste/dao-generation/releases)
+2. Télécharger `VS Code Extension Package`
+3. Dans VsCode aller dans `Extensions` → menu `...` → **Install from VSIX...**
+4. Sélectionner le fichier `php-dao-generator-x.x.x.vsix`.
 
 ---
 
