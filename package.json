@@ -156,6 +156,9 @@
     "type": "git",
     "url": "https://github.com/TabarBaptiste/dao-generation"
   },
+  "bugs": {
+    "url": "https://github.com/TabarBaptiste/dao-generation/issues"
+  },
   "scripts": {
     "vscode:prepublish": "npm run build:esbuild",
     "compile": "tsc -p ./",
