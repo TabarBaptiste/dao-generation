@@ -168,7 +168,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         const formData = await panel.show(undefined, this.extensionUri);
 
         if (formData) {
-            await this.connectionManager.addConnection({
+            const wasAdded = await this.connectionManager.addConnection({
                 name: formData.name,
                 host: formData.host,
                 port: formData.port,
@@ -178,8 +178,22 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                 type: formData.type
             });
 
-            this.refresh();
-            vscode.window.showInformationMessage(`Connection "${formData.name}" added successfully!`);
+            if (wasAdded) {
+                this.refresh();
+                vscode.window.showInformationMessage(`Connection "${formData.name}" added successfully!`);
+            } else {
+                // Utiliser la nouvelle fonction pour générer une description lisible
+                const serverInfo = this.connectionManager.getConnectionDescription({
+                    name: formData.name,
+                    host: formData.host,
+                    port: formData.port,
+                    username: formData.username,
+                    password: formData.password,
+                    database: formData.database || undefined,
+                    type: formData.type
+                });
+                vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos connexions.`);
+            }
         }
     }
 

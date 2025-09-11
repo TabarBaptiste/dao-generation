@@ -173,6 +173,7 @@
     "vscode:prepublish": "npm run build:esbuild",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "watch:tsc": "tsc -watch -p ./",
     "watch:esbuild": "node esbuild.js --watch",
     "build:esbuild": "node esbuild.js --production",
     "package": "vsce package",

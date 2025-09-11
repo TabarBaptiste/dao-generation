@@ -17,15 +17,24 @@ export class ConnectionManager {
         return this.connections;
     }
 
-    public async addConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<void> {
+    public async addConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<boolean> {
         const newConnection: DatabaseConnection = {
             ...connection,
             id: this.generateId(),
             isConnected: true
         };
 
+        // Vérifier s'il existe déjà une connexion identique
+        const existingConnection = this.connections.find(conn => this.isSameConnection(conn, newConnection));
+        
+        if (existingConnection) {
+            // Retourner false pour indiquer que la connexion n'a pas été ajoutée (doublon détecté)
+            return false;
+        }
+
         this.connections.push(newConnection);
         await this.saveConnections();
+        return true;
     }
 
     public async updateConnection(id: string, connection: Partial<DatabaseConnection>): Promise<void> {
@@ -116,11 +125,25 @@ export class ConnectionManager {
      * Vérifie si deux connexions sont identiques (même serveur, même base de données)
      */
     private isSameConnection(conn1: DatabaseConnection, conn2: DatabaseConnection): boolean {
+        // Normaliser les valeurs de base de données (undefined, null, "" sont tous traités comme "pas de base")
+        const db1 = conn1.database || undefined;
+        const db2 = conn2.database || undefined;
+        
         return conn1.host === conn2.host &&
             conn1.port === conn2.port &&
             conn1.username === conn2.username &&
-            conn1.database === conn2.database &&
+            db1 === db2 &&
             conn1.type === conn2.type;
+    }
+
+    /**
+     * Génère une description lisible d'une connexion pour les messages utilisateur
+     */
+    public getConnectionDescription(connection: DatabaseConnection | Omit<DatabaseConnection, 'id'>): string {
+        const database = connection.database || undefined;
+        return database 
+            ? `${connection.host}:${connection.port}/${database}`
+            : `${connection.host}:${connection.port}`;
     }
 
     private encryptPassword(password: string, masterKey: string): { encrypted: string, iv: string } {
