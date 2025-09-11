@@ -1,3 +1,12 @@
+## [1.4.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.1...v1.4.2) (2025-09-11)
+
+
+### Bug Fixes
+
+* Ajout de la vérification des doublons lors de l'ajout de connexions ([e3661cc](https://github.com/TabarBaptiste/dao-generation/commit/e3661cc4517f8619e65faa7145dd8b99bcdf0b45))
+* Connection Name transparent ([8575837](https://github.com/TabarBaptiste/dao-generation/commit/8575837f8f84bc30818d710cd9fe4c59f3374c9d))
+* Ouverture du projet correspond à à BDD sélectionnée resolved [#8](https://github.com/TabarBaptiste/dao-generation/issues/8) ([082bccd](https://github.com/TabarBaptiste/dao-generation/commit/082bccdb1995ccb3840ec91486ef165b4820c7a2))
+
 ## [1.4.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.0...v1.4.1) (2025-09-11)
 
 
