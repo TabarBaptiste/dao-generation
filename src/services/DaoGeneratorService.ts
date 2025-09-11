@@ -3,6 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { DatabaseConnection, TableInfo, ColumnInfo } from '../types/Connection';
 import { DatabaseService } from './DatabaseService';
+import { StringUtil } from '../utils/StringUtil';
+import { DateUtil } from '../utils/DateUtil';
+import { ErrorHandler } from '../utils/ErrorHandler';
+import { DEFAULT_PATHS, FILE_EXTENSIONS, VERSION_PATTERN } from '../constants/AppConstants';
 
 interface DaoGenerationOptions {
     mode: 'save' | 'overwrite';
@@ -41,8 +45,7 @@ export class DaoGeneratorService {
                     const tableInfo = await this.databaseService.getTableInfo(connection, database, tableName);
 
                     // Nom du fichier DAO
-                    const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
-                    const fileName = 'DAO' + this.toPascalCase(tableNameWithoutPrefix) + '.php';
+                    const fileName = StringUtil.generatePhpFileName(tableName);
                     const filePath = path.join(outputFolder, fileName);
 
                     // Générer le contenu du DAO (après avoir défini filePath)
@@ -88,7 +91,7 @@ export class DaoGeneratorService {
         }
 
         // Chemin par défaut : D:\wamp64\www
-        const defaultWampPath = 'D:\\wamp64\\www';
+        const defaultWampPath = DEFAULT_PATHS.WAMP_WWW;
         let defaultUri: vscode.Uri | undefined;
 
         // Déterminer le chemin par défaut pour la boîte de dialogue
@@ -148,7 +151,7 @@ export class DaoGeneratorService {
             // Vérifier si le dossier sélectionné est dans wamp64\www
             if (selectedPath.toLowerCase().startsWith('d:\\wamp64\\www\\')) {
                 // Créer la structure local/__classes/DAO pour les projets wamp
-                const daoPath = path.join(selectedPath, 'local', '__classes', 'DAO');
+                const daoPath = path.join(selectedPath, ...DEFAULT_PATHS.LOCAL_CLASSES.split('/'));
 
                 try {
                     // Créer le dossier DAO s'il n'existe pas
@@ -164,7 +167,7 @@ export class DaoGeneratorService {
                 }
             } else {
                 // Pour les autres projets, créer un sous-dossier DAO
-                const daoPath = path.join(selectedPath, 'DAO');
+                const daoPath = path.join(selectedPath, DEFAULT_PATHS.DAO_FOLDER);
 
                 try {
                     // Créer le dossier DAO s'il n'existe pas
@@ -185,16 +188,14 @@ export class DaoGeneratorService {
     }
 
     private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string, filePath?: string): string {
-        const tableNameWithoutPrefix = tableName.replace(/^[^_]+_/, '');
-        const className = 'DAO' + this.toPascalCase(tableNameWithoutPrefix);
+        const className = StringUtil.generateDaoClassName(tableName);
         const attributes = this.generateAttributes(tableInfo.columns);
         const mappingArray = this.generateMappingArray(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
-        const crudMethods = this.generateCrudMethods(tableNameWithoutPrefix, tableInfo.columns, database);
-        const primaryKey = this.findPrimaryKey(tableInfo.columns);
+        const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
         
         // Déterminer la version à utiliser
-        let version = '1.00';
+        let version: string = VERSION_PATTERN.INITIAL;
         if (filePath && fs.existsSync(filePath)) {
             version = this.getNextVersion(filePath);
         }
@@ -203,7 +204,7 @@ export class DaoGeneratorService {
 /** 
  * Classe d'accès aux données -> table ${tableName}
  * @version	${version}
- * @date	${new Date().toISOString().slice(0, 10)}
+ * @date	${DateUtil.formatForPhpDoc()}
  * @Create	Généré automatiquement par PHP DAO Generator
  * @BDD	    ${database}
  * @table	${tableName}
@@ -259,14 +260,14 @@ ${crudMethods}
 
     private generateMappingArray(columns: ColumnInfo[]): string {
         return columns.map(column => {
-            const setterName = 'set' + this.toPascalCase(column.name);
+            const setterName = 'set' + StringUtil.toPascalCase(column.name);
             return `			'${column.name}' => '${setterName}'`;
         }).join(',\n');
     }
 
     private generateAccessors(columns: ColumnInfo[]): string {
         return columns.map(column => {
-            const methodName = this.toPascalCase(column.name);
+            const methodName = StringUtil.toPascalCase(column.name);
             const phpType = this.mapSqlTypeToPhpType(column.type);
             const comment = this.generateColumnComment(column);
 
@@ -285,10 +286,11 @@ ${crudMethods}
         }).join('\n\n');
     }
 
-    private generateCrudMethods(tableNameWithoutPrefix: string, columns: ColumnInfo[], database: string): string {
+    private generateCrudMethods(tableName: string, columns: ColumnInfo[], database: string): string {
+        const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
         const primaryKey = this.findPrimaryKey(columns);
         const pkName = primaryKey ? primaryKey.name : 'id';
-        const pkMethodName = this.toPascalCase(pkName);
+        const pkMethodName = StringUtil.toPascalCase(pkName);
 
         return `    /**
 	 * Lecture d'un enregistrement et transfert dans l'objet
@@ -426,10 +428,6 @@ ${crudMethods}
         return columns.find(col => col.key === 'PRI') || null;
     }
 
-    private toPascalCase(str: string): string {
-        return str.replace(/(^\w|_\w)/g, (match) => match.replace('_', '').toUpperCase());
-    }
-
     /**
      * Extrait la version actuelle d'un fichier DAO existant
      * @param filePath Chemin vers le fichier DAO
@@ -439,9 +437,9 @@ ${crudMethods}
         try {
             const content = fs.readFileSync(filePath, 'utf8');
             const versionMatch = content.match(/@version\s+(\d+\.\d+)/);
-            return versionMatch ? versionMatch[1] : '1.00';
+            return versionMatch ? versionMatch[1] : VERSION_PATTERN.INITIAL;
         } catch (error) {
-            return '1.00';
+            return VERSION_PATTERN.INITIAL;
         }
     }
 
@@ -455,7 +453,7 @@ ${crudMethods}
         const [major, minor] = currentVersion.split('.').map(Number);
         
         // Incrémenter la partie mineure de 10
-        const newMinor = minor + 10;
+        const newMinor = minor + VERSION_PATTERN.INCREMENT;
         
         return `${major}.${newMinor.toString().padStart(2, '0')}`;
     }
@@ -466,16 +464,8 @@ ${crudMethods}
         }
 
         const fileDir = path.dirname(filePath);
-        const fileName = path.basename(filePath, '.php');
-        const timestamp = new Date().toLocaleString('fr-FR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).replace(/[\/\s:]/g, '-'); // Format: DD-MM-YYYY-HH-mm-ss
+        const fileName = path.basename(filePath, FILE_EXTENSIONS.PHP);
+        const timestamp = DateUtil.formatFrenchDateTime();
 
         // Créer le dossier backup s'il n'existe pas
         const backupDir = path.join(fileDir, 'backup');
@@ -484,7 +474,7 @@ ${crudMethods}
         }
 
         // Nom du fichier de backup
-        const backupFileName = `${fileName}_backup_${timestamp}.php`;
+        const backupFileName = `${fileName}_backup_${timestamp}${FILE_EXTENSIONS.PHP}`;
         const backupFilePath = path.join(backupDir, backupFileName);
 
         try {

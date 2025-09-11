@@ -1,19 +1,23 @@
 import * as mysql from 'mysql2/promise';
 import { DatabaseConnection, TableInfo, ColumnInfo } from '../types/Connection';
+import { DATABASE_SYSTEM_SCHEMAS } from '../constants/AppConstants';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 export class DatabaseService {
     private connections: Map<string, mysql.Connection> = new Map();
 
     public async testConnection(connection: DatabaseConnection): Promise<boolean> {
-        try {
-            const conn = await this.createConnection(connection);
-            await conn.ping();
-            await conn.end();
-            return true;
-        } catch (error) {
-            console.error('Connection test failed:', error);
-            return false;
-        }
+        const result = await ErrorHandler.handleAsync(
+            'test database connection',
+            async () => {
+                const conn = await this.createConnection(connection);
+                await conn.ping();
+                await conn.end();
+                return true;
+            },
+            false
+        );
+        return result === true;
     }
 
     public async connect(connection: DatabaseConnection): Promise<void> {
@@ -56,7 +60,7 @@ export class DatabaseService {
 
             const databases = (rows as any[])
                 .map(row => row.Database)
-                .filter(db => !['information_schema', 'performance_schema', 'mysql', 'sys'].includes(db));
+                .filter(db => !DATABASE_SYSTEM_SCHEMAS.includes(db));
 
             return databases;
         } catch (error) {
