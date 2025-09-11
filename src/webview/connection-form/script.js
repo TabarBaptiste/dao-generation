@@ -4,6 +4,8 @@ const vscode = acquireVsCodeApi();
 // State
 let availableDatabases = [];
 let isEditMode = false;
+let autoLoadTimeout = null; // Timer pour le rechargement automatique
+let lastConnectionData = null; // Stockage des dernières données de connexion
 
 // DOM elements
 let formElements = {};
@@ -64,6 +66,13 @@ function setupEventListeners() {
     // Auto-generate connection name based on host and database
     formElements.host.addEventListener('input', updateConnectionName);
     formElements.database.addEventListener('change', updateConnectionName);
+    
+    // Auto-load databases when all required fields are filled
+    formElements.host.addEventListener('input', scheduleAutoLoadDatabases);
+    formElements.port.addEventListener('input', scheduleAutoLoadDatabases);
+    formElements.username.addEventListener('input', scheduleAutoLoadDatabases);
+    formElements.password.addEventListener('input', scheduleAutoLoadDatabases);
+    formElements.type.addEventListener('change', scheduleAutoLoadDatabases);
     
     // Listen for messages from the extension
     window.addEventListener('message', event => {
@@ -184,7 +193,14 @@ function handleDatabasesLoaded(databases, error) {
     });
     
     availableDatabases = databases;
-    showStatus(`Loaded ${databases.length} database(s)`, true);
+    
+    // Message différent selon si c'est un chargement automatique ou manuel
+    const isAutoLoad = autoLoadTimeout === null && databases.length > 0;
+    const message = isAutoLoad 
+        ? `${databases.length} database(s) loaded automatically` 
+        : `Loaded ${databases.length} database(s)`;
+    
+    showStatus(message, true);
     
     // Update connection name if field is empty
     updateConnectionName();
@@ -204,6 +220,10 @@ function getFormData() {
 
 function validateRequiredFields(data) {
     return data.name && data.host && data.port && !isNaN(data.port) && data.port > 0 && data.port <= 65535 && data.username && data.password;
+}
+
+function validateConnectionFields(data) {
+    return data.host && data.port && !isNaN(data.port) && data.port > 0 && data.port <= 65535 && data.username && data.password;
 }
 
 function showStatus(message, isSuccess) {
@@ -231,6 +251,12 @@ function setButtonLoading(button, loading, text) {
 }
 
 function cancel() {
+    // Nettoyer le timeout avant de fermer
+    if (autoLoadTimeout) {
+        clearTimeout(autoLoadTimeout);
+        autoLoadTimeout = null;
+    }
+    
     vscode.postMessage({
         command: 'cancel'
     });
@@ -252,6 +278,82 @@ function updateConnectionName() {
             formElements.name.value = '';
         }
     // }
+}
+
+/**
+ * Planifie le rechargement automatique des bases de données
+ */
+function scheduleAutoLoadDatabases() {
+    // Annuler le timer précédent s'il existe
+    if (autoLoadTimeout) {
+        clearTimeout(autoLoadTimeout);
+        autoLoadTimeout = null;
+    }
+    
+    // Vérifier si tous les champs requis pour la connexion sont remplis
+    const data = getFormData();
+    const hasRequiredConnectionFields = validateConnectionFields(data);
+    
+    if (hasRequiredConnectionFields) {
+        // Vérifier si les données de connexion ont changé
+        const currentConnectionData = {
+            host: data.host,
+            port: data.port,
+            username: data.username,
+            password: data.password,
+            type: data.type
+        };
+        
+        const connectionDataChanged = !lastConnectionData || 
+            JSON.stringify(currentConnectionData) !== JSON.stringify(lastConnectionData);
+        
+        if (connectionDataChanged) {
+            // Programmer le rechargement automatique après 1.5 secondes
+            autoLoadTimeout = setTimeout(() => {
+                // Vérifier une dernière fois que les champs sont toujours remplis
+                const finalData = getFormData();
+                
+                if (validateConnectionFields(finalData)) {
+                    // Éviter de recharger si le bouton est déjà en cours de chargement
+                    if (!formElements.loadDbBtn.disabled) {
+                        console.log('Auto-loading databases...');
+                        loadDatabasesAuto();
+                    }
+                }
+                autoLoadTimeout = null;
+            }, 1500); // 1.5 secondes de délai
+            
+            // Sauvegarder les nouvelles données de connexion
+            lastConnectionData = currentConnectionData;
+        }
+    } else {
+        // Si les champs requis ne sont pas remplis, réinitialiser
+        lastConnectionData = null;
+    }
+}
+
+/**
+ * Charge les bases de données automatiquement (version silencieuse)
+ */
+function loadDatabasesAuto() {
+    const data = getFormData();
+    
+    // Validation finale avant le chargement
+    if (!validateConnectionFields(data)) {
+        return;
+    }
+    
+    // Indiquer visuellement que le chargement automatique est en cours
+    setButtonLoading(formElements.loadDbBtn, true, '⏳');
+    formElements.loadDbBtn.classList.add('spinning');
+    
+    // Afficher un message discret
+    showStatus('Loading databases automatically...', true);
+    
+    vscode.postMessage({
+        command: 'loadDatabases',
+        data: data
+    });
 }
 
 // Form validation helpers
@@ -308,3 +410,11 @@ document.addEventListener('input', saveState);
 
 // Restore state on load
 restoreState();
+
+// Nettoyer les timers lors de la fermeture de la fenêtre
+window.addEventListener('beforeunload', function() {
+    if (autoLoadTimeout) {
+        clearTimeout(autoLoadTimeout);
+        autoLoadTimeout = null;
+    }
+});
