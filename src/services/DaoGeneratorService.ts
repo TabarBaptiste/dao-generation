@@ -20,7 +20,7 @@ export class DaoGeneratorService {
     ): Promise<void> {
         try {
             // Demander le dossier de destination
-            const outputFolder = await this.getOutputFolder(options.outputPath);
+            const outputFolder = await this.getOutputFolder(options.outputPath, database);
             if (!outputFolder) {
                 vscode.window.showWarningMessage('Génération annulée : aucun dossier sélectionné.');
                 return;
@@ -82,7 +82,7 @@ export class DaoGeneratorService {
         }
     }
 
-    private async getOutputFolder(suggestedPath?: string): Promise<string | undefined> {
+    private async getOutputFolder(suggestedPath?: string, database?: string): Promise<string | undefined> {
         if (suggestedPath && fs.existsSync(suggestedPath)) {
             return suggestedPath;
         }
@@ -93,7 +93,36 @@ export class DaoGeneratorService {
 
         // Déterminer le chemin par défaut pour la boîte de dialogue
         if (fs.existsSync(defaultWampPath)) {
-            defaultUri = vscode.Uri.file(defaultWampPath);
+            // Si le nom de la BDD correspond à un sous-dossier de www, l'ouvrir par défaut
+            if (database) {
+                // Essayer plusieurs variations du nom de la base de données
+                const possibleFolderNames = [
+                    database, // Nom exact de la BDD
+                    database.toLowerCase(), // En minuscules
+                    database.toUpperCase(), // En majuscules
+                    // Enlever les préfixes communs (ex: rv_myproject -> myproject)
+                    database.replace(/^[a-zA-Z]+_/, ''),
+                    database.replace(/^[a-zA-Z]+_/, '').toLowerCase(),
+                    database.replace(/^[a-zA-Z]+_/, '').toUpperCase()
+                ];
+
+                // Chercher le premier dossier qui existe
+                for (const folderName of possibleFolderNames) {
+                    const projectPath = path.join(defaultWampPath, folderName);
+                    if (fs.existsSync(projectPath)) {
+                        defaultUri = vscode.Uri.file(projectPath);
+                        vscode.window.showInformationMessage(`Projet détecté automatiquement: ${folderName}`);
+                        break;
+                    }
+                }
+                
+                // Si aucun projet trouvé, utiliser www par défaut
+                if (!defaultUri) {
+                    defaultUri = vscode.Uri.file(defaultWampPath);
+                }
+            } else {
+                defaultUri = vscode.Uri.file(defaultWampPath);
+            }
         } else {
             // Si wamp64 n'existe pas, essayer d'utiliser le workspace
             const workspaceFolders = vscode.workspace.workspaceFolders;
