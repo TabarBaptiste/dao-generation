@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.0...v1.4.1) (2025-09-11)
+
+
+### Bug Fixes
+
+* Ajout de la vérification des doublons lors de l'ajout de connexions ([4560a08](https://github.com/TabarBaptiste/dao-generation/commit/4560a087bb73205cbf6117f291b761cf4bcadba7))
+
 # [1.4.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.3.0...v1.4.0) (2025-09-10)
 
 
