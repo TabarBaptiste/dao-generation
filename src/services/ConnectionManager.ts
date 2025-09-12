@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import { DatabaseConnection } from '../types/Connection';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
+import { EncryptionUtil } from '../utils/EncryptionUtil';
+import { ErrorHandler } from '../utils/ErrorHandler';
+import { STORAGE_KEYS, ENCRYPTION } from '../constants/AppConstants';
 
 export class ConnectionManager {
-    private static readonly STORAGE_KEY = 'phpDaoGenerator.connections';
-    private static readonly ENCRYPTION_KEY = 'phpDaoGenerator_storage_key_v1'; // Clé pour le stockage local
+    private static readonly STORAGE_KEY = STORAGE_KEYS.CONNECTIONS;
+    private static readonly ENCRYPTION_KEY = ENCRYPTION.KEY;
     private connections: DatabaseConnection[] = [];
 
     constructor(private context: vscode.ExtensionContext) {
@@ -60,33 +62,31 @@ export class ConnectionManager {
         if (stored) {
             // Déchiffrer les mots de passe lors du chargement
             this.connections = stored.map(conn => {
-                try {
-                    // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
-                    if (conn.encryptedPassword && conn.passwordIv) {
-                        const decryptedPassword = this.decryptPassword(
-                            conn.encryptedPassword,
-                            conn.passwordIv,
-                            ConnectionManager.ENCRYPTION_KEY
-                        );
+                // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
+                if (conn.encryptedPassword && conn.passwordIv) {
+                    const decryptedPassword = EncryptionUtil.safeDecrypt(
+                        conn.encryptedPassword,
+                        conn.passwordIv,
+                        ConnectionManager.ENCRYPTION_KEY
+                    );
+                    if (decryptedPassword === null) {
+                        ErrorHandler.logError('connection decryption', `Failed to decrypt password for connection: ${conn.name}`);
                         return {
                             ...conn,
-                            password: decryptedPassword,
+                            password: '',
                             encryptedPassword: undefined,
                             passwordIv: undefined
                         };
                     }
-                    // Si pas de chiffrement, retourner tel quel (rétrocompatibilité)
-                    return conn;
-                } catch (error) {
-                    console.error('Failed to decrypt password for connection:', conn.name, error);
-                    // En cas d'erreur de déchiffrement, garder la connexion mais sans mot de passe
                     return {
                         ...conn,
-                        password: '',
+                        password: decryptedPassword,
                         encryptedPassword: undefined,
                         passwordIv: undefined
                     };
                 }
+                // Si pas de chiffrement, retourner tel quel (rétrocompatibilité)
+                return conn;
             });
         }
     }
@@ -94,17 +94,9 @@ export class ConnectionManager {
     private async saveConnections(): Promise<void> {
         // Chiffrer les mots de passe avant la sauvegarde
         const connectionsToSave = this.connections.map(conn => {
-            try {
-                const encrypted = this.encryptPassword(conn.password, ConnectionManager.ENCRYPTION_KEY);
-                return {
-                    ...conn,
-                    password: undefined, // Supprimer le mot de passe en clair
-                    encryptedPassword: encrypted.encrypted,
-                    passwordIv: encrypted.iv
-                };
-            } catch (error) {
-                console.error('Failed to encrypt password for connection:', conn.name, error);
-                // En cas d'erreur de chiffrement, sauvegarder sans mot de passe
+            const encrypted = EncryptionUtil.safeEncrypt(conn.password, ConnectionManager.ENCRYPTION_KEY);
+            if (!encrypted) {
+                ErrorHandler.logError('connection encryption', `Failed to encrypt password for connection: ${conn.name}`);
                 return {
                     ...conn,
                     password: undefined,
@@ -112,6 +104,12 @@ export class ConnectionManager {
                     passwordIv: undefined
                 };
             }
+            return {
+                ...conn,
+                password: undefined, // Supprimer le mot de passe en clair
+                encryptedPassword: encrypted.encrypted,
+                passwordIv: encrypted.iv
+            };
         });
 
         await this.context.globalState.update(ConnectionManager.STORAGE_KEY, connectionsToSave);
@@ -144,33 +142,6 @@ export class ConnectionManager {
         return database 
             ? `${connection.host}:${connection.port}/${database}`
             : `${connection.host}:${connection.port}`;
-    }
-
-    private encryptPassword(password: string, masterKey: string): { encrypted: string, iv: string } {
-        const algorithm = 'aes-256-cbc';
-        const key = crypto.scryptSync(masterKey, 'salt', 32);
-        const iv = crypto.randomBytes(16);
-
-        const cipher = crypto.createCipheriv(algorithm, key, iv);
-        let encrypted = cipher.update(password, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-
-        return {
-            encrypted: encrypted,
-            iv: iv.toString('hex')
-        };
-    }
-
-    private decryptPassword(encryptedData: string, iv: string, masterKey: string): string {
-        const algorithm = 'aes-256-cbc';
-        const key = crypto.scryptSync(masterKey, 'salt', 32);
-        const ivBuffer = Buffer.from(iv, 'hex');
-
-        const decipher = crypto.createDecipheriv(algorithm, key, ivBuffer);
-        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-
-        return decrypted;
     }
 
     public async exportConnections(): Promise<void> {
@@ -208,7 +179,11 @@ export class ConnectionManager {
 
                     // Encrypt password if encryption is enabled
                     if (useEncryption && encryptionPassword) {
-                        const encrypted = this.encryptPassword(conn.password, encryptionPassword);
+                        const encrypted = EncryptionUtil.safeEncrypt(conn.password, encryptionPassword);
+                        if (!encrypted) {
+                            ErrorHandler.logError('export encryption', `Failed to encrypt password for connection: ${conn.name}`);
+                            return exportConn; // Return without encrypted password
+                        }
                         return {
                             ...exportConn,
                             password: encrypted.encrypted,
@@ -238,8 +213,8 @@ export class ConnectionManager {
                 vscode.window.showInformationMessage(`Successfully exported ${this.connections.length} connection(s) to ${saveUri.fsPath}${encryptionStatus}`);
             }
         } catch (error) {
-            console.error('Export error:', error);
-            vscode.window.showErrorMessage(`Failed to export connections: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            ErrorHandler.logError('export connections', error);
+            ErrorHandler.showError('export connections', error);
         }
     }
 
@@ -314,7 +289,11 @@ export class ConnectionManager {
                             continue;
                         }
                         try {
-                            password = this.decryptPassword(conn.password, conn.passwordIv, decryptionPassword);
+                            password = EncryptionUtil.safeDecrypt(conn.password, conn.passwordIv, decryptionPassword);
+                            if (password === null) {
+                                errors.push(`Failed to decrypt password for connection: ${conn.name}`);
+                                continue;
+                            }
                         } catch (decryptError) {
                             errors.push(`Failed to decrypt password for connection: ${conn.name}`);
                             continue;
@@ -480,8 +459,8 @@ export class ConnectionManager {
                 }
             }
         } catch (error) {
-            console.error('Import error:', error);
-            vscode.window.showErrorMessage(`Failed to import connections: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            ErrorHandler.logError('import connections', error);
+            ErrorHandler.showError('import connections', error);
         }
     }
 }

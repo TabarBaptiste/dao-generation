@@ -4,6 +4,8 @@ import { ConnectionManager } from '../services/ConnectionManager';
 import { ConnectionFormPanel } from '../panels/ConnectionFormPanel';
 import { TableSelectionPanel } from '../panels/TableSelectionPanel';
 import { DatabaseService } from '../services/DatabaseService';
+import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 export class DatabaseConnectionTreeItem extends vscode.TreeItem {
     constructor(
@@ -134,6 +136,17 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     private async getDatabasesForConnection(connection: DatabaseConnection): Promise<DatabaseConnectionTreeItem[]> {
         try {
+            // Si la connexion a une base de données spécifique, afficher uniquement celle-ci
+            if (connection.database) {
+                return [new DatabaseConnectionTreeItem(
+                    connection,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'database',
+                    connection.database
+                )];
+            }
+            
+            // Sinon, afficher toutes les bases de données disponibles
             const databases = await this.databaseService.getDatabases(connection);
             return databases.map(db => new DatabaseConnectionTreeItem(
                 connection,
@@ -164,34 +177,19 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     }
 
     public async addConnection(): Promise<void> {
-        const panel = new ConnectionFormPanel();
-        const formData = await panel.show(undefined, this.extensionUri);
+        const panel = new ConnectionFormPanel(this.extensionUri);
+        const formData = await panel.show();
 
         if (formData) {
-            const wasAdded = await this.connectionManager.addConnection({
-                name: formData.name,
-                host: formData.host,
-                port: formData.port,
-                username: formData.username,
-                password: formData.password,
-                database: formData.database || undefined,
-                type: formData.type
-            });
+            const connectionData = DatabaseConnectionFactory.createConnectionData(formData);
+            const wasAdded = await this.connectionManager.addConnection(connectionData);
 
             if (wasAdded) {
                 this.refresh();
                 vscode.window.showInformationMessage(`Connection "${formData.name}" added successfully!`);
             } else {
                 // Utiliser la nouvelle fonction pour générer une description lisible
-                const serverInfo = this.connectionManager.getConnectionDescription({
-                    name: formData.name,
-                    host: formData.host,
-                    port: formData.port,
-                    username: formData.username,
-                    password: formData.password,
-                    database: formData.database || undefined,
-                    type: formData.type
-                });
+                const serverInfo = this.connectionManager.getConnectionDescription(connectionData);
                 vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos connexions.`);
             }
         }
@@ -199,8 +197,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     public async editConnection(item: DatabaseConnectionTreeItem): Promise<void> {
         const connection = item.connection;
-        const panel = new ConnectionFormPanel();
-        const formData = await panel.show({
+        const panel = new ConnectionFormPanel(this.extensionUri, {
             name: connection.name,
             host: connection.host,
             port: connection.port,
@@ -208,18 +205,12 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             password: connection.password,
             database: connection.database || '',
             type: connection.type
-        }, this.extensionUri);
+        });
+        const formData = await panel.show();
 
         if (formData) {
-            await this.connectionManager.updateConnection(connection.id, {
-                name: formData.name,
-                host: formData.host,
-                port: formData.port,
-                username: formData.username,
-                password: formData.password,
-                database: formData.database || undefined,
-                type: formData.type
-            });
+            const updateData = DatabaseConnectionFactory.createConnectionData(formData);
+            await this.connectionManager.updateConnection(connection.id, updateData);
 
             this.refresh();
             vscode.window.showInformationMessage(`Connection "${formData.name}" updated successfully!`);
@@ -242,36 +233,40 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     }
 
     public async connectToDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
-        try {
-            await this.databaseService.connect(item.connection);
-            
-            // Update connection status
-            await this.connectionManager.updateConnection(item.connection.id, { 
-                isConnected: true,
-                lastConnected: new Date() 
-            });
-            
-            this.refresh();
-            vscode.window.showInformationMessage(`Connected to "${item.connection.name}" successfully!`);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to connect to "${item.connection.name}": ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        const success = await ErrorHandler.handleAsync(
+            `connect to "${item.connection.name}"`,
+            async () => {
+                await this.databaseService.connect(item.connection);
+                
+                // Update connection status
+                await this.connectionManager.updateConnection(item.connection.id, { 
+                    isConnected: true,
+                    lastConnected: new Date() 
+                });
+                
+                this.refresh();
+                vscode.window.showInformationMessage(`Connected to "${item.connection.name}" successfully!`);
+                return true;
+            }
+        );
     }
 
     public async disconnectFromDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
-        try {
-            await this.databaseService.disconnect(item.connection.id);
-            
-            // Update connection status
-            await this.connectionManager.updateConnection(item.connection.id, { 
-                isConnected: false 
-            });
-            
-            this.refresh();
-            vscode.window.showInformationMessage(`Disconnected from "${item.connection.name}" successfully!`);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to disconnect from "${item.connection.name}": ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        const success = await ErrorHandler.handleAsync(
+            `disconnect from "${item.connection.name}"`,
+            async () => {
+                await this.databaseService.disconnect(item.connection.id);
+                
+                // Update connection status
+                await this.connectionManager.updateConnection(item.connection.id, { 
+                    isConnected: false 
+                });
+                
+                this.refresh();
+                vscode.window.showInformationMessage(`Disconnected from "${item.connection.name}" successfully!`);
+                return true;
+            }
+        );
     }
 
     public async openTableSelection(item: DatabaseConnectionTreeItem): Promise<void> {
@@ -286,11 +281,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             return;
         }
 
-        try {
-            await TableSelectionPanel.createOrShow(item.connection, databaseName, this.databaseService, this.extensionUri);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to open table selection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        await ErrorHandler.handleAsync(
+            'open table selection',
+            () => TableSelectionPanel.createOrShow(item.connection, databaseName, this.databaseService, this.extensionUri)
+        );
     }
 
     public async exportConnections(): Promise<void> {
