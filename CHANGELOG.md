@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.4...v1.4.5) (2025-09-12)
+
+
+### Bug Fixes
+
+* Mise à jour des traductions et des libellés dans l'interface utilisateur ([1797283](https://github.com/TabarBaptiste/dao-generation/commit/1797283b4a37bcee05ddb2e983f89fc8b08e4da9))
+
 ## [1.4.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.3...v1.4.4) (2025-09-12)
 
 
