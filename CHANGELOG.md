@@ -1,3 +1,12 @@
+## [1.4.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.2...v1.4.3) (2025-09-12)
+
+
+### Bug Fixes
+
+* améliore la gestion du chargement des bases de données avec des messages contextuels et un chargement automatique ([f88b0ee](https://github.com/TabarBaptiste/dao-generation/commit/f88b0eebe5d2d0dbb36702422ba884fc5a0d37e3))
+* refactor(ConnectionFormPanel) : simplifie la méthode d'affichage en supprimant les paramètres inutilisés ([876cced](https://github.com/TabarBaptiste/dao-generation/commit/876cced9fb9ed2e25c84bc03ec3596b32382fc0d))
+* une base données affichée si une sélectionnée et réinitialise les bases de données en cas d'échec ([7e88bc3](https://github.com/TabarBaptiste/dao-generation/commit/7e88bc34347fd523968b319434fc7994761528db))
+
 ## [1.4.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.1...v1.4.2) (2025-09-11)
 
 
