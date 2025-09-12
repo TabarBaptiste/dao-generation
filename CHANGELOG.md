@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.3...v1.4.4) (2025-09-12)
+
+
+### Bug Fixes
+
+* Traduction de l'anglais au français resolved [#17](https://github.com/TabarBaptiste/dao-generation/issues/17) ([8188643](https://github.com/TabarBaptiste/dao-generation/commit/8188643278c79286cde42a755449dfb380b3c256))
+
 ## [1.4.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.2...v1.4.3) (2025-09-12)
 
 
