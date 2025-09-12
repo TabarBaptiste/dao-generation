@@ -23,10 +23,9 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         return 'connection-form';
     }
 
-    public async show(existingData?: ConnectionFormData, extensionUri?: vscode.Uri): Promise<ConnectionFormData | undefined> {
+    public async show(): Promise<ConnectionFormData | undefined> {
         return new Promise(async (resolve) => {
             this.resolve = resolve;
-            this.existingData = existingData;
             await this.createPanel();
         });
     }
