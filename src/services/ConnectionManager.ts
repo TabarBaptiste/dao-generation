@@ -28,7 +28,7 @@ export class ConnectionManager {
 
         // Vérifier s'il existe déjà une connexion identique
         const existingConnection = this.connections.find(conn => this.isSameConnection(conn, newConnection));
-        
+
         if (existingConnection) {
             // Retourner false pour indiquer que la connexion n'a pas été ajoutée (doublon détecté)
             return false;
@@ -70,7 +70,7 @@ export class ConnectionManager {
                         ConnectionManager.ENCRYPTION_KEY
                     );
                     if (decryptedPassword === null) {
-                        ErrorHandler.logError('connection decryption', `Failed to decrypt password for connection: ${conn.name}`);
+                        ErrorHandler.logError('déchiffrement connexion', `Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
                         return {
                             ...conn,
                             password: '',
@@ -96,7 +96,7 @@ export class ConnectionManager {
         const connectionsToSave = this.connections.map(conn => {
             const encrypted = EncryptionUtil.safeEncrypt(conn.password, ConnectionManager.ENCRYPTION_KEY);
             if (!encrypted) {
-                ErrorHandler.logError('connection encryption', `Failed to encrypt password for connection: ${conn.name}`);
+                ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
                 return {
                     ...conn,
                     password: undefined,
@@ -126,7 +126,7 @@ export class ConnectionManager {
         // Normaliser les valeurs de base de données (undefined, null, "" sont tous traités comme "pas de base")
         const db1 = conn1.database || undefined;
         const db2 = conn2.database || undefined;
-        
+
         return conn1.host === conn2.host &&
             conn1.port === conn2.port &&
             conn1.username === conn2.username &&
@@ -139,7 +139,7 @@ export class ConnectionManager {
      */
     public getConnectionDescription(connection: DatabaseConnection | Omit<DatabaseConnection, 'id'>): string {
         const database = connection.database || undefined;
-        return database 
+        return database
             ? `${connection.host}:${connection.port}/${database}`
             : `${connection.host}:${connection.port}`;
     }
@@ -147,24 +147,24 @@ export class ConnectionManager {
     public async exportConnections(): Promise<void> {
         try {
             if (this.connections.length === 0) {
-                vscode.window.showInformationMessage('No connections to export.');
+                vscode.window.showInformationMessage('Aucune connexion à exporter.');
                 return;
             }
 
-            // Ask for encryption password
+            // Demander un mot de passe de chiffrement
             const encryptionPassword = await vscode.window.showInputBox({
-                prompt: 'Enter a password to encrypt the connection passwords (leave empty for unencrypted export)',
+                prompt: 'Entrez un mot de passe pour chiffrer les mots de passe de connexion (laisser vide pour une exportation non chiffrée)',
                 password: true,
-                placeHolder: 'Encryption password (optional)'
+                placeHolder: 'Mot de passe de chiffrement (facultatif)'
             });
 
             if (encryptionPassword === undefined) {
-                return; // User cancelled
+                return; // Utilisateur a annulé
             }
 
             const useEncryption = encryptionPassword && encryptionPassword.trim().length > 0;
 
-            // Create export data structure
+            // Créer la structure de données d'exportation
             const exportData = {
                 exportDate: new Date().toISOString(),
                 version: '1.0.0',
@@ -172,17 +172,17 @@ export class ConnectionManager {
                 connections: this.connections.map(conn => {
                     const exportConn = {
                         ...conn,
-                        // Remove runtime properties that shouldn't be exported
+                        // Supprimer les propriétés d'exécution qui ne doivent pas être exportées
                         isConnected: undefined,
                         lastConnected: undefined
                     };
 
-                    // Encrypt password if encryption is enabled
+                    // Chiffrer le mot de passe si le chiffrement est activé
                     if (useEncryption && encryptionPassword) {
                         const encrypted = EncryptionUtil.safeEncrypt(conn.password, encryptionPassword);
                         if (!encrypted) {
-                            ErrorHandler.logError('export encryption', `Failed to encrypt password for connection: ${conn.name}`);
-                            return exportConn; // Return without encrypted password
+                            ErrorHandler.logError('chiffrement exportation', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
+                            return exportConn; // Retourner sans mot de passe chiffré
                         }
                         return {
                             ...exportConn,
@@ -195,40 +195,40 @@ export class ConnectionManager {
                 })
             };
 
-            // Show save dialog
+            // Afficher la boîte de dialogue de sauvegarde
             const saveUri = await vscode.window.showSaveDialog({
                 defaultUri: vscode.Uri.file('php-dao-connections.json'),
                 filters: {
-                    'JSON Files': ['json'],
-                    'All Files': ['*']
+                    'Fichiers JSON': ['json'],
+                    'Tous les fichiers': ['*']
                 },
-                saveLabel: 'Export Connections'
+                saveLabel: 'Exporter les connexions'
             });
 
             if (saveUri) {
                 const jsonContent = JSON.stringify(exportData, null, 2);
                 await vscode.workspace.fs.writeFile(saveUri, Buffer.from(jsonContent, 'utf8'));
 
-                const encryptionStatus = useEncryption ? ' (passwords encrypted)' : ' (passwords in plain text)';
-                vscode.window.showInformationMessage(`Successfully exported ${this.connections.length} connection(s) to ${saveUri.fsPath}${encryptionStatus}`);
+                const encryptionStatus = useEncryption ? ' (mots de passe chiffrés)' : ' (mots de passe en texte clair)';
+                vscode.window.showInformationMessage(`${this.connections.length} connexion(s) exportée(s) avec succès vers ${saveUri.fsPath}${encryptionStatus}`);
             }
         } catch (error) {
-            ErrorHandler.logError('export connections', error);
-            ErrorHandler.showError('export connections', error);
+            ErrorHandler.logError('exportation connexions', error);
+            ErrorHandler.showError('exportation connexions', error);
         }
     }
 
     public async importConnections(): Promise<void> {
         try {
-            // Show open dialog
+            // Afficher la boîte de dialogue d'ouverture
             const openUri = await vscode.window.showOpenDialog({
                 canSelectFiles: true,
                 canSelectMany: false,
                 filters: {
-                    'JSON Files': ['json'],
-                    'All Files': ['*']
+                    'Fichiers JSON': ['json'],
+                    'Tous les fichiers': ['*']
                 },
-                openLabel: 'Import Connections'
+                openLabel: 'Importer les connexions'
             });
 
             if (!openUri || openUri.length === 0) {
@@ -243,59 +243,59 @@ export class ConnectionManager {
             try {
                 importData = JSON.parse(jsonContent);
             } catch (parseError) {
-                throw new Error('Invalid JSON file format');
+                throw new Error('Format de fichier JSON invalide');
             }
 
-            // Validate import data structure
+            // Valider la structure des données d'importation
             if (!importData.connections || !Array.isArray(importData.connections)) {
-                throw new Error('Invalid file format: missing connections array');
+                throw new Error('Format de fichier invalide : tableau de connexions manquant');
             }
 
-            // Check if file contains encrypted passwords
+            // Vérifier si le fichier contient des mots de passe chiffrés
             const isEncrypted = importData.encrypted === true;
             let decryptionPassword: string | undefined;
 
             if (isEncrypted) {
                 decryptionPassword = await vscode.window.showInputBox({
-                    prompt: 'This file contains encrypted passwords. Enter the decryption password:',
+                    prompt: 'Ce fichier contient des mots de passe chiffrés. Entrez le mot de passe de déchiffrement :',
                     password: true,
-                    placeHolder: 'Decryption password'
+                    placeHolder: 'Mot de passe de déchiffrement'
                 });
 
                 if (!decryptionPassword) {
-                    vscode.window.showWarningMessage('Import cancelled: decryption password is required for encrypted files.');
+                    vscode.window.showWarningMessage('Importation annulée : un mot de passe de déchiffrement est requis pour les fichiers chiffrés.');
                     return;
                 }
             }
 
-            // Validate and decrypt connections
+            // Valider et déchiffrer les connexions
             const validConnections = [];
             const errors = [];
 
             for (const conn of importData.connections) {
                 try {
-                    // Basic validation
+                    // Validation de base
                     if (!conn.name || !conn.host || !conn.port || !conn.username ||
                         !conn.type || !['mysql', 'mariadb'].includes(conn.type)) {
-                        errors.push(`Invalid connection format: ${conn.name || 'unnamed'}`);
+                        errors.push(`Format de connexion invalide : ${conn.name || 'sans nom'}`);
                         continue;
                     }
 
-                    // Handle password decryption if needed
+                    // Gérer le déchiffrement du mot de passe si nécessaire
                     let password = conn.password;
                     if (isEncrypted && decryptionPassword) {
                         if (!conn.passwordIv) {
-                            errors.push(`Missing encryption data for connection: ${conn.name}`);
+                            errors.push(`Données de chiffrement manquantes pour la connexion : ${conn.name}`);
                             continue;
                         }
                         try {
                             password = EncryptionUtil.safeDecrypt(conn.password, conn.passwordIv, decryptionPassword);
                             if (password === null) {
-                                errors.push(`Failed to decrypt password for connection: ${conn.name}`);
+                                errors.push(`Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
                                 continue;
                             }
                         } catch (decryptError) {
-                            errors.push(`Failed to decrypt password for connection: ${conn.name}`);
+                            errors.push(`Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
                             continue;
                         }
                     }
@@ -303,46 +303,46 @@ export class ConnectionManager {
                     validConnections.push({
                         ...conn,
                         password: password,
-                        passwordIv: undefined // Remove encryption metadata
+                        passwordIv: undefined // Supprimer les métadonnées de chiffrement
                     });
                 } catch (error) {
-                    errors.push(`Error processing connection ${conn.name || 'unnamed'}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    errors.push(`Erreur lors du traitement de la connexion ${conn.name || 'sans nom'} : ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
                 }
             }
 
             if (validConnections.length === 0) {
                 const errorMessage = errors.length > 0
-                    ? `No valid connections found. Errors:\n${errors.join('\n')}`
-                    : 'No valid connections found in the import file';
+                    ? `Aucune connexion valide trouvée. Erreurs :\n${errors.join('\n')}`
+                    : 'Aucune connexion valide trouvée dans le fichier d\'importation';
                 throw new Error(errorMessage);
             }
 
-            // Ask user if they want to replace existing connections or merge
+            // Demander à l'utilisateur s'il veut remplacer les connexions existantes ou fusionner
             let importMode = 'merge';
             if (this.connections.length > 0) {
                 const choice = await vscode.window.showQuickPick([
                     {
-                        label: 'Merge (Smart)',
-                        description: 'Add new connections and update existing ones (no duplicates)',
+                        label: 'Fusion',
+                        description: 'Ajouter de nouvelles connexions et mettre à jour les existantes',
                         value: 'merge'
                     },
                     {
-                        label: 'Replace (Smart)',
-                        description: 'Replace only the connections being imported (others are kept)',
+                        label: 'Remplacement',
+                        description: 'Remplacer uniquement les connexions importées',
                         value: 'replace'
                     }
                 ], {
-                    placeHolder: 'Choose import mode'
+                    placeHolder: 'Choisir le mode d\'importation'
                 });
 
                 if (!choice) {
-                    return; // User cancelled
+                    return; // Utilisateur a annulé
                 }
 
                 importMode = choice.value;
             }
 
-            // Import connections avec gestion intelligente des doublons
+            // Importer les connexions avec gestion intelligente des doublons
             const importedConnections: DatabaseConnection[] = validConnections.map((conn: any) => ({
                 ...conn,
                 id: this.generateId(),
@@ -356,7 +356,7 @@ export class ConnectionManager {
             let autoUpdateRemaining = false;
 
             if (importMode === 'replace') {
-                // Mode Replace (Smart): Remplacer seulement les connexions importées
+                // Mode Remplacement (Intelligent): Remplacer seulement les connexions importées
                 for (const importedConn of importedConnections) {
                     const existingIndex = this.connections.findIndex(conn =>
                         this.isSameConnection(conn, importedConn)
@@ -376,7 +376,7 @@ export class ConnectionManager {
                     }
                 }
             } else {
-                // Mode Merge (Smart): Ajouter seulement les nouvelles, mettre à jour les existantes
+                // Mode Fusion (Intelligent): Ajouter seulement les nouvelles, mettre à jour les existantes
                 for (const importedConn of importedConnections) {
                     const existingIndex = this.connections.findIndex(conn =>
                         this.isSameConnection(conn, importedConn)
@@ -387,11 +387,11 @@ export class ConnectionManager {
                         if (!autoUpdateRemaining) {
                             // Demander si on veut mettre à jour la connexion existante
                             const updateChoice = await vscode.window.showQuickPick([
-                                { label: 'Yes', description: 'Update this connection', value: 'yes' },
-                                { label: 'No', description: 'Keep the existing connection', value: 'no' },
-                                { label: 'Yes to all', description: 'Update this and all remaining duplicates', value: 'yesAll' }
+                                { label: 'Oui', description: 'Mettre à jour cette connexion', value: 'yes' },
+                                { label: 'Non', description: 'Conserver la connexion existante', value: 'no' },
+                                { label: 'Oui pour tout', description: 'Mettre à jour celle-ci et tous les doublons restants', value: 'yesAll' }
                             ], {
-                                placeHolder: `Connection "${importedConn.name}" already exists. Update it?`
+                                placeHolder: `La connexion "${importedConn.name}" existe déjà. La mettre à jour ?`
                             });
 
                             if (!updateChoice) {
@@ -414,7 +414,7 @@ export class ConnectionManager {
                                 skippedCount++;
                             }
                         } else {
-                            // Mode auto-update activé
+                            // Mode mise à jour automatique activé
                             this.connections[existingIndex] = {
                                 ...importedConn,
                                 id: this.connections[existingIndex].id
@@ -431,36 +431,36 @@ export class ConnectionManager {
 
             await this.saveConnections();
 
-            let message = `Successfully imported connections: ${addedCount} added`;
+            let message = `Connexions importées avec succès : ${addedCount} ajoutées`;
             if (updatedCount > 0) {
-                message += `, ${updatedCount} updated`;
+                message += `, ${updatedCount} mises à jour`;
             }
             if (skippedCount > 0) {
-                message += `, ${skippedCount} skipped`;
+                message += `, ${skippedCount} ignorées`;
             }
             if (errors.length > 0) {
-                message += ` (${errors.length} connections had errors)`;
+                message += ` (${errors.length} connexions ont eu des erreurs)`;
             }
             if (isEncrypted) {
-                message += ` (passwords were decrypted)`;
+                message += ` (mots de passe déchiffrés)`;
             }
 
             vscode.window.showInformationMessage(message);
 
-            // Show detailed errors if any
-            if (errors.length > 0 && errors.length < 10) { // Don't spam if too many errors
+            // Afficher les erreurs détaillées si il y en a
+            if (errors.length > 0 && errors.length < 10) { // Ne pas spammer si trop d'erreurs
                 const showErrors = await vscode.window.showWarningMessage(
-                    `Some connections could not be imported. Show details?`,
-                    'Show Details'
+                    `Certaines connexions n'ont pas pu être importées. Afficher les détails ?`,
+                    'Afficher les détails'
                 );
                 if (showErrors) {
                     const errorDetails = errors.join('\n');
-                    vscode.window.showErrorMessage(`Import errors:\n${errorDetails}`);
+                    vscode.window.showErrorMessage(`Erreurs d'importation :\n${errorDetails}`);
                 }
             }
         } catch (error) {
-            ErrorHandler.logError('import connections', error);
-            ErrorHandler.showError('import connections', error);
+            ErrorHandler.logError('importation connexions', error);
+            ErrorHandler.showError('importation connexions', error);
         }
     }
 }

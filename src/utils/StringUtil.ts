@@ -1,3 +1,5 @@
+import { FILE_EXTENSIONS } from '../constants/AppConstants';
+
 /**
  * String manipulation utility functions
  * Centralizes common string operations to eliminate duplication
@@ -47,7 +49,7 @@ export class StringUtil {
      * @returns PHP file name
      */
     static generatePhpFileName(tableName: string): string {
-        return this.generateDaoClassName(tableName) + '.php';
+        return this.generateDaoClassName(tableName) + FILE_EXTENSIONS.PHP;
     }
 
     /**

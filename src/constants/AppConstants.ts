@@ -17,14 +17,21 @@ export const WEBVIEW_TYPES = {
 } as const;
 
 export const VIEW_TITLES = {
-    ADD_CONNECTION: 'Add Database Connection',
-    EDIT_CONNECTION: 'Edit Database Connection',
+    ADD_CONNECTION: 'Ajouter un serveur',
+    EDIT_CONNECTION: 'Modifier la connexion du serveur',
     TABLE_SELECTION: 'Tables'
+} as const;
+
+export const BUTTON_LABELS = {
+    CREATE: 'Créer',
+    UPDATE: 'Mettre à jour',
+    CANCEL: 'Annuler',
+    TEST_CONNECTION: 'Tester la Connexion'
 } as const;
 
 export const DATABASE_SYSTEM_SCHEMAS = [
     'information_schema',
-    'performance_schema', 
+    'performance_schema',
     'mysql',
     'sys'
 ] as const;

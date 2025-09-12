@@ -1,12 +1,13 @@
 import * as crypto from 'crypto';
+import { ENCRYPTION } from '../constants/AppConstants';
 
 /**
  * Utility class for encryption and decryption operations
  * Centralizes crypto operations to eliminate duplication
  */
 export class EncryptionUtil {
-    private static readonly ALGORITHM = 'aes-256-cbc';
-    private static readonly SALT = 'salt';
+    private static readonly ALGORITHM = ENCRYPTION.ALGORITHM;
+    private static readonly SALT = ENCRYPTION.SALT;
 
     /**
      * Encrypts a string using AES-256-CBC

@@ -16,9 +16,9 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
         public readonly tableName?: string
     ) {
         super(
-            itemType === 'connection' ? connection.name : 
-            itemType === 'database' ? (databaseName || '') :
-            (tableName || ''), 
+            itemType === 'connection' ? connection.name :
+                itemType === 'database' ? (databaseName || '') :
+                    (tableName || ''),
             collapsibleState
         );
 
@@ -27,7 +27,7 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
             this.description = `${connection.host}:${connection.port}${connection.database ? '/' + connection.database : ''}`;
             this.contextValue = connection.isConnected ? 'connectedConnection' : 'disconnectedConnection';
 
-            // Icon based on connection status
+            // Icône basée sur le statut de connexion
             this.iconPath = new vscode.ThemeIcon(
                 connection.isConnected ? 'database' : 'circle-outline',
                 connection.isConnected ? new vscode.ThemeColor('charts.green') : new vscode.ThemeColor('charts.red')
@@ -35,19 +35,19 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
         } else if (itemType === 'database') {
             this.contextValue = 'database';
             this.iconPath = new vscode.ThemeIcon('folder-library');
-            // Set command to open table selection on click
+            // Définir la commande pour ouvrir la sélection de table au clic
             this.command = {
                 command: 'phpDaoGenerator.openTableSelection',
-                title: 'Generate DAO',
+                title: 'Générer DAO',
                 arguments: [this]
             };
         } else if (itemType === 'table') {
             this.contextValue = 'table';
             this.iconPath = new vscode.ThemeIcon('table');
-            // Set command to open table selection on click
+            // Définir la commande pour ouvrir la sélection de table au clic
             this.command = {
                 command: 'phpDaoGenerator.openTableSelection',
-                title: 'Generate DAO',
+                title: 'Générer DAO',
                 arguments: [this]
             };
         }
@@ -57,7 +57,7 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
 export class DatabaseConnectionProvider implements vscode.TreeDataProvider<DatabaseConnectionTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void> = new vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<DatabaseConnectionTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
-    
+
     private sortMode: 'alphabetical' | 'date' = 'date';
 
     constructor(
@@ -75,7 +75,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
      */
     private sortConnections(connections: DatabaseConnection[]): DatabaseConnection[] {
         const sorted = [...connections]; // Copie pour éviter de muter l'original
-        
+
         if (this.sortMode === 'alphabetical') {
             // Tri alphabétique par nom
             return sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
@@ -95,11 +95,11 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
      */
     public toggleSortMode(): void {
         this.sortMode = this.sortMode === 'alphabetical' ? 'date' : 'alphabetical';
-        
+
         // Afficher le mode de tri actuel
         const sortModeText = this.sortMode === 'alphabetical' ? 'alphabétique' : 'date d\'ajout';
         vscode.window.showInformationMessage(`Connexions triées par ${sortModeText}`);
-        
+
         this.refresh();
     }
 
@@ -109,12 +109,12 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     getChildren(element?: DatabaseConnectionTreeItem): Thenable<DatabaseConnectionTreeItem[]> {
         if (!element) {
-            // Root level - return all connections with sorting
+            // Return all connections with sorting
             const connections = this.connectionManager.getConnections();
             const sortedConnections = this.sortConnections(connections);
             return Promise.resolve(
                 sortedConnections.map((conn: DatabaseConnection) => new DatabaseConnectionTreeItem(
-                    conn, 
+                    conn,
                     conn.isConnected ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                     'connection'
                 ))
@@ -122,12 +122,12 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
 
         if (element.itemType === 'connection' && element.connection.isConnected) {
-            // Return databases for connected connection
+            // Retourner les bases de données pour la connexion connectée
             return this.getDatabasesForConnection(element.connection);
         }
 
         if (element.itemType === 'database' && element.databaseName) {
-            // Return tables for database
+            // Retourner les tables pour la base de données
             return this.getTablesForDatabase(element.connection, element.databaseName);
         }
 
@@ -145,7 +145,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                     connection.database
                 )];
             }
-            
+
             // Sinon, afficher toutes les bases de données disponibles
             const databases = await this.databaseService.getDatabases(connection);
             return databases.map(db => new DatabaseConnectionTreeItem(
@@ -155,7 +155,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                 db
             ));
         } catch (error) {
-            console.error('Failed to get databases:', error);
+            console.error('Échec de récupération des bases de données :', error);
             return [];
         }
     }
@@ -171,7 +171,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                 table
             ));
         } catch (error) {
-            console.error('Failed to get tables:', error);
+            console.error('Échec de récupération des tables :', error);
             return [];
         }
     }
@@ -186,7 +186,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
             if (wasAdded) {
                 this.refresh();
-                vscode.window.showInformationMessage(`Connection "${formData.name}" added successfully!`);
+                vscode.window.showInformationMessage(`Connexion "${formData.name}" ajoutée avec succès !`);
             } else {
                 // Utiliser la nouvelle fonction pour générer une description lisible
                 const serverInfo = this.connectionManager.getConnectionDescription(connectionData);
@@ -213,39 +213,39 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             await this.connectionManager.updateConnection(connection.id, updateData);
 
             this.refresh();
-            vscode.window.showInformationMessage(`Connection "${formData.name}" updated successfully!`);
+            vscode.window.showInformationMessage(`Connexion "${formData.name}" mise à jour avec succès !`);
         }
     }
 
     public async deleteConnection(item: DatabaseConnectionTreeItem): Promise<void> {
         const connection = item.connection;
         const result = await vscode.window.showWarningMessage(
-            `Are you sure you want to delete the connection "${connection.name}"?`,
+            `Êtes-vous sûr de vouloir supprimer la connexion "${connection.name}" ?`,
             { modal: true },
-            'Delete'
+            'Supprimer'
         );
 
-        if (result === 'Delete') {
+        if (result === 'Supprimer') {
             await this.connectionManager.deleteConnection(connection.id);
             this.refresh();
-            vscode.window.showInformationMessage(`Connection "${connection.name}" deleted successfully!`);
+            vscode.window.showInformationMessage(`Connexion "${connection.name}" supprimée avec succès !`);
         }
     }
 
     public async connectToDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
         const success = await ErrorHandler.handleAsync(
-            `connect to "${item.connection.name}"`,
+            `connexion à "${item.connection.name}"`,
             async () => {
                 await this.databaseService.connect(item.connection);
-                
-                // Update connection status
-                await this.connectionManager.updateConnection(item.connection.id, { 
+
+                // Mettre à jour le statut de connexion
+                await this.connectionManager.updateConnection(item.connection.id, {
                     isConnected: true,
-                    lastConnected: new Date() 
+                    lastConnected: new Date()
                 });
-                
+
                 this.refresh();
-                vscode.window.showInformationMessage(`Connected to "${item.connection.name}" successfully!`);
+                vscode.window.showInformationMessage(`Connecté à "${item.connection.name}"`);
                 return true;
             }
         );
@@ -253,17 +253,17 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     public async disconnectFromDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
         const success = await ErrorHandler.handleAsync(
-            `disconnect from "${item.connection.name}"`,
+            `déconnexion de "${item.connection.name}"`,
             async () => {
                 await this.databaseService.disconnect(item.connection.id);
-                
-                // Update connection status
-                await this.connectionManager.updateConnection(item.connection.id, { 
-                    isConnected: false 
+
+                // Mettre à jour le statut de connexion
+                await this.connectionManager.updateConnection(item.connection.id, {
+                    isConnected: false
                 });
-                
+
                 this.refresh();
-                vscode.window.showInformationMessage(`Disconnected from "${item.connection.name}" successfully!`);
+                vscode.window.showInformationMessage(`Déconnecté de "${item.connection.name}"`);
                 return true;
             }
         );
@@ -271,18 +271,18 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     public async openTableSelection(item: DatabaseConnectionTreeItem): Promise<void> {
         let databaseName: string;
-        
+
         if (item.itemType === 'database' && item.databaseName) {
             databaseName = item.databaseName;
         } else if (item.itemType === 'table' && item.databaseName) {
             databaseName = item.databaseName;
         } else {
-            vscode.window.showErrorMessage('Unable to determine database for table selection.');
+            vscode.window.showErrorMessage('Impossible de déterminer la base de données pour la sélection de table.');
             return;
         }
 
         await ErrorHandler.handleAsync(
-            'open table selection',
+            'ouverture de la sélection de table',
             () => TableSelectionPanel.createOrShow(item.connection, databaseName, this.databaseService, this.extensionUri)
         );
     }
@@ -293,6 +293,6 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     public async importConnections(): Promise<void> {
         await this.connectionManager.importConnections();
-        this.refresh(); // Refresh the tree view to show imported connections
+        this.refresh(); // Rafraîchir la vue de l'arbre pour afficher les connexions importées
     }
 }

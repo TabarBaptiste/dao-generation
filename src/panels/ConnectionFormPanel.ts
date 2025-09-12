@@ -4,6 +4,7 @@ import { DatabaseService } from '../services/DatabaseService';
 import { BaseWebviewPanel } from './BaseWebviewPanel';
 import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
+import { VIEW_TITLES, BUTTON_LABELS } from '../constants/AppConstants';
 
 export class ConnectionFormPanel extends BaseWebviewPanel {
     private databaseService = new DatabaseService();
@@ -14,7 +15,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         super(
             extensionUri,
             'connectionForm',
-            existingData ? 'Edit Database Connection' : 'Add Database Connection'
+            existingData ? VIEW_TITLES.EDIT_CONNECTION : VIEW_TITLES.ADD_CONNECTION
         );
         this.existingData = existingData;
     }
@@ -33,11 +34,19 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
     protected async handleMessage(message: any): Promise<void> {
         switch (message.command) {
             case 'ready':
-                // Send initial data to webview
+                // Envoyer les données initiales au webview
                 this.sendMessage({
                     command: 'loadData',
                     data: this.existingData,
-                    isEdit: !!this.existingData
+                    isEdit: !!this.existingData,
+                    titles: {
+                        add: VIEW_TITLES.ADD_CONNECTION,
+                        edit: VIEW_TITLES.EDIT_CONNECTION
+                    },
+                    buttonLabels: {
+                        create: BUTTON_LABELS.CREATE,
+                        update: BUTTON_LABELS.UPDATE
+                    }
                 });
                 break;
             case 'submit':
@@ -61,7 +70,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         const connectionData = DatabaseConnectionFactory.createTempConnection(data);
 
         const result = await ErrorHandler.handleAsync(
-            'test database connection',
+            'test connexion base de données',
             () => this.databaseService.testConnection(connectionData),
             false
         );
@@ -70,7 +79,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         this.sendMessage({
             command: 'testConnectionResult',
             success,
-            message: success ? 'Connection successful!' : 'Connection failed. Please check your credentials.'
+            message: success ? 'Connexion réussie !' : 'Connexion échouée. Veuillez vérifier vos identifiants.'
         });
     }
 
@@ -78,7 +87,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         const connectionData = DatabaseConnectionFactory.createTempConnection(data);
 
         const databases = await ErrorHandler.handleAsync(
-            'load databases',
+            'charger bases de données',
             () => this.databaseService.getDatabases(connectionData),
             false
         );
@@ -88,8 +97,8 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         if (success) {
             // Succès : afficher le message de chargement approprié
             const message = isAutoLoad
-                ? `${databases.length} database(s) loaded automatically`
-                : `Loaded ${databases.length} database(s)`;
+                ? `${databases.length} base(s) de données chargée(s) automatiquement`
+                : `${databases.length} base(s) de données chargée(s)`;
 
             this.sendMessage({
                 command: 'databasesLoaded',
@@ -101,8 +110,8 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         } else {
             // Échec : message différent selon le contexte
             const message = isAutoLoad
-                ? 'Connection failed. Please check your credentials.'
-                : 'Failed to load databases';
+                ? 'Connexion échouée. Veuillez vérifier vos identifiants.'
+                : 'Échec du chargement des bases de données';
 
             this.sendMessage({
                 command: 'databasesLoaded',

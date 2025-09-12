@@ -8,7 +8,7 @@ export class DatabaseService {
 
     public async testConnection(connection: DatabaseConnection): Promise<boolean> {
         const result = await ErrorHandler.handleAsync(
-            'test database connection',
+            'test connexion base de données',
             async () => {
                 const conn = await this.createConnection(connection);
                 await conn.ping();
@@ -22,15 +22,15 @@ export class DatabaseService {
 
     public async connect(connection: DatabaseConnection): Promise<void> {
         try {
-            // Close existing connection if any
+            // Fermer la connexion existante s'il y en a une
             await this.disconnect(connection.id);
 
             const conn = await this.createConnection(connection);
             this.connections.set(connection.id, conn);
 
-            console.log(`dao Connected to ${connection.name}`);
+            console.log(`dao Connecté à ${connection.name}`);
         } catch (error) {
-            console.error(`Failed to connect to ${connection.name}:`, error);
+            console.error(`Échec de la connexion à ${connection.name}:`, error);
             throw error;
         }
     }
@@ -41,9 +41,9 @@ export class DatabaseService {
             try {
                 await conn.end();
                 this.connections.delete(connectionId);
-                console.log(`dao Disconnected from connection ${connectionId}`);
+                console.log(`dao Déconnecté de la connexion ${connectionId}`);
             } catch (error) {
-                console.error(`Error disconnecting from ${connectionId}:`, error);
+                console.error(`Erreur lors de la déconnexion de ${connectionId}:`, error);
             }
         }
     }
@@ -64,7 +64,7 @@ export class DatabaseService {
 
             return databases;
         } catch (error) {
-            console.error('Failed to get databases:', error);
+            console.error('Échec de la récupération des bases de données:', error);
             throw error;
         }
     }
@@ -75,10 +75,10 @@ export class DatabaseService {
         }
 
         try {
-            // Use a temporary connection like getDatabases does
+            // Utiliser une connexion temporaire comme le fait getDatabases
             const conn = await this.createConnection(connection);
 
-            // Use SHOW TABLES FROM database instead of USE + SHOW TABLES
+            // Utiliser SHOW TABLES FROM database au lieu de USE + SHOW TABLES
             const [rows] = await conn.execute(`SHOW TABLES FROM \`${database}\``);
 
             await conn.end();
@@ -86,17 +86,17 @@ export class DatabaseService {
             const tableKey = `Tables_in_${database}`;
             return (rows as any[]).map(row => row[tableKey]);
         } catch (error) {
-            console.error('Failed to get tables:', error);
+            console.error('Échec de la récupération des tables:', error);
             throw error;
         }
     }
 
     public async getTableInfo(connection: DatabaseConnection, database: string, tableName: string): Promise<TableInfo> {
         try {
-            // Use a temporary connection like the other methods
+            // Utiliser une connexion temporaire comme les autres méthodes
             const conn = await this.createConnection(connection);
 
-            // Use DESCRIBE database.table instead of USE + DESCRIBE
+            // Utiliser DESCRIBE database.table au lieu de USE + DESCRIBE
             const [rows] = await conn.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
 
             await conn.end();
@@ -115,7 +115,7 @@ export class DatabaseService {
                 columns
             };
         } catch (error) {
-            console.error('Failed to get table info:', error);
+            console.error('Échec de la récupération des informations de table:', error);
             throw error;
         }
     }

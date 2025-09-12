@@ -10,7 +10,7 @@ export class TableSelectionPanel {
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
     private readonly daoGenerator: DaoGeneratorService;
-    
+
     private constructor(
         panel: vscode.WebviewPanel,
         private readonly connection: DatabaseConnection,
@@ -25,7 +25,7 @@ export class TableSelectionPanel {
     }
 
     public static async createOrShow(
-        connection: DatabaseConnection, 
+        connection: DatabaseConnection,
         database: string,
         databaseService: DatabaseService,
         extensionUri: vscode.Uri
@@ -34,21 +34,21 @@ export class TableSelectionPanel {
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        // If we already have a panel for this exact same database, update it
+        // Si nous avons déjà un panneau pour cette même base de données, le mettre à jour
         console.log('dao TableSelectionPanel.currentPanel :', TableSelectionPanel.currentPanel);
-        if (TableSelectionPanel.currentPanel && 
+        if (TableSelectionPanel.currentPanel &&
             TableSelectionPanel.currentPanel.database === database &&
             TableSelectionPanel.currentPanel.connection.id === connection.id) {
             TableSelectionPanel.currentPanel._panel.reveal(column);
             return;
         }
 
-        // Dispose existing panel if it exists
+        // Supprimer le panneau existant s'il existe
         if (TableSelectionPanel.currentPanel) {
             TableSelectionPanel.currentPanel.dispose();
         }
 
-        // Create a new panel
+        // Créer un nouveau panneau
         const panel = vscode.window.createWebviewPanel(
             'tableSelection',
             `Tables - ${database}`,
@@ -60,7 +60,7 @@ export class TableSelectionPanel {
             }
         );
 
-        // Add icon to the panel using built-in icons
+        // Ajouter une icône au panneau en utilisant les icônes intégrées
         panel.iconPath = {
             light: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png'),
             dark: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png')
@@ -72,7 +72,7 @@ export class TableSelectionPanel {
     public dispose() {
         TableSelectionPanel.currentPanel = undefined;
 
-        // Clean up our resources
+        // Nettoyer nos ressources
         this._panel.dispose();
 
         while (this._disposables.length) {
@@ -106,10 +106,10 @@ export class TableSelectionPanel {
 
     private async sendInitialData() {
         try {
-            // Send loading state first
+            // Envoyer d'abord l'état de chargement
             this._panel.webview.postMessage({ command: 'showLoading' });
-            
-            // Send page data
+
+            // Envoyer les données de la page
             this._panel.webview.postMessage({
                 command: 'updateData',
                 data: {
@@ -118,7 +118,7 @@ export class TableSelectionPanel {
                 }
             });
 
-            // Load and send tables
+            // Charger et envoyer les tables
             const tables = await this.databaseService.getTables(this.connection, this.database);
             this._panel.webview.postMessage({
                 command: 'updateTables',
@@ -135,7 +135,7 @@ export class TableSelectionPanel {
     private async handleGenerate(selectedTables: string[], mode: 'save' | 'overwrite'): Promise<void> {
         try {
             vscode.window.showInformationMessage(`Génération de ${selectedTables.length} DAO en cours...`);
-            
+
             await this.daoGenerator.generateDaoFiles(
                 this.connection,
                 this.database,
@@ -149,38 +149,38 @@ export class TableSelectionPanel {
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         try {
-            // Get paths to resources
+            // Obtenir les chemins vers les ressources
             const webviewPath = vscode.Uri.joinPath(this.extensionUri, 'src', 'webview', 'table-selection');
             const htmlPath = vscode.Uri.joinPath(webviewPath, 'index.html');
             const cssPath = vscode.Uri.joinPath(webviewPath, 'styles.css');
             const jsPath = vscode.Uri.joinPath(webviewPath, 'script.js');
 
-            // Convert paths to webview URIs
+            // Convertir les chemins en URIs webview
             const cssUri = webview.asWebviewUri(cssPath);
             const jsUri = webview.asWebviewUri(jsPath);
 
-            // Read HTML template
+            // Lire le template HTML
             const htmlContent = fs.readFileSync(htmlPath.fsPath, 'utf8');
 
-            // Replace placeholders
+            // Remplacer les placeholders
             return htmlContent
                 .replace(/{{cspSource}}/g, webview.cspSource)
                 .replace(/{{cssUri}}/g, cssUri.toString())
                 .replace(/{{jsUri}}/g, jsUri.toString());
-                
+
         } catch (error) {
-            console.error('Error loading webview content:', error);
+            console.error('Erreur lors du chargement du contenu webview :', error);
             return this._getErrorHtml(error instanceof Error ? error.message : 'Erreur inconnue');
         }
     }
 
     private _getErrorHtml(errorMessage: string): string {
         return `<!DOCTYPE html>
-        <html lang="en">
+        <html lang="fr">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Error</title>
+            <title>Erreur</title>
             <style>
                 body {
                     font-family: var(--vscode-font-family);

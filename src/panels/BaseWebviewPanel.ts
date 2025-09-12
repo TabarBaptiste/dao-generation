@@ -4,8 +4,8 @@ import * as fs from 'fs';
 import { ErrorHandler } from '../utils/ErrorHandler';
 
 /**
- * Abstract base class for webview panels
- * Eliminates duplication of webview setup and content loading logic
+ * Classe de base abstraite pour les panneaux webview
+ * Élimine la duplication de la logique de configuration et de chargement du contenu webview
  */
 export abstract class BaseWebviewPanel {
     protected panel: vscode.WebviewPanel | undefined;
@@ -18,9 +18,9 @@ export abstract class BaseWebviewPanel {
     ) { }
 
     /**
-     * Creates and shows the webview panel
-     * @param column View column to show panel in
-     * @returns Promise resolving when panel is ready
+     * Crée et affiche le panneau webview
+     * @param column Colonne de vue dans laquelle afficher le panneau
+     * @returns Promise qui se résout quand le panneau est prêt
      */
     protected async createPanel(column?: vscode.ViewColumn): Promise<void> {
         this.panel = vscode.window.createWebviewPanel(
@@ -34,72 +34,72 @@ export abstract class BaseWebviewPanel {
             }
         );
 
-        // Set panel icon
+        // Définir l'icône du panneau
         this.panel.iconPath = {
             light: vscode.Uri.joinPath(this.extensionUri, 'assets', 'img', 'logo.png'),
             dark: vscode.Uri.joinPath(this.extensionUri, 'assets', 'img', 'logo.png')
         };
 
-        // Setup webview content
+        // Configurer le contenu webview
         this.panel.webview.html = await this.loadWebviewContent();
 
-        // Setup message handling
+        // Configurer la gestion des messages
         this.setupMessageHandling();
 
-        // Setup disposal
+        // Configurer la disposition
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
     }
 
     /**
-     * Abstract method to be implemented by subclasses
-     * @returns The webview folder name (e.g., 'connection-form', 'table-selection')
+     * Méthode abstraite à implémenter par les sous-classes
+     * @returns Le nom du dossier webview (ex: 'connection-form', 'table-selection')
      */
     protected abstract getWebviewFolderName(): string;
 
     /**
-     * Abstract method for handling webview messages
-     * @param message Message received from webview
+     * Méthode abstraite pour gérer les messages webview
+     * @param message Message reçu du webview
      */
     protected abstract handleMessage(message: any): Promise<void>;
 
     /**
-     * Loads webview content from HTML template
-     * @returns HTML content for webview
+     * Charge le contenu webview depuis le modèle HTML
+     * @returns Contenu HTML pour le webview
      */
     private async loadWebviewContent(): Promise<string> {
         const webviewFolderName = this.getWebviewFolderName();
-        
+
         return ErrorHandler.handleSync(
-            'load webview content',
+            'charger contenu webview',
             () => this.getWebviewHtml(webviewFolderName),
             false
-        ) || this.getErrorHtml('Failed to load webview content');
+        ) || this.getErrorHtml('Échec du chargement du contenu webview');
     }
 
     /**
-     * Generates HTML content for webview
-     * @param webviewFolderName Name of the webview folder
-     * @returns HTML content with resource URIs replaced
+     * Génère le contenu HTML pour le webview
+     * @param webviewFolderName Nom du dossier webview
+     * @returns Contenu HTML avec les URIs de ressources remplacées
      */
     private getWebviewHtml(webviewFolderName: string): string {
         if (!this.panel) {
-            throw new Error('Panel not initialized');
+            throw new Error('Panneau non initialisé');
         }
 
-        // Get paths to resources
+        // Obtenir les chemins vers les ressources
         const webviewPath = vscode.Uri.joinPath(this.extensionUri, 'src', 'webview', webviewFolderName);
         const htmlPath = vscode.Uri.joinPath(webviewPath, 'index.html');
         const cssPath = vscode.Uri.joinPath(webviewPath, 'styles.css');
         const jsPath = vscode.Uri.joinPath(webviewPath, 'script.js');
 
-        // Convert paths to webview URIs
+        // Convertir les chemins en URIs webview
         const cssUri = this.panel.webview.asWebviewUri(cssPath);
         const jsUri = this.panel.webview.asWebviewUri(jsPath);
 
-        // Read HTML template
+        // Lire le modèle HTML
         const htmlContent = fs.readFileSync(htmlPath.fsPath, 'utf8');
 
-        // Replace placeholders
+        // Remplacer les marqueurs de position
         return htmlContent
             .replace(/{{cspSource}}/g, this.panel.webview.cspSource)
             .replace(/{{cssUri}}/g, cssUri.toString())
@@ -107,17 +107,17 @@ export abstract class BaseWebviewPanel {
     }
 
     /**
-     * Generates error HTML when webview content fails to load
-     * @param errorMessage Error message to display
-     * @returns Error HTML content
+     * Génère le HTML d'erreur quand le contenu webview ne parvient pas à se charger
+     * @param errorMessage Message d'erreur à afficher
+     * @returns Contenu HTML d'erreur
      */
     protected getErrorHtml(errorMessage: string): string {
         return `<!DOCTYPE html>
-        <html lang="en">
+        <html lang="fr">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Error</title>
+            <title>Erreur</title>
             <style>
                 body {
                     font-family: var(--vscode-font-family);
@@ -145,7 +145,7 @@ export abstract class BaseWebviewPanel {
     }
 
     /**
-     * Sets up message handling for webview
+     * Configure la gestion des messages pour le webview
      */
     private setupMessageHandling(): void {
         if (!this.panel) {
@@ -155,7 +155,7 @@ export abstract class BaseWebviewPanel {
         this.panel.webview.onDidReceiveMessage(
             async (message) => {
                 await ErrorHandler.handleAsync(
-                    'handle webview message',
+                    'gérer message webview',
                     () => this.handleMessage(message),
                     false
                 );
@@ -166,23 +166,23 @@ export abstract class BaseWebviewPanel {
     }
 
     /**
-     * Sends message to webview
-     * @param message Message to send
+     * Envoie un message au webview
+     * @param message Message à envoyer
      */
     protected sendMessage(message: any): void {
         this.panel?.webview.postMessage(message);
     }
 
     /**
-     * Reveals the panel if it exists
-     * @param column Optional view column
+     * Révèle le panneau s'il existe
+     * @param column Colonne de vue optionnelle
      */
     public reveal(column?: vscode.ViewColumn): void {
         this.panel?.reveal(column);
     }
 
     /**
-     * Disposes the panel and cleans up resources
+     * Dispose le panneau et nettoie les ressources
      */
     public dispose(): void {
         if (this.panel) {
