@@ -38,7 +38,7 @@
       "php-dao-explorer": [
         {
           "id": "phpDaoConnections",
-          "name": "Database Connections",
+          "name": "SERVEURS",
           "when": "true",
           "icon": "$(database)"
         }
@@ -56,52 +56,52 @@
     "commands": [
       {
         "command": "phpDaoGenerator.addConnection",
-        "title": "Add Database Connection",
+        "title": "Ajouter un serveur",
         "icon": "$(add)"
       },
       {
         "command": "phpDaoGenerator.refreshConnections",
-        "title": "Refresh",
+        "title": "Rafraîchir",
         "icon": "$(refresh)"
       },
       {
         "command": "phpDaoGenerator.editConnection",
-        "title": "Edit Connection",
+        "title": "Modifier le serveur",
         "icon": "$(edit)"
       },
       {
         "command": "phpDaoGenerator.deleteConnection",
-        "title": "Delete Connection",
+        "title": "Supprimer le serveur",
         "icon": "$(trash)"
       },
       {
         "command": "phpDaoGenerator.connect",
-        "title": "Connect",
+        "title": "Connecter",
         "icon": "$(plug)"
       },
       {
         "command": "phpDaoGenerator.disconnect",
-        "title": "Disconnect",
+        "title": "Se déconnecter",
         "icon": "$(debug-disconnect)"
       },
       {
         "command": "phpDaoGenerator.openTableSelection",
-        "title": "Generate DAO",
+        "title": "Générer DAO",
         "icon": "$(code)"
       },
       {
         "command": "phpDaoGenerator.exportConnections",
-        "title": "Export Connections",
+        "title": "Exporter les serveurs",
         "icon": "$(cloud-upload)"
       },
       {
         "command": "phpDaoGenerator.importConnections",
-        "title": "Import Connections",
+        "title": "Importer les serveurs",
         "icon": "$(cloud-download)"
       },
       {
         "command": "phpDaoGenerator.toggleSort",
-        "title": "Toggle Sort Mode",
+        "title": "Trier",
         "icon": "$(list-ordered)"
       }
     ],

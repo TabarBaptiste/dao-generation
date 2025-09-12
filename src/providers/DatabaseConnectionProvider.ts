@@ -245,7 +245,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                 });
 
                 this.refresh();
-                vscode.window.showInformationMessage(`Connecté à "${item.connection.name}"`);
+                vscode.window.showInformationMessage(`"${item.connection.name}" connecté`);
                 return true;
             }
         );
@@ -263,7 +263,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                 });
 
                 this.refresh();
-                vscode.window.showInformationMessage(`Déconnecté de "${item.connection.name}"`);
+                vscode.window.showInformationMessage(`"${item.connection.name}" déconnecté`);
                 return true;
             }
         );

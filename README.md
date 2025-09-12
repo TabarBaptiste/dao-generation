@@ -50,24 +50,24 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
 ### 2. Ajouter un serveur
 - Cliquez sur le bouton **+**
 - Remplissez le formulaire :
-  - `Connection Name *`
-  - `Database Type *`
+  - `Type de serveur *`
   - `Host *`
   - `Port *`
   - `Username *`
   - `Password *`
   - `Database` (liste déroulante avec bouton refresh)
-- Cliquez sur **Test Connection** pour vérifier l’accès.
-- Puis sur **Create**.
+- Cliquez sur **Test de connexion** pour vérifier l’accès.
+- Puis sur **Créer**.
 
 <!-- ![Add Serveur](assets/img/add_serveur.png) -->
 
 ➡️ Le serveur apparaît dans la sidebar.
 
 ### 3. Gérer un serveur
-- **Connect** : affiche la liste des bases de données.
-- **Edit** : permet de modifier la configuration.
-- **Delete** : supprime le serveur.
+- Cliquer sur **Se déconneter** pour avoir :
+  - **Connecter** : affiche la liste des bases de données.
+  - **Modifier le serveur** : permet de modifier la configuration.
+  - **Delete le serveur** : supprime le serveur.
 
 ### 4. Explorer une base
 - Déroulez un serveur connecté
