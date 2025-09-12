@@ -52,7 +52,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
                 await this.handleTestConnection(message.data);
                 break;
             case 'loadDatabases':
-                await this.handleLoadDatabases(message.data);
+                await this.handleLoadDatabases(message.data, message.isAutoLoad || false);
                 break;
         }
     }
@@ -74,7 +74,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         });
     }
 
-    private async handleLoadDatabases(data: any): Promise<void> {
+    private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
         const connectionData = DatabaseConnectionFactory.createTempConnection(data);
 
         const databases = await ErrorHandler.handleAsync(
@@ -83,10 +83,34 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
             false
         );
 
-        this.sendMessage({
-            command: 'databasesLoaded',
-            databases: databases || [],
-            error: databases ? undefined : 'Failed to load databases'
-        });
+        const success = databases !== undefined && Array.isArray(databases);
+
+        if (success) {
+            // Succès : afficher le message de chargement approprié
+            const message = isAutoLoad
+                ? `${databases.length} database(s) loaded automatically`
+                : `Loaded ${databases.length} database(s)`;
+
+            this.sendMessage({
+                command: 'databasesLoaded',
+                databases: databases || [],
+                success: true,
+                message,
+                isAutoLoad
+            });
+        } else {
+            // Échec : message différent selon le contexte
+            const message = isAutoLoad
+                ? 'Connection failed. Please check your credentials.'
+                : 'Failed to load databases';
+
+            this.sendMessage({
+                command: 'databasesLoaded',
+                databases: [],
+                success: false,
+                message,
+                isAutoLoad
+            });
+        }
     }
 }
