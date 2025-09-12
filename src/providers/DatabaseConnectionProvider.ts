@@ -136,6 +136,17 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     private async getDatabasesForConnection(connection: DatabaseConnection): Promise<DatabaseConnectionTreeItem[]> {
         try {
+            // Si la connexion a une base de données spécifique, afficher uniquement celle-ci
+            if (connection.database) {
+                return [new DatabaseConnectionTreeItem(
+                    connection,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'database',
+                    connection.database
+                )];
+            }
+            
+            // Sinon, afficher toutes les bases de données disponibles
             const databases = await this.databaseService.getDatabases(connection);
             return databases.map(db => new DatabaseConnectionTreeItem(
                 connection,

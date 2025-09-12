@@ -180,6 +180,8 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     formElements.loadDbBtn.classList.remove('spinning');
     
     if (!success) {
+        formElements.database.innerHTML = '<option value="">Select a database...</option>';
+        availableDatabases = [];
         showStatus(message, false);
         return;
     }
