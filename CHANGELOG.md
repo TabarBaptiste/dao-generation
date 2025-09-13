@@ -1,3 +1,12 @@
+## [1.4.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.5...v1.4.6) (2025-09-13)
+
+
+### Bug Fixes
+
+* Amélioration de l'import/export des connexions avec gestion des mots de passe chiffrés et non chiffrés ([af81c3b](https://github.com/TabarBaptiste/dao-generation/commit/af81c3baad292bde63b2c26c848ae6c699459166))
+* Mise à jour des configurations de débogage et des tâches pour améliorer le développement de l'extension (à tester ([5ee1a50](https://github.com/TabarBaptiste/dao-generation/commit/5ee1a50c39aa860a18691f8a16f335c45fe423e2))
+* Rendre le mot de passe facultatif dans les interfaces de connexion et ajuster la validation des champs ([50be6ee](https://github.com/TabarBaptiste/dao-generation/commit/50be6ee39ff1c6ccbcaac780ac19e7fa8ac9ed18))
+
 ## [1.4.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.4...v1.4.5) (2025-09-12)
 
 
