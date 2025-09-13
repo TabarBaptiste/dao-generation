@@ -66,7 +66,7 @@ function setupEventListeners() {
     formElements.database.addEventListener('change', updateConnectionName);
 
     // Auto-load databases when all required fields are filled
-    ['host', 'port', 'username', 'password'].forEach(field => {
+    ['host', 'port', 'username'].forEach(field => {
         formElements[field].addEventListener('input', scheduleAutoLoadDatabases);
     });
     formElements.type.addEventListener('change', scheduleAutoLoadDatabases);
@@ -228,12 +228,12 @@ function getFormData() {
 
 function validateRequiredFields(data) {
     return data.name && data.host && data.port && !isNaN(data.port) &&
-        data.port > 0 && data.port <= 65535 && data.username && data.password;
+        data.port > 0 && data.port <= 65535 && data.username;
 }
 
 function validateConnectionFields(data) {
     return data.host && data.port && !isNaN(data.port) &&
-        data.port > 0 && data.port <= 65535 && data.username && data.password;
+        data.port > 0 && data.port <= 65535 && data.username;
 }
 
 function showStatus(message, isSuccess) {

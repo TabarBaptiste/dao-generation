@@ -4,7 +4,7 @@ export interface DatabaseConnection {
     host: string;
     port: number;
     username: string;
-    password: string;
+    password?: string;
     database?: string;
     type: 'mysql' | 'mariadb';
     isConnected?: boolean;
@@ -16,7 +16,7 @@ export interface ConnectionFormData {
     host: string;
     port: number;
     username: string;
-    password: string;
+    password?: string;
     database: string;
     type: 'mysql' | 'mariadb';
 }

@@ -16,7 +16,7 @@ export class DatabaseConnectionFactory {
             host: data.host,
             port: data.port,
             username: data.username,
-            password: data.password,
+            password: data.password || '',
             database: data.database || undefined,
             type: data.type,
             isConnected: false
@@ -33,7 +33,7 @@ export class DatabaseConnectionFactory {
         host: string;
         port: number;
         username: string;
-        password: string;
+        password?: string;
         database?: string;
         type: 'mysql' | 'mariadb';
     }): DatabaseConnection {
@@ -43,7 +43,7 @@ export class DatabaseConnectionFactory {
             host: data.host,
             port: data.port,
             username: data.username,
-            password: data.password,
+            password: data.password || '',
             database: data.database,
             type: data.type,
             isConnected: false
