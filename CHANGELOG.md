@@ -1,3 +1,10 @@
+## [1.4.7](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.6...v1.4.7) (2025-09-15)
+
+
+### Bug Fixes
+
+* Amélioration de l'interface de connexion avec des icônes et un bouton pour afficher/masquer le mot de passe ([f79db7f](https://github.com/TabarBaptiste/dao-generation/commit/f79db7fcd2c96cfffd9c72501f3eb455a668fe0b))
+
 ## [1.4.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.5...v1.4.6) (2025-09-13)
 
 
