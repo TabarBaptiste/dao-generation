@@ -72,7 +72,9 @@ function updateTablesList(tables) {
     const tableItems = tables.map(table => `
         <div class="table-item">
             <label>
-                <input type="checkbox" value="${escapeHtml(table)}"> ${escapeHtml(table)}
+                <input type="checkbox" value="${escapeHtml(table)}">
+                <i class="codicon codicon-table"></i>
+                ${escapeHtml(table)}
             </label>
         </div>
     `).join('');
@@ -113,7 +115,7 @@ function updateSelectedCount() {
     const checkboxes = document.querySelectorAll('.table-item input[type="checkbox"]');
     const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
     
-    selectedCount.textContent = `${checkedCount} table(s) sélectionnée(s)`;
+    selectedCount.innerHTML = `<i class="codicon codicon-info"></i> ${checkedCount} table(s) sélectionnée(s)`;
     generateBtn.disabled = checkedCount === 0;
 }
 

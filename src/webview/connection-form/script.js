@@ -99,6 +99,12 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
     const editTitle = titles.edit;
 
     formElements.formTitle.textContent = editMode ? editTitle : addTitle;
+    
+    // Update title icon based on mode
+    const titleIcon = document.getElementById('titleIcon');
+    if (titleIcon) {
+        titleIcon.className = editMode ? 'codicon codicon-edit' : 'codicon codicon-add';
+    }
 
     // Update button text using constants if provided, fallback to hardcoded strings  
     const createLabel = buttonLabels.create;
