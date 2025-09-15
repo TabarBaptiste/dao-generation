@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.7...v1.5.0) (2025-09-15)
+
+
+### Features
+
+* Ajout d'icônes et amélioration de l'interface dans les formulaires de connexion et de sélection de table ([2cc3b8d](https://github.com/TabarBaptiste/dao-generation/commit/2cc3b8d5719162575de36b92257bf0cd74b3aeb2))
+
 ## [1.4.7](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.6...v1.4.7) (2025-09-15)
 
 
