@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}} 'unsafe-inline';">
+        content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline' https://unpkg.com; font-src https://unpkg.com; script-src {{cspSource}} 'unsafe-inline';">
     <title>Connexion au serveur</title>
     <link rel="stylesheet" type="text/css" href="{{cssUri}}">
+    <link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
 </head>
 
 <body>
@@ -19,14 +20,20 @@
 
         <form id="connectionForm">
             <div class="form-group">
-                <label for="name">Nom de la connexion</label>
+                <label for="name">
+                    <i class="codicon codicon-tag"></i>
+                    Nom de la connexion
+                </label>
                 <input type="text" id="name" name="name" disabled
                     style="background-color: transparent; border: transparent;">
                 <!-- <div class="help-text">A friendly name to identify this connection</div> -->
             </div>
 
             <div class="form-group">
-                <label for="type">Type de serveur <span class="required">*</span></label>
+                <label for="type">
+                    <i class="codicon codicon-server-environment"></i>
+                    Type de serveur <span class="required">*</span>
+                </label>
                 <select id="type" name="type" required>
                     <option value="mysql">MySQL</option>
                     <option value="mariadb">MariaDB</option>
@@ -35,12 +42,18 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="host">Host <span class="required">*</span></label>
+                    <label for="host">
+                        <i class="codicon codicon-server"></i>
+                        Host <span class="required">*</span>
+                    </label>
                     <input type="text" id="host" name="host" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="port">Port <span class="required">*</span></label>
+                    <label for="port">
+                        <i class="codicon codicon-ports"></i>
+                        Port <span class="required">*</span>
+                    </label>
                     <input type="number" id="port" name="port" min="1" max="65535" value="3306" required
                         onkeydown="return !['e', 'E', '+', '-'].includes(event.key)"
                         oninput="this.value = this.value.replace(/[eE\+\-]/g, '')">
@@ -48,36 +61,62 @@
             </div>
 
             <div class="form-group">
-                <label for="username">Username <span class="required">*</span></label>
+                <label for="username">
+                    <i class="codicon codicon-person"></i>
+                    Username <span class="required">*</span>
+                </label>
                 <input type="text" id="username" name="username" required>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password">
+                <label for="password">
+                    <i class="codicon codicon-key"></i>
+                    Password
+                </label>
+                <div class="password-input-group">
+                    <input type="password" id="password" name="password">
+                    <button type="button" id="togglePasswordBtn" class="btn-toggle-password" 
+                            title="Afficher/masquer le mot de passe">
+                        <i class="codicon codicon-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="form-group">
-                <label for="database">Database</label>
+                <label for="database">
+                    <i class="codicon codicon-database"></i>
+                    Database
+                </label>
                 <div class="database-input-group">
                     <select id="database" name="database">
                         <option value="">Sélectionner une base de données...</option>
                     </select>
                     <button type="button" id="loadDbBtn" class="btn-load-db"
-                        title="Charger les bases de données">🔄</button>
+                        title="Charger les bases de données">
+                        <i class="codicon codicon-refresh"></i>
+                    </button>
                 </div>
                 <div class="help-text">Cliquez sur le bouton de rafraîchissement pour charger les bases de données
                     disponibles</div>
             </div>
 
             <div class="test-connection">
-                <button type="button" id="testBtn" class="btn-test">Test de connexion</button>
+                <button type="button" id="testBtn" class="btn-test">
+                    <i class="codicon codicon-plug"></i>
+                    Test de connexion
+                </button>
                 <div id="statusMessage" class="status-message" style="display: none;"></div>
             </div>
 
             <div class="buttons">
-                <button type="button" class="btn-secondary" id="cancelBtn">Annuler</button>
-                <button type="submit" class="btn-primary" id="submitBtn">Créer</button>
+                <button type="button" class="btn-secondary" id="cancelBtn">
+                    <i class="codicon codicon-close"></i>
+                    Annuler
+                </button>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <i class="codicon codicon-check"></i>
+                    Créer
+                </button>
             </div>
         </form>
     </div>

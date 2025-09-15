@@ -16,10 +16,18 @@ body {
 }
 
 label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 5px;
     font-weight: bold;
     color: var(--vscode-foreground);
+}
+
+label i {
+    font-size: 14px;
+    opacity: 0.8;
+    min-width: 14px;
 }
 
 input, select {
@@ -95,6 +103,22 @@ button {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
+/* Styles pour les icônes dans les boutons */
+.btn-primary,
+.btn-secondary,
+.btn-test {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+
+.btn-primary i,
+.btn-secondary i,
+.btn-test i {
+    font-size: 14px;
+}
+
 h1 {
     color: var(--vscode-foreground);
     margin-bottom: 30px;
@@ -118,6 +142,58 @@ h1 {
 
 .database-input-group select {
     flex: 1;
+}
+
+.password-input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.password-input-group input {
+    flex: 1;
+}
+
+.btn-toggle-password {
+    padding: 8px 10px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    transition: all 0.2s ease;
+}
+
+.btn-toggle-password:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.btn-toggle-password:active {
+    transform: scale(0.95);
+}
+
+/* Animation de rotation pour les icônes de chargement */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Styles pour les icônes Codicons dans les boutons */
+.btn-load-db i,
+.btn-toggle-password i {
+    font-size: 14px;
+    line-height: 1;
 }
 
 .btn-load-db {

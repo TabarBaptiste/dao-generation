@@ -561,7 +561,7 @@ export class ConnectionManager {
             if (skippedCount > 0) message += `, ${skippedCount} ignorées`;
             if (errors.length > 0) message += ` (${errors.length} erreurs)`;
             if (hasEncryptedPasswords && decryptionPassword) message += ` |  Mots de passe déchiffrés`;
-            else if (!isEncrypted) message += ` | 📄 Fichier non chiffré`;
+            else if (!isEncrypted) message += ` | Fichier non chiffré`;
 
             vscode.window.showInformationMessage(message);
 

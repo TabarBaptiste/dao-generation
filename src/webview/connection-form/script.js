@@ -35,6 +35,7 @@ function initializeElements() {
         database: document.getElementById('database'),
         testBtn: document.getElementById('testBtn'),
         loadDbBtn: document.getElementById('loadDbBtn'),
+        togglePasswordBtn: document.getElementById('togglePasswordBtn'),
         cancelBtn: document.getElementById('cancelBtn'),
         submitBtn: document.getElementById('submitBtn'),
         statusMessage: document.getElementById('statusMessage')
@@ -48,6 +49,7 @@ function setupEventListeners() {
     // Button event listeners
     formElements.testBtn.addEventListener('click', testConnection);
     formElements.loadDbBtn.addEventListener('click', () => loadDatabases(false));
+    formElements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
     formElements.cancelBtn.addEventListener('click', cancel);
 
     // Prevent exponential notation in port field
@@ -102,7 +104,7 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
     const createLabel = buttonLabels.create;
     const updateLabel = buttonLabels.update;
 
-    formElements.submitBtn.textContent = editMode ? updateLabel : createLabel;
+    setButtonTextWithIcon(formElements.submitBtn, editMode ? updateLabel : createLabel, editMode ? 'codicon-sync' : 'codicon-check');
 
     // Populate form fields
     if (data) {
@@ -164,7 +166,7 @@ function loadDatabases(isAutoLoad = false) {
         return;
     }
 
-    setButtonLoading(formElements.loadDbBtn, true, '⏳');
+    setIconButtonLoading(formElements.loadDbBtn, true, 'codicon-sync', 'spin');
     formElements.loadDbBtn.classList.add('spinning');
 
     if (!isAutoLoad) {
@@ -184,7 +186,7 @@ function handleTestResult(success, message) {
 }
 
 function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) {
-    setButtonLoading(formElements.loadDbBtn, false, '🔄');
+    setIconButtonLoading(formElements.loadDbBtn, false, 'codicon-refresh');
     formElements.loadDbBtn.classList.remove('spinning');
 
     if (!success) {
@@ -258,6 +260,29 @@ function setButtonLoading(button, loading, text) {
         button.textContent = text;
         button.classList.remove('loading');
     }
+}
+
+function setIconButtonLoading(button, loading, iconClass, animationClass = null) {
+    const icon = button.querySelector('i');
+    if (loading) {
+        button.disabled = true;
+        icon.className = `codicon ${iconClass}`;
+        if (animationClass) {
+            icon.classList.add(animationClass);
+        }
+        button.classList.add('loading');
+    } else {
+        button.disabled = false;
+        icon.className = `codicon ${iconClass}`;
+        if (animationClass) {
+            icon.classList.remove(animationClass);
+        }
+        button.classList.remove('loading');
+    }
+}
+
+function setButtonTextWithIcon(button, text, iconClass) {
+    button.innerHTML = `<i class="codicon ${iconClass}"></i> ${text}`;
 }
 
 function cancel() {
@@ -364,6 +389,24 @@ function restoreState() {
             }
             formElements.database.appendChild(option);
         });
+    }
+}
+
+function togglePasswordVisibility() {
+    const passwordInput = formElements.password;
+    const toggleBtn = formElements.togglePasswordBtn;
+    const icon = toggleBtn.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        // Afficher le mot de passe
+        passwordInput.type = 'text';
+        icon.className = 'codicon codicon-eye-closed'; // Changer l'icône pour "masquer"
+        toggleBtn.title = 'Masquer le mot de passe';
+    } else {
+        // Masquer le mot de passe
+        passwordInput.type = 'password';
+        icon.className = 'codicon codicon-eye'; // Changer l'icône pour "afficher"
+        toggleBtn.title = 'Afficher le mot de passe';
     }
 }
 
