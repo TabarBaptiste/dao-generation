@@ -63,12 +63,16 @@ export class ConnectionManager {
     /**
      * Nettoie une connexion pour la sauvegarde/export en supprimant les propriétés temporaires
      */
-    private cleanConnectionForStorage(conn: DatabaseConnection, includeRuntimeProps = false): any {
+    private cleanConnectionForStorage(conn: DatabaseConnection, includeRuntimeProps = false, forExport = false): any {
         const cleaned = { ...conn };
 
         if (!includeRuntimeProps) {
-            delete cleaned.isConnected;
-            delete cleaned.lastConnected;
+            // Pour l'export, on supprime l'état de connexion
+            // Pour la sauvegarde locale, on garde l'état de connexion
+            if (forExport) {
+                delete cleaned.isConnected;
+                delete cleaned.lastConnected;
+            }
         }
 
         return cleaned;
@@ -111,7 +115,8 @@ export class ConnectionManager {
 
     private async saveConnections(): Promise<void> {
         const connectionsToSave = this.connections.map(conn => {
-            const cleanConn = this.cleanConnectionForStorage(conn);
+            // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
+            const cleanConn = this.cleanConnectionForStorage(conn, false, false);
 
             // Si pas de mot de passe valide, sauvegarder sans chiffrement
             if (!this.isValidPassword(conn.password)) {
@@ -239,7 +244,8 @@ export class ConnectionManager {
      * Traite une connexion pour l'export (chiffrement ou nettoyage)
      */
     private processConnectionForExport(conn: DatabaseConnection, encryptionConfig: { useEncryption: boolean; password?: string }): any {
-        const cleanConn = this.cleanConnectionForStorage(conn, false);
+        // Pour l'export, supprimer l'état de connexion (forExport = true)
+        const cleanConn = this.cleanConnectionForStorage(conn, false, true);
 
         // Si pas de mot de passe valide, retourner sans le champ password
         if (!this.isValidPassword(conn.password)) {

@@ -112,6 +112,18 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             // Return all connections with sorting
             const connections = this.connectionManager.getConnections();
             const sortedConnections = this.sortConnections(connections);
+            
+            // Reconnecter automatiquement les connexions marquées comme connectées
+            sortedConnections.forEach(conn => {
+                if (conn.isConnected && !this.databaseService.isConnected(conn.id)) {
+                    this.databaseService.connect(conn).catch(error => {
+                        // En cas d'échec, marquer comme déconnectée
+                        this.connectionManager.updateConnection(conn.id, { isConnected: false });
+                        console.warn(`Échec de reconnexion automatique pour "${conn.name}":`, error);
+                    });
+                }
+            });
+            
             return Promise.resolve(
                 sortedConnections.map((conn: DatabaseConnection) => new DatabaseConnectionTreeItem(
                     conn,
