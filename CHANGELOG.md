@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.0...v1.5.1) (2025-09-16)
+
+
+### Bug Fixes
+
+* Ajout de la reconnexion automatique pour les connexions marquées comme connectées ([4e6ec6b](https://github.com/TabarBaptiste/dao-generation/commit/4e6ec6bb8d6293e92ad1f7f98f1cdf7446036c44))
+
 # [1.5.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.4.7...v1.5.0) (2025-09-15)
 
 
