@@ -68,7 +68,7 @@ function setupEventListeners() {
     formElements.database.addEventListener('change', updateConnectionName);
 
     // Auto-load databases when all required fields are filled
-    ['host', 'port', 'username'].forEach(field => {
+    ['host', 'port', 'username', 'password'].forEach(field => {
         formElements[field].addEventListener('input', scheduleAutoLoadDatabases);
     });
     formElements.type.addEventListener('change', scheduleAutoLoadDatabases);
