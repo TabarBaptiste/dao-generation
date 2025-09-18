@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.2...v1.5.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* Ajout du champ mot de passe pour le chargement automatique des bases de données ([3fce867](https://github.com/TabarBaptiste/dao-generation/commit/3fce8670c3262e62940db74f146a1674234585f5))
+
 ## [1.5.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.1...v1.5.2) (2025-09-18)
 
 
