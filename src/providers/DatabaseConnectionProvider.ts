@@ -7,6 +7,22 @@ import { DatabaseService } from '../services/DatabaseService';
 import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
 
+/**
+ * Élément d'arbre pour afficher un message quand aucun serveur n'est trouvé
+ * Hérite de vscode.TreeItem pour l'affichage dans la vue arbre
+ */
+export class EmptyStateTreeItem extends vscode.TreeItem {
+    constructor() {
+        super('Aucun serveur trouvé', vscode.TreeItemCollapsibleState.None);
+        this.iconPath = new vscode.ThemeIcon('info');
+        this.contextValue = 'emptyState';
+    }
+}
+
+/**
+ * Élément d'arbre représentant une connexion, base de données ou table
+ * Hérite de vscode.TreeItem pour l'affichage dans la vue arbre avec icônes et commandes
+ */
 export class DatabaseConnectionTreeItem extends vscode.TreeItem {
     constructor(
         public readonly connection: DatabaseConnection,
@@ -54,6 +70,10 @@ export class DatabaseConnectionTreeItem extends vscode.TreeItem {
     }
 }
 
+/**
+ * Fournisseur de données pour la vue arbre des connexions de base de données
+ * Implémente l'interface TreeDataProvider de VS Code pour gérer l'affichage hiérarchique
+ */
 export class DatabaseConnectionProvider implements vscode.TreeDataProvider<DatabaseConnectionTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void> = new vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<DatabaseConnectionTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
@@ -66,6 +86,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         private extensionUri: vscode.Uri
     ) { }
 
+    /**
+     * Rafraîchit la vue arbre en déclenchant un événement de changement
+     * Utilisé après ajout, modification ou suppression de connexions
+     */
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
@@ -92,6 +116,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
     /**
      * Bascule entre les modes de tri et rafraîchit la vue
+     * Alterne entre tri alphabétique et tri par date d'ajout
      */
     public toggleSortMode(): void {
         this.sortMode = this.sortMode === 'alphabetical' ? 'date' : 'alphabetical';
@@ -103,14 +128,28 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         this.refresh();
     }
 
+    /**
+     * Retourne l'élément d'arbre pour l'affichage VS Code
+     * Méthode requise par l'interface TreeDataProvider
+     */
     getTreeItem(element: DatabaseConnectionTreeItem): vscode.TreeItem {
         return element;
     }
 
+    /**
+     * Retourne les éléments enfants d'un élément donné ou les éléments racine
+     * Gère l'affichage hiérarchique : connexions -> bases de données -> tables
+     */
     getChildren(element?: DatabaseConnectionTreeItem): Thenable<DatabaseConnectionTreeItem[]> {
         if (!element) {
-            // Return all connections with sorting
+            // Retourner toutes les connexions avec tri
             const connections = this.connectionManager.getConnections();
+            
+            // Si aucune connexion n'existe, afficher le message d'état vide
+            if (connections.length === 0) {
+                return Promise.resolve([new EmptyStateTreeItem() as any]);
+            }
+            
             const sortedConnections = this.sortConnections(connections);
             
             // Reconnecter automatiquement les connexions marquées comme connectées
@@ -146,6 +185,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         return Promise.resolve([]);
     }
 
+    /**
+     * Récupère les bases de données disponibles pour une connexion donnée
+     * Retourne soit la base spécifique de la connexion, soit toutes les bases disponibles
+     */
     private async getDatabasesForConnection(connection: DatabaseConnection): Promise<DatabaseConnectionTreeItem[]> {
         try {
             // Si la connexion a une base de données spécifique, afficher uniquement celle-ci
@@ -172,6 +215,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
     }
 
+    /**
+     * Récupère les tables d'une base de données spécifique
+     * Transforme la liste des tables en éléments d'arbre affichables
+     */
     private async getTablesForDatabase(connection: DatabaseConnection, database: string): Promise<DatabaseConnectionTreeItem[]> {
         try {
             const tables = await this.databaseService.getTables(connection, database);
@@ -188,6 +235,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
     }
 
+    /**
+     * Ajoute une nouvelle connexion de base de données
+     * Ouvre un formulaire de saisie et sauvegarde la connexion si valide
+     */
     public async addConnection(): Promise<void> {
         const panel = new ConnectionFormPanel(this.extensionUri);
         const formData = await panel.show();
@@ -207,6 +258,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
     }
 
+    /**
+     * Modifie une connexion existante
+     * Ouvre un formulaire pré-rempli avec les données actuelles de la connexion
+     */
     public async editConnection(item: DatabaseConnectionTreeItem): Promise<void> {
         const connection = item.connection;
         const panel = new ConnectionFormPanel(this.extensionUri, {
@@ -229,6 +284,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
     }
 
+    /**
+     * Supprime une connexion après confirmation de l'utilisateur
+     * Affiche une boîte de dialogue de confirmation avant suppression
+     */
     public async deleteConnection(item: DatabaseConnectionTreeItem): Promise<void> {
         const connection = item.connection;
         const result = await vscode.window.showWarningMessage(
@@ -244,6 +303,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         }
     }
 
+    /**
+     * Établit une connexion physique à la base de données
+     * Met à jour le statut et rafraîchit l'affichage en cas de succès
+     */
     public async connectToDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
         const success = await ErrorHandler.handleAsync(
             `connexion à "${item.connection.name}"`,
@@ -263,6 +326,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         );
     }
 
+    /**
+     * Ferme une connexion active à la base de données
+     * Met à jour le statut de connexion et rafraîchit l'affichage
+     */
     public async disconnectFromDatabase(item: DatabaseConnectionTreeItem): Promise<void> {
         const success = await ErrorHandler.handleAsync(
             `déconnexion de "${item.connection.name}"`,
@@ -281,6 +348,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         );
     }
 
+    /**
+     * Ouvre le panneau de sélection de tables pour générer les DAO
+     * Détermine automatiquement la base de données à partir de l'élément sélectionné
+     */
     public async openTableSelection(item: DatabaseConnectionTreeItem): Promise<void> {
         let databaseName: string;
 
@@ -299,10 +370,18 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         );
     }
 
+    /**
+     * Exporte toutes les connexions vers un fichier JSON
+     * Délègue le traitement au ConnectionManager
+     */
     public async exportConnections(): Promise<void> {
         await this.connectionManager.exportConnections();
     }
 
+    /**
+     * Importe des connexions depuis un fichier JSON
+     * Rafraîchit automatiquement la vue après import pour afficher les nouvelles connexions
+     */
     public async importConnections(): Promise<void> {
         await this.connectionManager.importConnections();
         this.refresh(); // Rafraîchir la vue de l'arbre pour afficher les connexions importées

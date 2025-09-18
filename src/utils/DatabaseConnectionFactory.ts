@@ -49,17 +49,4 @@ export class DatabaseConnectionFactory {
             isConnected: false
         };
     }
-
-    /**
-     * Creates connection data specifically for database operations
-     * @param connection Base connection object
-     * @param database Optional database override
-     * @returns Connection object optimized for database operations
-     */
-    static createDatabaseConnection(connection: DatabaseConnection, database?: string): DatabaseConnection {
-        return {
-            ...connection,
-            database: database || connection.database
-        };
-    }
 }
