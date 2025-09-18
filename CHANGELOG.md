@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.1...v1.5.2) (2025-09-18)
+
+
+### Bug Fixes
+
+* Affichage d'un message si aucun serveur retourné ([44ef1e6](https://github.com/TabarBaptiste/dao-generation/commit/44ef1e67b370fea15ee843b5aca640ad16dbe803))
+
 ## [1.5.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.0...v1.5.1) (2025-09-16)
 
 
