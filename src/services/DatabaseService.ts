@@ -6,25 +6,43 @@ import { ErrorHandler } from '../utils/ErrorHandler';
 export class DatabaseService {
     private connections: Map<string, mysql.Connection> = new Map();
 
-    public async testConnection(connection: DatabaseConnection): Promise<boolean> {
-        const result = await ErrorHandler.handleAsync(
-            'test connexion base de données',
-            async () => {
-                const conn = await this.createConnection(connection);
-                await conn.ping();
-                await conn.end();
-                return true;
-            },
-            false
-        );
-        return result === true;
+    public async testConnection(connection: DatabaseConnection): Promise<{ success: boolean, message: string }> {
+        try {
+            const conn = await this.createConnection(connection);
+            await conn.ping();
+            await conn.end();
+            return { success: true, message: 'Connexion réussie !' };
+        } catch (error: any) {
+            console.log('Code d\'erreur MySQL:', error.code);
+            console.log('Message d\'erreur MySQL:', error.message);
+            
+            if (error.code === 'ENOTFOUND') {
+                return { success: false, message: 'Host introuvable. Vérifiez l\'adresse du serveur.' };
+            } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+                return { success: false, message: 'Accès refusé. Vérifiez vos identifiants.' };
+            } else if (error.code === 'ETIMEDOUT') {
+                return { success: false, message: 'Timeout de connexion. Vérifiez le port et la connectivité réseau.' };
+            } else if (error.code === 'ECONNREFUSED') {
+                return { success: false, message: 'Connexion refusée. Le serveur MySQL n\'est pas démarré ou le port est incorrect.' };
+            } else {
+                return { success: false, message: `Erreur de connexion: ${error.code || 'Inconnue'}` };
+            }
+        }
     }
 
     public async connect(connection: DatabaseConnection): Promise<void> {
+        // Tester la connexion d'abord avec gestion d'erreur personnalisée
+        const testResult = await this.testConnection(connection);
+        
+        if (!testResult.success) {
+            throw new Error(testResult.message);
+        }
+
         try {
             // Fermer la connexion existante s'il y en a une
             await this.disconnect(connection.id);
 
+            // Créer la connexion persistante
             const conn = await this.createConnection(connection);
             this.connections.set(connection.id, conn);
 
@@ -127,7 +145,7 @@ export class DatabaseService {
             user: connection.username,
             password: connection.password,
             database: connection.database,
-            connectTimeout: 10000
+            connectTimeout: 5000
         };
 
         return await mysql.createConnection(config);

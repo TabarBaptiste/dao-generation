@@ -64,20 +64,23 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
     }
 
     private async handleTestConnection(data: any): Promise<void> {
-        const connectionData = DatabaseConnectionFactory.createTempConnection(data);
-
-        const result = await ErrorHandler.handleAsync(
-            'test connexion base de données',
-            () => this.databaseService.testConnection(connectionData),
-            false
-        );
-
-        const success = result === true;
-        this.sendMessage({
-            command: 'testConnectionResult',
-            success,
-            message: success ? 'Connexion réussie !' : 'Connexion échouée. Veuillez vérifier vos identifiants.'
-        });
+        try {
+            const connectionData = DatabaseConnectionFactory.createTempConnection(data);
+            const result = await this.databaseService.testConnection(connectionData);
+            
+            this.sendMessage({
+                command: 'testConnectionResult',
+                success: result.success,
+                message: result.message
+            });
+        } catch (error) {
+            ErrorHandler.logError('handleTestConnection', error);
+            this.sendMessage({
+                command: 'testConnectionResult',
+                success: false,
+                message: 'Erreur inattendue lors du test de connexion.'
+            });
+        }
     }
 
     private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
