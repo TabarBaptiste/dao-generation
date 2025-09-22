@@ -21,6 +21,7 @@ export class ConnectionManager {
         const newConnection: DatabaseConnection = {
             ...connection,
             id: this.generateId(),
+            // TODO : tester la connexion avant de marquer comme connectée
             isConnected: true
         };
 
