@@ -16,6 +16,11 @@ export const WEBVIEW_TYPES = {
     TABLE_SELECTION: 'tableSelection'
 } as const;
 
+export const WEBVIEW_FOLDERS = {
+    CONNECTION_FORM: 'connection-form',
+    TABLE_SELECTION: 'table-selection'
+} as const;
+
 export const VIEW_TITLES = {
     ADD_CONNECTION: 'Ajouter un serveur',
     EDIT_CONNECTION: 'Modifier la connexion du serveur',

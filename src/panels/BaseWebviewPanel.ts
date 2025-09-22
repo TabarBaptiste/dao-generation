@@ -14,7 +14,8 @@ export abstract class BaseWebviewPanel {
     constructor(
         protected extensionUri: vscode.Uri,
         protected webviewType: string,
-        protected title: string
+        protected title: string,
+        protected webviewFolderName: string
     ) { }
 
     /**
@@ -51,12 +52,6 @@ export abstract class BaseWebviewPanel {
     }
 
     /**
-     * Méthode abstraite à implémenter par les sous-classes
-     * @returns Le nom du dossier webview (ex: 'connection-form', 'table-selection')
-     */
-    protected abstract getWebviewFolderName(): string;
-
-    /**
      * Méthode abstraite pour gérer les messages webview
      * @param message Message reçu du webview
      */
@@ -67,11 +62,9 @@ export abstract class BaseWebviewPanel {
      * @returns Contenu HTML pour le webview
      */
     private async loadWebviewContent(): Promise<string> {
-        const webviewFolderName = this.getWebviewFolderName();
-
         return ErrorHandler.handleSync(
             'charger contenu webview',
-            () => this.getWebviewHtml(webviewFolderName),
+            () => this.getWebviewHtml(this.webviewFolderName),
             false
         ) || this.getErrorHtml('Échec du chargement du contenu webview');
     }

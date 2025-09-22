@@ -4,7 +4,7 @@ import { DatabaseService } from '../services/DatabaseService';
 import { BaseWebviewPanel } from './BaseWebviewPanel';
 import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
-import { VIEW_TITLES, BUTTON_LABELS } from '../constants/AppConstants';
+import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS } from '../constants/AppConstants';
 
 export class ConnectionFormPanel extends BaseWebviewPanel {
     private databaseService = new DatabaseService();
@@ -14,14 +14,11 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
     constructor(extensionUri: vscode.Uri, existingData?: ConnectionFormData) {
         super(
             extensionUri,
-            'connectionForm',
-            existingData ? VIEW_TITLES.EDIT_CONNECTION : VIEW_TITLES.ADD_CONNECTION
+            WEBVIEW_TYPES.CONNECTION_FORM,
+            existingData ? VIEW_TITLES.EDIT_CONNECTION : VIEW_TITLES.ADD_CONNECTION,
+            WEBVIEW_FOLDERS.CONNECTION_FORM
         );
         this.existingData = existingData;
-    }
-
-    protected getWebviewFolderName(): string {
-        return 'connection-form';
     }
 
     public async show(): Promise<ConnectionFormData | undefined> {
