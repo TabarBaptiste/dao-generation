@@ -1,3 +1,11 @@
+## [1.5.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.4...v1.5.5) (2025-09-22)
+
+
+### Bug Fixes
+
+* Amélioration de la gestion des erreurs lors du test de connexion à la base de données ([1503389](https://github.com/TabarBaptiste/dao-generation/commit/1503389d7f95e1467cbb118c8e51d178d2663446))
+* Refactor des tests de connexion ([211b3ac](https://github.com/TabarBaptiste/dao-generation/commit/211b3ac30c678eda34c8b9a66b167a9bab88515a))
+
 ## [1.5.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.3...v1.5.4) (2025-09-22)
 
 
