@@ -47,8 +47,8 @@ function setupEventListeners() {
     formElements.form.addEventListener('submit', handleSubmit);
 
     // Écouteurs d'événements des boutons
-    formElements.testBtn.addEventListener('click', testConnection);
-    formElements.loadDbBtn.addEventListener('click', () => loadDatabases(false));
+    formElements.testBtn.addEventListener('click', () => performConnectionTest(false));
+    formElements.loadDbBtn.addEventListener('click', () => performConnectionTest(true, false));
     formElements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
     formElements.cancelBtn.addEventListener('click', cancel);
 
@@ -148,42 +148,50 @@ function handleSubmit(e) {
     });
 }
 
-function testConnection() {
+/**
+ * Fonction commune de test de connexion
+ * @param {boolean} loadDatabasesAfterTest - Si true, charge les BDD après le test
+ * @param {boolean} isAutoLoad - Si true, c'est un chargement automatique
+ */
+function performConnectionTest(loadDatabasesAfterTest = false, isAutoLoad = false) {
     const data = getFormData();
-    if (!validateRequiredFields(data)) {
-        showStatus('Veuillez d\'abord remplir tous les champs obligatoires', false);
-        return;
-    }
-
-    setButtonLoading(formElements.testBtn, true, 'Test en cours...');
-
-    vscode.postMessage({
-        command: 'testConnection',
-        data: data
-    });
-}
-
-function loadDatabases(isAutoLoad = false) {
-    const data = getFormData();
-    if (!validateConnectionFields(data)) {
-        if (!isAutoLoad) {
-            showStatus('Veuillez d\'abord remplir les détails de connexion', false);
+    
+    // Validation selon le type de test
+    const validationFn = loadDatabasesAfterTest ? validateConnectionFields : validateRequiredFields;
+    const errorMessage = loadDatabasesAfterTest 
+        ? 'Veuillez d\'abord remplir les détails de connexion'
+        : 'Veuillez d\'abord remplir tous les champs obligatoires';
+    
+    if (!validationFn(data)) {
+        if (!isAutoLoad) { // Ne pas afficher d'erreur pour l'auto-load
+            showStatus(errorMessage, false);
         }
         return;
     }
 
-    setIconButtonLoading(formElements.loadDbBtn, true, 'codicon-sync', 'spin');
-    formElements.loadDbBtn.classList.add('spinning');
+    if (loadDatabasesAfterTest) {
+        // Configuration pour le chargement de BDD
+        setIconButtonLoading(formElements.loadDbBtn, true, 'codicon-sync', 'spin');
+        formElements.loadDbBtn.classList.add('spinning');
 
-    if (!isAutoLoad) {
-        showStatus('Chargement des bases de données...', true);
+        if (!isAutoLoad) {
+            showStatus('Chargement des bases de données...', true);
+        }
+
+        vscode.postMessage({
+            command: 'loadDatabases',
+            data: data,
+            isAutoLoad: isAutoLoad
+        });
+    } else {
+        // Configuration pour le test simple
+        setButtonLoading(formElements.testBtn, true, 'Test en cours...');
+
+        vscode.postMessage({
+            command: 'testConnection',
+            data: data
+        });
     }
-
-    vscode.postMessage({
-        command: 'loadDatabases',
-        data: data,
-        isAutoLoad: isAutoLoad
-    });
 }
 
 function handleTestResult(success, message) {
@@ -337,11 +345,7 @@ function scheduleAutoLoadDatabases() {
 
         if (connectionDataChanged) {
             autoLoadTimeout = setTimeout(() => {
-                const finalData = getFormData();
-
-                if (validateConnectionFields(finalData) && !formElements.loadDbBtn.disabled) {
-                    loadDatabases(true); // isAutoLoad = true
-                }
+                performConnectionTest(true, true); // Test + chargement BDD en auto-load
                 autoLoadTimeout = null;
             }, 1500);
 
