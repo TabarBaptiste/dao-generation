@@ -35,7 +35,6 @@ export class TableSelectionPanel {
             : undefined;
 
         // Si nous avons déjà un panneau pour cette même base de données, le mettre à jour
-        console.log('dao TableSelectionPanel.currentPanel :', TableSelectionPanel.currentPanel);
         if (TableSelectionPanel.currentPanel &&
             TableSelectionPanel.currentPanel.database === database &&
             TableSelectionPanel.currentPanel.connection.id === connection.id) {
