@@ -1,3 +1,12 @@
+## [1.5.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.3...v1.5.4) (2025-09-22)
+
+
+### Bug Fixes
+
+* Ajout de nouvelles constantes pour les dossiers webview ([a3938a3](https://github.com/TabarBaptiste/dao-generation/commit/a3938a306f944dc35d47a4ae2559749ff55a156e))
+* Suppression de console.log ([48f2f8f](https://github.com/TabarBaptiste/dao-generation/commit/48f2f8ffb1fe94e8ea6b6c77b89eec34d2f8da06))
+* Traduction anglais --> français ([d60b465](https://github.com/TabarBaptiste/dao-generation/commit/d60b46503c876299f070809e2f86480dc263dacb))
+
 ## [1.5.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.2...v1.5.3) (2025-09-18)
 
 
