@@ -1,24 +1,24 @@
-// Get the VS Code API
+// Récupération de l'API VS Code
 const vscode = acquireVsCodeApi();
 
-// State
+// État
 let availableDatabases = [];
 let isEditMode = false;
 let autoLoadTimeout = null;
 let lastConnectionData = null;
 
-// DOM elements
+// Éléments DOM
 let formElements = {};
 
-// Initialize when DOM is loaded
+// Initialisation quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', function () {
     initializeElements();
     setupEventListeners();
 
-    // Request initial data
+    // Demander les données initiales
     vscode.postMessage({ command: 'ready' });
 
-    // Focus on first input
+    // Focus sur le premier champ
     formElements.name.focus();
 });
 
@@ -43,16 +43,16 @@ function initializeElements() {
 }
 
 function setupEventListeners() {
-    // Form submission
+    // Soumission du formulaire
     formElements.form.addEventListener('submit', handleSubmit);
 
-    // Button event listeners
+    // Écouteurs d'événements des boutons
     formElements.testBtn.addEventListener('click', testConnection);
     formElements.loadDbBtn.addEventListener('click', () => loadDatabases(false));
     formElements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
     formElements.cancelBtn.addEventListener('click', cancel);
 
-    // Prevent exponential notation in port field
+    // Empêcher la notation exponentielle dans le champ port
     formElements.port.addEventListener('keydown', function (e) {
         if (['e', 'E', '+', '-'].includes(e.key)) {
             e.preventDefault();
@@ -63,17 +63,17 @@ function setupEventListeners() {
         e.target.value = e.target.value.replace(/[eE\+\-]/g, '');
     });
 
-    // Auto-generate connection name based on host and database
+    // Auto-génération du nom de connexion basé sur l'hôte et la base de données
     formElements.host.addEventListener('input', updateConnectionName);
     formElements.database.addEventListener('change', updateConnectionName);
 
-    // Auto-load databases when all required fields are filled
+    // Chargement automatique des bases de données quand tous les champs requis sont remplis
     ['host', 'port', 'username', 'password'].forEach(field => {
         formElements[field].addEventListener('input', scheduleAutoLoadDatabases);
     });
     formElements.type.addEventListener('change', scheduleAutoLoadDatabases);
 
-    // Listen for messages from the extension
+    // Écouter les messages de l'extension
     window.addEventListener('message', event => {
         const message = event.data;
 
@@ -94,25 +94,25 @@ function setupEventListeners() {
 function loadFormData(data, editMode = false, titles = null, buttonLabels = null) {
     isEditMode = editMode;
 
-    // Update form title using constants if provided, fallback to hardcoded strings
+    // Mettre à jour le titre du formulaire en utilisant les constantes si fournies, sinon utiliser des chaînes codées en dur
     const addTitle = titles.add;
     const editTitle = titles.edit;
 
     formElements.formTitle.textContent = editMode ? editTitle : addTitle;
     
-    // Update title icon based on mode
+    // Mettre à jour l'icône du titre selon le mode
     const titleIcon = document.getElementById('titleIcon');
     if (titleIcon) {
         titleIcon.className = editMode ? 'codicon codicon-edit' : 'codicon codicon-add';
     }
 
-    // Update button text using constants if provided, fallback to hardcoded strings  
+    // Mettre à jour le texte des boutons en utilisant les constantes si fournies, sinon utiliser des chaînes codées en dur
     const createLabel = buttonLabels.create;
     const updateLabel = buttonLabels.update;
 
     setButtonTextWithIcon(formElements.submitBtn, editMode ? updateLabel : createLabel, editMode ? 'codicon-sync' : 'codicon-check');
 
-    // Populate form fields
+    // Remplir les champs du formulaire
     if (data) {
         formElements.name.value = data.name || '';
         formElements.type.value = data.type || 'mysql';
@@ -121,7 +121,7 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
         formElements.username.value = data.username || '';
         formElements.password.value = data.password || '';
 
-        // Handle database selection
+        // Gérer la sélection de base de données
         if (data.database) {
             const option = document.createElement('option');
             option.value = data.database;
@@ -138,7 +138,7 @@ function handleSubmit(e) {
     const formData = getFormData();
 
     if (!validateRequiredFields(formData)) {
-        showStatus('Please fill in all required fields', false);
+        showStatus('Veuillez remplir tous les champs obligatoires', false);
         return;
     }
 
@@ -151,11 +151,11 @@ function handleSubmit(e) {
 function testConnection() {
     const data = getFormData();
     if (!validateRequiredFields(data)) {
-        showStatus('Please fill in all required fields first', false);
+        showStatus('Veuillez d\'abord remplir tous les champs obligatoires', false);
         return;
     }
 
-    setButtonLoading(formElements.testBtn, true, 'Testing...');
+    setButtonLoading(formElements.testBtn, true, 'Test en cours...');
 
     vscode.postMessage({
         command: 'testConnection',
@@ -167,7 +167,7 @@ function loadDatabases(isAutoLoad = false) {
     const data = getFormData();
     if (!validateConnectionFields(data)) {
         if (!isAutoLoad) {
-            showStatus('Please fill in connection details first', false);
+            showStatus('Veuillez d\'abord remplir les détails de connexion', false);
         }
         return;
     }
@@ -176,7 +176,7 @@ function loadDatabases(isAutoLoad = false) {
     formElements.loadDbBtn.classList.add('spinning');
 
     if (!isAutoLoad) {
-        showStatus('Loading databases...', true);
+        showStatus('Chargement des bases de données...', true);
     }
 
     vscode.postMessage({
@@ -196,16 +196,16 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     formElements.loadDbBtn.classList.remove('spinning');
 
     if (!success) {
-        formElements.database.innerHTML = '<option value="">Select a database...</option>';
+        formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
         availableDatabases = [];
         showStatus(message, false);
         return;
     }
 
-    // Clear existing options except the first one
-    formElements.database.innerHTML = '<option value="">Select a database...</option>';
+    // Effacer les options existantes sauf la première
+    formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
 
-    // Add database options
+    // Ajouter les options de base de données
     databases.forEach(db => {
         const option = document.createElement('option');
         option.value = db;
@@ -218,7 +218,7 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     // Afficher le message approprié
     showStatus(message, true);
 
-    // Update connection name if field is empty
+    // Mettre à jour le nom de connexion si le champ est vide
     updateConnectionName();
 }
 
@@ -250,7 +250,7 @@ function showStatus(message, isSuccess) {
     statusDiv.className = 'status-message ' + (isSuccess ? 'status-success' : 'status-error');
     statusDiv.style.display = 'block';
 
-    // Auto-hide after 5 seconds
+    // Masquer automatiquement après 5 secondes
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 5000);
@@ -340,7 +340,6 @@ function scheduleAutoLoadDatabases() {
                 const finalData = getFormData();
 
                 if (validateConnectionFields(finalData) && !formElements.loadDbBtn.disabled) {
-                    console.log('Auto-loading databases...');
                     loadDatabases(true); // isAutoLoad = true
                 }
                 autoLoadTimeout = null;
@@ -353,7 +352,7 @@ function scheduleAutoLoadDatabases() {
     }
 }
 
-// Form validation helpers
+// Aides à la validation du formulaire
 function validateForm() {
     const data = getFormData();
     const isValid = validateRequiredFields(data);
@@ -361,10 +360,10 @@ function validateForm() {
     return isValid;
 }
 
-// Add real-time validation
+// Ajouter une validation en temps réel
 document.addEventListener('input', validateForm);
 
-// State management
+// Gestion de l'état
 function saveState() {
     const data = getFormData();
     vscode.setState({
@@ -385,7 +384,7 @@ function restoreState() {
     if (state.availableDatabases) {
         availableDatabases = state.availableDatabases;
         const currentDatabase = formElements.database.value;
-        formElements.database.innerHTML = '<option value="">Select a database...</option>';
+        formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
         state.availableDatabases.forEach(db => {
             const option = document.createElement('option');
             option.value = db;
@@ -416,14 +415,14 @@ function togglePasswordVisibility() {
     }
 }
 
-// Auto-save state when form changes
+// Sauvegarder automatiquement l'état quand le formulaire change
 document.addEventListener('change', saveState);
 document.addEventListener('input', saveState);
 
-// Restore state on load
+// Restaurer l'état au chargement
 restoreState();
 
-// Cleanup
+// Nettoyage
 window.addEventListener('beforeunload', function () {
     if (autoLoadTimeout) {
         clearTimeout(autoLoadTimeout);
