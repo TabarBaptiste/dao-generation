@@ -118,7 +118,7 @@ export class DaoGeneratorService {
                         break;
                     }
                 }
-                
+
                 // Si aucun projet trouvé, utiliser www par défaut
                 if (!defaultUri) {
                     defaultUri = vscode.Uri.file(defaultWampPath);
@@ -193,7 +193,7 @@ export class DaoGeneratorService {
         const mappingArray = this.generateMappingArray(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
-        
+
         // Déterminer la version à utiliser
         let version: string = VERSION_PATTERN.INITIAL;
         if (filePath && fs.existsSync(filePath)) {
@@ -451,10 +451,10 @@ ${crudMethods}
     private getNextVersion(filePath: string): string {
         const currentVersion = this.getCurrentVersion(filePath);
         const [major, minor] = currentVersion.split('.').map(Number);
-        
+
         // Incrémenter la partie mineure de 10
         const newMinor = minor + VERSION_PATTERN.INCREMENT;
-        
+
         return `${major}.${newMinor.toString().padStart(2, '0')}`;
     }
 

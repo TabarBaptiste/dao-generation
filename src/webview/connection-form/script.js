@@ -99,7 +99,7 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
     const editTitle = titles.edit;
 
     formElements.formTitle.textContent = editMode ? editTitle : addTitle;
-    
+
     // Mettre à jour l'icône du titre selon le mode
     const titleIcon = document.getElementById('titleIcon');
     if (titleIcon) {
@@ -155,13 +155,13 @@ function handleSubmit(e) {
  */
 function performConnectionTest(loadDatabasesAfterTest = false, isAutoLoad = false) {
     const data = getFormData();
-    
+
     // Validation selon le type de test
     const validationFn = loadDatabasesAfterTest ? validateConnectionFields : validateRequiredFields;
-    const errorMessage = loadDatabasesAfterTest 
+    const errorMessage = loadDatabasesAfterTest
         ? 'Veuillez d\'abord remplir les détails de connexion'
         : 'Veuillez d\'abord remplir tous les champs obligatoires';
-    
+
     if (!validationFn(data)) {
         if (!isAutoLoad) { // Ne pas afficher d'erreur pour l'auto-load
             showStatus(errorMessage, false);
@@ -405,7 +405,7 @@ function togglePasswordVisibility() {
     const passwordInput = formElements.password;
     const toggleBtn = formElements.togglePasswordBtn;
     const icon = toggleBtn.querySelector('i');
-    
+
     if (passwordInput.type === 'password') {
         // Afficher le mot de passe
         passwordInput.type = 'text';

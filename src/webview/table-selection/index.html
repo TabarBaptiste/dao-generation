@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" 
+    <meta http-equiv="Content-Security-Policy"
         content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline' https://unpkg.com; font-src https://unpkg.com; script-src {{cspSource}} 'unsafe-inline';">
     <title>Table Selection</title>
     <link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
     <link rel="stylesheet" type="text/css" href="{{cssUri}}">
 </head>
+
 <body>
     <div class="header">
         <h1>
@@ -20,7 +22,7 @@
             Base de données: <strong id="databaseName"></strong> sur <span id="hostName"></span>
         </div>
     </div>
-    
+
     <div class="tables-section">
         <div class="section-title">Sélection des tables</div>
         <div class="table-controls">
@@ -41,7 +43,7 @@
             <!-- Tables will be dynamically added here -->
         </div>
     </div>
-    
+
     <div class="options-section">
         <div class="section-title">
             <i class="codicon codicon-settings-gear"></i>
@@ -64,7 +66,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="actions">
         <button type="button" id="generateBtn">
             <i class="codicon codicon-play"></i>
@@ -74,4 +76,5 @@
 
     <script src="{{jsUri}}"></script>
 </body>
+
 </html>

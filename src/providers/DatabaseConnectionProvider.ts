@@ -144,14 +144,14 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
         if (!element) {
             // Retourner toutes les connexions avec tri
             const connections = this.connectionManager.getConnections();
-            
+
             // Si aucune connexion n'existe, afficher le message d'état vide
             if (connections.length === 0) {
                 return Promise.resolve([new EmptyStateTreeItem() as any]);
             }
-            
+
             const sortedConnections = this.sortConnections(connections);
-            
+
             // Reconnecter automatiquement les connexions marquées comme connectées
             sortedConnections.forEach(conn => {
                 if (conn.isConnected && !this.databaseService.isConnected(conn.id)) {
@@ -162,7 +162,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
                     });
                 }
             });
-            
+
             return Promise.resolve(
                 sortedConnections.map((conn: DatabaseConnection) => new DatabaseConnectionTreeItem(
                     conn,

@@ -12,10 +12,10 @@ let selectNoneBtn;
 let tablesData = [];
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initializeElements();
     setupEventListeners();
-    
+
     // Request initial data
     vscode.postMessage({ command: 'ready' });
 });
@@ -33,7 +33,7 @@ function setupEventListeners() {
     selectAllBtn.addEventListener('click', selectAll);
     selectNoneBtn.addEventListener('click', selectNone);
     generateBtn.addEventListener('click', generateDao);
-    
+
     // Listen for messages from the extension
     window.addEventListener('message', event => {
         const message = event.data;
@@ -62,13 +62,13 @@ function updatePageData(data) {
 
 function updateTablesList(tables) {
     tablesData = tables;
-    
+
     if (tables.length === 0) {
         tableList.innerHTML = '<div class="loading">Aucune table trouvée dans cette base de données.</div>';
         updateSelectedCount();
         return;
     }
-    
+
     const tableItems = tables.map(table => `
         <div class="table-item">
             <label>
@@ -78,15 +78,15 @@ function updateTablesList(tables) {
             </label>
         </div>
     `).join('');
-    
+
     tableList.innerHTML = tableItems;
-    
+
     // Add event listeners to new checkboxes
     const checkboxes = tableList.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateSelectedCount);
     });
-    
+
     updateSelectedCount();
 }
 
@@ -114,7 +114,7 @@ function showError(errorMessage) {
 function updateSelectedCount() {
     const checkboxes = document.querySelectorAll('.table-item input[type="checkbox"]');
     const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-    
+
     selectedCount.innerHTML = `<i class="codicon codicon-info"></i> ${checkedCount} table(s) sélectionnée(s)`;
     generateBtn.disabled = checkedCount === 0;
 }
@@ -134,13 +134,13 @@ function selectNone() {
 function generateDao() {
     const selectedTables = Array.from(document.querySelectorAll('.table-item input[type="checkbox"]:checked'))
         .map(cb => cb.value);
-    
+
     const mode = document.querySelector('input[name="mode"]:checked').value;
-    
+
     if (selectedTables.length === 0) {
         return;
     }
-    
+
     vscode.postMessage({
         command: 'generate',
         selectedTables: selectedTables,
@@ -161,9 +161,9 @@ function saveState() {
     const selectedTables = Array.from(checkboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.value);
-    
+
     const mode = document.querySelector('input[name="mode"]:checked')?.value || 'save';
-    
+
     vscode.setState({
         selectedTables: selectedTables,
         mode: mode,
@@ -174,7 +174,7 @@ function saveState() {
 function restoreState() {
     const state = vscode.getState();
     if (!state) return;
-    
+
     // Restore mode selection
     if (state.mode) {
         const modeRadio = document.querySelector(`input[name="mode"][value="${state.mode}"]`);
@@ -182,7 +182,7 @@ function restoreState() {
             modeRadio.checked = true;
         }
     }
-    
+
     // Restore table selections
     if (state.selectedTables) {
         const checkboxes = document.querySelectorAll('.table-item input[type="checkbox"]');

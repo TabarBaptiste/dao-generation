@@ -67,7 +67,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         try {
             const connectionData = DatabaseConnectionFactory.createTempConnection(data);
             const result = await this.databaseService.testConnection(connectionData);
-            
+
             this.sendMessage({
                 command: 'testConnectionResult',
                 success: result.success,

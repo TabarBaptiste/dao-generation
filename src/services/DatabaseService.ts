@@ -15,7 +15,7 @@ export class DatabaseService {
         } catch (error: any) {
             console.log('Code d\'erreur MySQL:', error.code);
             console.log('Message d\'erreur MySQL:', error.message);
-            
+
             if (error.code === 'ENOTFOUND') {
                 return { success: false, message: 'Host introuvable. Vérifiez l\'adresse du serveur.' };
             } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
@@ -33,7 +33,7 @@ export class DatabaseService {
     public async connect(connection: DatabaseConnection): Promise<void> {
         // Tester la connexion d'abord avec gestion d'erreur personnalisée
         const testResult = await this.testConnection(connection);
-        
+
         if (!testResult.success) {
             throw new Error(testResult.message);
         }

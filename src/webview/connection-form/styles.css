@@ -30,7 +30,8 @@ label i {
     min-width: 14px;
 }
 
-input, select {
+input,
+select {
     width: 100%;
     padding: 8px 12px;
     /* border: 1px solid white; */
@@ -42,7 +43,8 @@ input, select {
     box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     border-color: var(--vscode-focusBorder);
 }
@@ -191,8 +193,13 @@ h1 {
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Styles pour les icônes Codicons dans les boutons */
@@ -292,8 +299,13 @@ input:valid {
 
 /* Animations */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .btn-load-db.spinning {
