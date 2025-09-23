@@ -56,3 +56,8 @@ export const VERSION_PATTERN = {
     INITIAL: '1.00',
     INCREMENT: 10
 } as const;
+
+export const SORT = {
+    ALPHABETICAL: 'alphabetical',
+    DATE: 'date'
+} as const;

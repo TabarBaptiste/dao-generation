@@ -6,6 +6,7 @@ import { TableSelectionPanel } from '../panels/TableSelectionPanel';
 import { DatabaseService } from '../services/DatabaseService';
 import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
+import { SORT } from '../constants/AppConstants';
 
 /**
  * Élément d'arbre pour afficher un message quand aucun serveur n'est trouvé
@@ -78,7 +79,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     private _onDidChangeTreeData: vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void> = new vscode.EventEmitter<DatabaseConnectionTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<DatabaseConnectionTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    private sortMode: 'alphabetical' | 'date' = 'date';
+    private sortMode: 'alphabetical' | 'date' = SORT.DATE;
 
     constructor(
         private connectionManager: ConnectionManager,
@@ -100,7 +101,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     private sortConnections(connections: DatabaseConnection[]): DatabaseConnection[] {
         const sorted = [...connections]; // Copie pour éviter de muter l'original
 
-        if (this.sortMode === 'alphabetical') {
+        if (this.sortMode === SORT.ALPHABETICAL) {
             // Tri alphabétique par nom
             return sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
         } else {
@@ -119,10 +120,10 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
      * Alterne entre tri alphabétique et tri par date d'ajout
      */
     public toggleSortMode(): void {
-        this.sortMode = this.sortMode === 'alphabetical' ? 'date' : 'alphabetical';
+        this.sortMode = this.sortMode === SORT.ALPHABETICAL ? SORT.DATE : SORT.ALPHABETICAL;
 
         // Afficher le mode de tri actuel
-        const sortModeText = this.sortMode === 'alphabetical' ? 'alphabétique' : 'date d\'ajout';
+        const sortModeText = this.sortMode === SORT.ALPHABETICAL ? 'ordre alphabétique' : 'date d\'ajout';
         vscode.window.showInformationMessage(`Connexions triées par ${sortModeText}`);
 
         this.refresh();
