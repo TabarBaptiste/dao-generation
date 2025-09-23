@@ -1,3 +1,10 @@
+## [1.5.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.5...v1.5.6) (2025-09-23)
+
+
+### Bug Fixes
+
+* Nouvel icône pour port ([440cfaa](https://github.com/TabarBaptiste/dao-generation/commit/440cfaa11aa7c05b7608774bb7bb02396bd8728a))
+
 ## [1.5.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.4...v1.5.5) (2025-09-22)
 
 
