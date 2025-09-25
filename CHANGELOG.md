@@ -1,3 +1,12 @@
+## [1.5.7](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.6...v1.5.7) (2025-09-25)
+
+
+### Bug Fixes
+
+* Corrections mineurs ([a0c2dd4](https://github.com/TabarBaptiste/dao-generation/commit/a0c2dd429980bbd5a428ffa1c6775756d9c7f967))
+* Serveurs enregistrés globalement, et plus pour un utilisateur ([b6d7c86](https://github.com/TabarBaptiste/dao-generation/commit/b6d7c86493f444b0c520df01ea07ddbae04ab64d))
+* Traduction de l'anglais au français ([4b94fd5](https://github.com/TabarBaptiste/dao-generation/commit/4b94fd5e741be79721ec279f7fc0f61ad8f39ba3))
+
 ## [1.5.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.5...v1.5.6) (2025-09-23)
 
 
