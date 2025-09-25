@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { DatabaseConnection, ConnectionFormData } from '../types/Connection';
+import { DatabaseConnection } from '../types/Connection';
 import { ConnectionManager } from '../services/ConnectionManager';
 import { ConnectionFormPanel } from '../panels/ConnectionFormPanel';
 import { TableSelectionPanel } from '../panels/TableSelectionPanel';
@@ -80,6 +80,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
     readonly onDidChangeTreeData: vscode.Event<DatabaseConnectionTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private sortMode: 'alphabetical' | 'date' = SORT.DATE;
+    private connections: DatabaseConnection[] = [];
 
     constructor(
         private connectionManager: ConnectionManager,
@@ -120,6 +121,11 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
      * Alterne entre tri alphabétique et tri par date d'ajout
      */
     public toggleSortMode(): void {
+        if (this.connections.length === 0) {
+            vscode.window.showInformationMessage('Aucune connexion à trier.');
+            return;
+        }
+
         this.sortMode = this.sortMode === SORT.ALPHABETICAL ? SORT.DATE : SORT.ALPHABETICAL;
 
         // Afficher le mode de tri actuel
