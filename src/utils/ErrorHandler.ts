@@ -1,43 +1,43 @@
 import * as vscode from 'vscode';
 
 /**
- * Centralized error handling utility to standardize error management
- * Eliminates duplication of try-catch patterns and error formatting
+ * Utilitaire centralisé de gestion des erreurs pour standardiser la gestion d'erreur
+ * Élimine la duplication des patterns try-catch et du formatage d'erreurs
  */
 export class ErrorHandler {
     /**
-     * Shows error message to user with consistent formatting
-     * @param operation Description of the operation that failed
-     * @param error The error that occurred
+     * Affiche un message d'erreur à l'utilisateur avec un formatage cohérent
+     * @param operation Description de l'opération qui a échoué
+     * @param error L'erreur qui s'est produite
      */
     static showError(operation: string, error: unknown): void {
-        const message = `Failed to ${operation}: ${this.formatErrorMessage(error)}`;
+        const message = `Échec de ${operation} : ${this.formatErrorMessage(error)}`;
         vscode.window.showErrorMessage(message);
     }
 
     /**
-     * Shows warning message to user
-     * @param operation Description of the operation
-     * @param error The error that occurred
+     * Affiche un message d'avertissement à l'utilisateur
+     * @param operation Description de l'opération
+     * @param error L'erreur qui s'est produite
      */
     static showWarning(operation: string, error: unknown): void {
-        const message = `Warning during ${operation}: ${this.formatErrorMessage(error)}`;
+        const message = `Avertissement pendant ${operation} : ${this.formatErrorMessage(error)}`;
         vscode.window.showWarningMessage(message);
     }
 
     /**
-     * Logs error to console with context
-     * @param context Context description for debugging
-     * @param error The error that occurred
+     * Enregistre l'erreur dans la console avec le contexte
+     * @param context Description du contexte pour le débogage
+     * @param error L'erreur qui s'est produite
      */
     static logError(context: string, error: unknown): void {
         console.error(`[${context}]`, error);
     }
 
     /**
-     * Formats error message with consistent pattern
-     * @param error The error to format
-     * @returns Formatted error message
+     * Formate le message d'erreur avec un pattern cohérent
+     * @param error L'erreur à formater
+     * @returns Message d'erreur formaté
      */
     static formatErrorMessage(error: unknown): string {
         if (error instanceof Error) {
@@ -46,15 +46,15 @@ export class ErrorHandler {
         if (typeof error === 'string') {
             return error;
         }
-        return 'Unknown error';
+        return 'Erreur inconnue';
     }
 
     /**
-     * Handles async operations with standardized error handling
-     * @param operation Description of operation
-     * @param asyncFn The async function to execute
-     * @param showUserError Whether to show error to user (default: true)
-     * @returns Promise that resolves to result or undefined on error
+     * Gère les opérations asynchrones avec gestion d'erreur standardisée
+     * @param operation Description de l'opération
+     * @param asyncFn La fonction asynchrone à exécuter
+     * @param showUserError Si afficher l'erreur à l'utilisateur (par défaut : true)
+     * @returns Promise qui se résout avec le résultat ou undefined en cas d'erreur
      */
     static async handleAsync<T>(
         operation: string,
@@ -73,11 +73,11 @@ export class ErrorHandler {
     }
 
     /**
-     * Wraps sync operations with error handling
-     * @param operation Description of operation
-     * @param syncFn The function to execute
-     * @param showUserError Whether to show error to user (default: true)
-     * @returns Result or undefined on error
+     * Encapsule les opérations synchrones avec gestion d'erreur
+     * @param operation Description de l'opération
+     * @param syncFn La fonction à exécuter
+     * @param showUserError Si afficher l'erreur à l'utilisateur (par défaut : true)
+     * @returns Résultat ou undefined en cas d'erreur
      */
     static handleSync<T>(
         operation: string,
