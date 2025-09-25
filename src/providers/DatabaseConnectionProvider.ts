@@ -278,7 +278,8 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
             username: connection.username,
             password: connection.password,
             database: connection.database || '',
-            type: connection.type
+            type: connection.type,
+            defaultDaoPath: connection.defaultDaoPath
         });
         const formData = await panel.show();
 

@@ -4,7 +4,7 @@ import { DatabaseService } from '../services/DatabaseService';
 import { BaseWebviewPanel } from './BaseWebviewPanel';
 import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
-import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS } from '../constants/AppConstants';
+import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS, DEFAULT_PATHS } from '../constants/AppConstants';
 
 export class ConnectionFormPanel extends BaseWebviewPanel {
     private databaseService = new DatabaseService();
@@ -59,6 +59,9 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
                 break;
             case 'loadDatabases':
                 await this.handleLoadDatabases(message.data, message.isAutoLoad || false);
+                break;
+            case 'selectPath':
+                await this.handleSelectPath();
                 break;
         }
     }
@@ -119,6 +122,30 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
                 success: false,
                 message,
                 isAutoLoad
+            });
+        }
+    }
+
+    private async handleSelectPath(): Promise<void> {
+        const result = await ErrorHandler.handleAsync(
+            'sélection du répertoire',
+            async () => {
+                return await vscode.window.showOpenDialog({
+                    canSelectFiles: false,
+                    canSelectFolders: true,
+                    canSelectMany: false,
+                    openLabel: 'Sélectionner le répertoire du projet',
+                    title: 'Choisir le répertoire du projet pour la génération des DAO',
+                    defaultUri: vscode.Uri.file(DEFAULT_PATHS.WAMP_WWW)
+                });
+            },
+            true
+        );
+
+        if (result && result[0]) {
+            this.sendMessage({
+                command: 'pathSelected',
+                path: result[0].fsPath
             });
         }
     }

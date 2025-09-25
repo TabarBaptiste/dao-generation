@@ -9,6 +9,7 @@ export interface DatabaseConnection {
     type: 'mysql' | 'mariadb';
     isConnected?: boolean;
     lastConnected?: Date;
+    defaultDaoPath?: string;
 }
 
 export interface ConnectionFormData {
@@ -19,6 +20,7 @@ export interface ConnectionFormData {
     password?: string;
     database: string;
     type: 'mysql' | 'mariadb';
+    defaultDaoPath?: string;
 }
 
 export interface TableInfo {

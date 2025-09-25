@@ -99,6 +99,21 @@
                     disponibles</div>
             </div>
 
+            <div class="form-group" id="defaultDaoPathGroup">
+                <label for="defaultDaoPath">
+                    <i class="codicon codicon-folder"></i>
+                    Répertoire du projet
+                </label>
+                <div class="path-input-group">
+                    <input type="text" id="defaultDaoPath" name="defaultDaoPath"
+                        placeholder="Cliquez sur le bouton pour sélectionner un dossier...">
+                    <button type="button" id="selectPathBtn" class="btn-select-path" title="Sélectionner un dossier">
+                        <i class="codicon codicon-folder-opened"></i>
+                    </button>
+                </div>
+                <div class="help-text">Si défini, les DAO seront générés automatiquement dans ce répertoire</div>
+            </div>
+
             <div class="test-connection">
                 <button type="button" id="testBtn" class="btn-test">
                     <i class="codicon codicon-plug"></i>

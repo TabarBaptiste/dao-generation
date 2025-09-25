@@ -19,7 +19,8 @@ export class DatabaseConnectionFactory {
             password: data.password || '',
             database: data.database || undefined,
             type: data.type,
-            isConnected: false
+            isConnected: false,
+            defaultDaoPath: data.defaultDaoPath
         };
     }
 

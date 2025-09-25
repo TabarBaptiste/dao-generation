@@ -26,12 +26,13 @@ export class ConnectionManager {
 
     public async addConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<boolean> {
         const testResult = await this.databaseService.testConnection(connection);
-
         // Créer la connexion finale avec le statut de connexion basé sur le test
         const newConnection: DatabaseConnection = {
             ...connection,
             id: this.generateId(),
-            isConnected: testResult.success
+            isConnected: testResult.success,
+            // Ne sauvegarder le defaultDaoPath que si une database est définie
+            defaultDaoPath: connection.database ? connection.defaultDaoPath : undefined
         };
 
         // Vérifier s'il existe déjà une connexion identique
@@ -57,7 +58,12 @@ export class ConnectionManager {
     public async updateConnection(id: string, connection: Partial<DatabaseConnection>): Promise<void> {
         const index = this.connections.findIndex(conn => conn.id === id);
         if (index !== -1) {
-            this.connections[index] = { ...this.connections[index], ...connection };
+            // Nettoyer le defaultDaoPath si pas de database
+            const updatedConnection = { ...this.connections[index], ...connection };
+            if (!updatedConnection.database) {
+                updatedConnection.defaultDaoPath = undefined;
+            }
+            this.connections[index] = updatedConnection;
             await this.saveConnections();
         }
     }
@@ -201,6 +207,7 @@ export class ConnectionManager {
      * Vérifie si deux connexions sont identiques (même serveur, même base de données)
      */
     private isSameConnection(conn1: DatabaseConnection, conn2: DatabaseConnection): boolean {
+        // TODO : vérifier aussi avec "name"
         // Normaliser les valeurs de base de données
         const db1 = conn1.database || undefined;
         const db2 = conn2.database || undefined;
@@ -352,7 +359,7 @@ export class ConnectionManager {
             // Créer les données d'export
             const exportData = {
                 exportDate: new Date().toISOString(),
-                version: '1.0.0',
+                // version: '1.0.0',
                 encrypted: hasEncryptedData,
                 connections: processedConnections
             };
@@ -559,6 +566,8 @@ export class ConnectionManager {
                 throw new Error(errorMessage);
             }
 
+            // TODO : Modifier pour mettre à jour les connexions existantes et ajouter celles qui n'existe pas encore par défaut.
+            // TODO : Donc, Plus besoin de demander si on ajoute ou remplace. (Corriger/Supprimer aussi handleConnectionImport())
             // Déterminer le mode d'importation
             let importMode = 'merge';
             if (this.connections.length > 0) {

@@ -33,8 +33,10 @@ function initializeElements() {
         username: document.getElementById('username'),
         password: document.getElementById('password'),
         database: document.getElementById('database'),
+        defaultDaoPath: document.getElementById('defaultDaoPath'),
         testBtn: document.getElementById('testBtn'),
         loadDbBtn: document.getElementById('loadDbBtn'),
+        selectPathBtn: document.getElementById('selectPathBtn'),
         togglePasswordBtn: document.getElementById('togglePasswordBtn'),
         cancelBtn: document.getElementById('cancelBtn'),
         submitBtn: document.getElementById('submitBtn'),
@@ -49,6 +51,7 @@ function setupEventListeners() {
     // Écouteurs d'événements des boutons
     formElements.testBtn.addEventListener('click', () => performConnectionTest(false));
     formElements.loadDbBtn.addEventListener('click', () => performConnectionTest(true, false));
+    formElements.selectPathBtn.addEventListener('click', selectDefaultPath);
     formElements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
     formElements.cancelBtn.addEventListener('click', cancel);
 
@@ -65,7 +68,10 @@ function setupEventListeners() {
 
     // Auto-génération du nom de connexion basé sur l'hôte et la base de données
     formElements.host.addEventListener('input', updateConnectionName);
-    formElements.database.addEventListener('change', updateConnectionName);
+    formElements.database.addEventListener('change', function() {
+        updateConnectionName();
+        toggleDaoPathVisibility();
+    });
 
     // Chargement automatique des bases de données quand tous les champs requis sont remplis
     ['host', 'port', 'username', 'password'].forEach(field => {
@@ -86,6 +92,9 @@ function setupEventListeners() {
                 break;
             case 'databasesLoaded':
                 handleDatabasesLoaded(message.databases, message.success, message.message, message.isAutoLoad);
+                break;
+            case 'pathSelected':
+                handlePathSelected(message.path);
                 break;
         }
     });
@@ -120,6 +129,7 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
         formElements.port.value = data.port || '3306';
         formElements.username.value = data.username || '';
         formElements.password.value = data.password || '';
+        formElements.defaultDaoPath.value = data.defaultDaoPath || '';
 
         // Gérer la sélection de base de données
         if (data.database) {
@@ -129,6 +139,9 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
             option.selected = true;
             formElements.database.appendChild(option);
         }
+        
+        // Mettre à jour la visibilité du champ de répertoire par défaut
+        toggleDaoPathVisibility();
     }
 }
 
@@ -228,6 +241,9 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
 
     // Mettre à jour le nom de connexion si le champ est vide
     updateConnectionName();
+    
+    // Mettre à jour la visibilité du champ de répertoire par défaut
+    toggleDaoPathVisibility();
 }
 
 function getFormData() {
@@ -238,7 +254,8 @@ function getFormData() {
         port: parseInt(formElements.port.value, 10),
         username: formElements.username.value.trim(),
         password: formElements.password.value,
-        database: formElements.database.value
+        database: formElements.database.value,
+        defaultDaoPath: formElements.defaultDaoPath.value.trim()
     };
 }
 
@@ -308,6 +325,36 @@ function cancel() {
     vscode.postMessage({
         command: 'cancel'
     });
+}
+
+// Fonction pour afficher/masquer le champ du répertoire par défaut
+function toggleDaoPathVisibility() {
+    const daoPathGroup = document.getElementById('defaultDaoPathGroup');
+    const databaseValue = formElements.database.value.trim();
+    
+    if (databaseValue) {
+        daoPathGroup.classList.add('show');
+    } else {
+        daoPathGroup.classList.remove('show');
+        // Vider le champ si on masque le groupe
+        formElements.defaultDaoPath.value = '';
+    }
+}
+
+// Fonction pour demander la sélection d'un dossier
+function selectDefaultPath() {
+    vscode.postMessage({
+        command: 'selectPath'
+    });
+}
+
+// Fonction pour traiter le dossier sélectionné
+function handlePathSelected(path) {
+    if (path) {
+        formElements.defaultDaoPath.value = path;
+        // Déclencher l'événement change pour la sauvegarde automatique
+        formElements.defaultDaoPath.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 }
 
 function updateConnectionName() {

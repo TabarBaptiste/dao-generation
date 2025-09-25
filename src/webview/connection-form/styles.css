@@ -152,6 +152,26 @@ h1 {
     flex: 1;
 }
 
+.path-input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.path-input-group input {
+    flex: 1;
+}
+
+/* Masquer le champ du répertoire par défaut par défaut */
+#defaultDaoPathGroup {
+    display: none;
+}
+
+/* Afficher le champ quand la classe 'show' est présente */
+#defaultDaoPathGroup.show {
+    display: block;
+}
+
 .password-input-group {
     display: flex;
     align-items: center;
@@ -204,12 +224,14 @@ h1 {
 
 /* Styles pour les icônes Codicons dans les boutons */
 .btn-load-db i,
-.btn-toggle-password i {
+.btn-toggle-password i,
+.btn-select-path i {
     font-size: 14px;
     line-height: 1;
 }
 
-.btn-load-db {
+.btn-load-db,
+.btn-select-path {
     padding: 8px 10px;
     border: 1px solid var(--vscode-input-border);
     background-color: var(--vscode-button-secondaryBackground);
@@ -225,11 +247,13 @@ h1 {
     min-width: auto;
 }
 
-.btn-load-db:hover {
+.btn-load-db:hover,
+.btn-select-path:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
-.btn-load-db:disabled {
+.btn-load-db:disabled,
+.btn-select-path:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
