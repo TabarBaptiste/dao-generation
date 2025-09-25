@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { DatabaseConnection } from '../types/Connection';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
@@ -8,8 +10,12 @@ export class ConnectionManager {
     private static readonly STORAGE_KEY = STORAGE_KEYS.CONNECTIONS;
     private static readonly ENCRYPTION_KEY = ENCRYPTION.KEY;
     private connections: DatabaseConnection[] = [];
+    private globalStoragePath: string;
 
     constructor(private context: vscode.ExtensionContext) {
+        // Utiliser le répertoire de stockage global de l'extension
+        this.globalStoragePath = path.join(context.globalStorageUri.fsPath, 'connections.json');
+        console.log('this.globalStoragePath :', this.globalStoragePath);
         this.loadConnections();
     }
 
@@ -80,68 +86,100 @@ export class ConnectionManager {
     }
 
     private async loadConnections(): Promise<void> {
-        const stored = this.context.globalState.get<any[]>(ConnectionManager.STORAGE_KEY);
-        console.log('dao stored :', stored);
-
-        if (!stored) {
-            this.connections = [];
-            return;
-        }
-
-        this.connections = stored.map(conn => {
-            // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
-            if (conn.encryptedPassword && conn.passwordIv) {
-                const decryptedPassword = EncryptionUtil.safeDecrypt(
-                    conn.encryptedPassword,
-                    conn.passwordIv,
-                    ConnectionManager.ENCRYPTION_KEY
-                );
-
-                if (decryptedPassword === null) {
-                    ErrorHandler.logError('déchiffrement connexion', `Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
-                    // Retourner la connexion sans mot de passe en cas d'échec
-                    const { encryptedPassword, passwordIv, ...cleanConn } = conn;
-                    return { ...cleanConn, password: '' };
+        await ErrorHandler.handleAsync(
+            'chargement des connexions',
+            async () => {
+                // S'assurer que le répertoire existe
+                if (!fs.existsSync(path.dirname(this.globalStoragePath))) {
+                    fs.mkdirSync(path.dirname(this.globalStoragePath), { recursive: true });
                 }
 
-                // Retourner la connexion avec le mot de passe déchiffré
-                const { encryptedPassword, passwordIv, ...cleanConn } = conn;
-                return { ...cleanConn, password: decryptedPassword };
-            }
+                if (!fs.existsSync(this.globalStoragePath)) {
+                    this.connections = [];
+                    return;
+                }
 
-            // Connexion non chiffrée (rétrocompatibilité)
-            return conn;
-        });
+                const fileContent = fs.readFileSync(this.globalStoragePath, 'utf-8');
+                const stored = JSON.parse(fileContent);
+                console.log('dao stored (stockage global):', stored);
+
+                if (!stored || !Array.isArray(stored)) {
+                    this.connections = [];
+                    return;
+                }
+
+                this.connections = stored.map(conn => {
+                    // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
+                    if (conn.encryptedPassword && conn.passwordIv) {
+                        const decryptedPassword = EncryptionUtil.safeDecrypt(
+                            conn.encryptedPassword,
+                            conn.passwordIv,
+                            ConnectionManager.ENCRYPTION_KEY
+                        );
+
+                        if (decryptedPassword === null) {
+                            ErrorHandler.logError('déchiffrement connexion', `Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
+                            // Retourner la connexion sans mot de passe en cas d'échec
+                            const { encryptedPassword, passwordIv, ...cleanConn } = conn;
+                            return { ...cleanConn, password: '' };
+                        }
+
+                        // Retourner la connexion avec le mot de passe déchiffré
+                        const { encryptedPassword, passwordIv, ...cleanConn } = conn;
+                        return { ...cleanConn, password: decryptedPassword };
+                    }
+
+                    // Connexion non chiffrée (rétrocompatibilité)
+                    return conn;
+                });
+            },
+            false // Ne pas afficher d'erreur à l'utilisateur, juste initialiser à vide
+        );
+
+        // S'assurer qu'on a toujours un tableau même en cas d'erreur
+        if (!this.connections) {
+            this.connections = [];
+        }
     }
 
     private async saveConnections(): Promise<void> {
-        const connectionsToSave = this.connections.map(conn => {
-            // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
-            const cleanConn = this.cleanConnectionForStorage(conn, false, false);
+        await ErrorHandler.handleAsync(
+            'sauvegarde des connexions',
+            async () => {
+                const connectionsToSave = this.connections.map(conn => {
+                    // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
+                    const cleanConn = this.cleanConnectionForStorage(conn, false, false);
 
-            // Si pas de mot de passe valide, sauvegarder sans chiffrement
-            if (!this.isValidPassword(conn.password)) {
-                const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-                return connWithoutPassword;
+                    // Si pas de mot de passe valide, sauvegarder sans chiffrement
+                    if (!this.isValidPassword(conn.password)) {
+                        const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
+                        return connWithoutPassword;
+                    }
+
+                    // Chiffrer le mot de passe
+                    const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ConnectionManager.ENCRYPTION_KEY);
+                    if (!encrypted) {
+                        ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
+                        const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
+                        return connWithoutPassword;
+                    }
+
+                    const { password, ...connWithoutClearPassword } = cleanConn;
+                    return {
+                        ...connWithoutClearPassword,
+                        encryptedPassword: encrypted.encrypted,
+                        passwordIv: encrypted.iv
+                    };
+                });
+
+                // S'assurer que le répertoire existe
+                if (!fs.existsSync(path.dirname(this.globalStoragePath))) {
+                    fs.mkdirSync(path.dirname(this.globalStoragePath), { recursive: true });
+                }
+
+                fs.writeFileSync(this.globalStoragePath, JSON.stringify(connectionsToSave, null, 2), 'utf-8');
             }
-
-            // Chiffrer le mot de passe
-            const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ConnectionManager.ENCRYPTION_KEY);
-            if (!encrypted) {
-                ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
-                const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-                return connWithoutPassword;
-            }
-
-            const { password, ...connWithoutClearPassword } = cleanConn;
-            return {
-                ...connWithoutClearPassword,
-                encryptedPassword: encrypted.encrypted,
-                passwordIv: encrypted.iv
-            };
-        });
-
-        await this.context.globalState.update(ConnectionManager.STORAGE_KEY, connectionsToSave);
+        );
     }
 
     private generateId(): string {
