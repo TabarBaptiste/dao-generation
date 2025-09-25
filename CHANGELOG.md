@@ -1,3 +1,11 @@
+## [1.5.8](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.7...v1.5.8) (2025-09-25)
+
+
+### Bug Fixes
+
+* ignore fichiers .vscode - remove from tracking ([59982a1](https://github.com/TabarBaptiste/dao-generation/commit/59982a183d9cf19bceb72438dc6de50e875c12e2))
+* Serveurs enregistrés globalement, et plus pour un utilisateur ([67d3009](https://github.com/TabarBaptiste/dao-generation/commit/67d3009258a5a79b0c3e2e9031d74721636b0d7c))
+
 ## [1.5.7](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.6...v1.5.7) (2025-09-25)
 
 
