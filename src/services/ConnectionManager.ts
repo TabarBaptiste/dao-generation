@@ -5,6 +5,7 @@ import { DatabaseConnection } from '../types/Connection';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { STORAGE_KEYS, ENCRYPTION } from '../constants/AppConstants';
+import { DatabaseService } from './DatabaseService';
 
 export class ConnectionManager {
     private static readonly STORAGE_KEY = STORAGE_KEYS.CONNECTIONS;
@@ -12,7 +13,7 @@ export class ConnectionManager {
     private connections: DatabaseConnection[] = [];
     private globalStoragePath: string;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(private context: vscode.ExtensionContext, private databaseService: DatabaseService) {
         // Utiliser le répertoire de stockage global de l'extension
         this.globalStoragePath = path.join(context.globalStorageUri.fsPath, 'connections.json');
         console.log('this.globalStoragePath :', this.globalStoragePath);
@@ -24,11 +25,13 @@ export class ConnectionManager {
     }
 
     public async addConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<boolean> {
+        const testResult = await this.databaseService.testConnection(connection);
+
+        // Créer la connexion finale avec le statut de connexion basé sur le test
         const newConnection: DatabaseConnection = {
             ...connection,
             id: this.generateId(),
-            // TODO : tester la connexion avant de marquer comme connectée
-            isConnected: true
+            isConnected: testResult.success
         };
 
         // Vérifier s'il existe déjà une connexion identique
@@ -40,6 +43,14 @@ export class ConnectionManager {
 
         this.connections.push(newConnection);
         await this.saveConnections();
+
+        // Afficher un message informatif selon le résultat du test
+        if (!testResult.success) {
+            vscode.window.showWarningMessage(
+                `Connexion "${newConnection.name}" ajoutée mais le test a échoué : ${testResult.message} `
+            );
+        }
+
         return true;
     }
 

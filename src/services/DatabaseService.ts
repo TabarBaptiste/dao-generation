@@ -6,7 +6,7 @@ import { ErrorHandler } from '../utils/ErrorHandler';
 export class DatabaseService {
     private connections: Map<string, mysql.Connection> = new Map();
 
-    public async testConnection(connection: DatabaseConnection): Promise<{ success: boolean, message: string }> {
+    public async testConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<{ success: boolean, message: string }> {
         try {
             const conn = await this.createConnection(connection);
             await conn.ping();
@@ -138,7 +138,7 @@ export class DatabaseService {
         }
     }
 
-    private async createConnection(connection: DatabaseConnection): Promise<mysql.Connection> {
+    private async createConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<mysql.Connection> {
         const config: mysql.ConnectionOptions = {
             host: connection.host,
             port: connection.port,
