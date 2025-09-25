@@ -33,7 +33,6 @@ Elle facilite la connexion à vos serveurs, l’exploration des bases, et la gé
 ## 📌 Fonctionnalités principales
 
 - Ajouter facilement des serveurs de bases de données.
-- Tester la connexion avant de sauvegarder.
 - Explorer vos bases et tables directement depuis la sidebar.
 - Générer automatiquement des fichiers DAO pour vos tables.
 - Deux modes de génération :
@@ -54,7 +53,7 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
   - `Host *`
   - `Port *`
   - `Username *`
-  - `Password *`
+  - `Password`
   - `Database` (liste déroulante avec bouton refresh)
 - Cliquez sur **Test de connexion** pour vérifier l’accès.
 - Puis sur **Créer**.
@@ -67,7 +66,7 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
 - Cliquer sur **Se déconneter** pour avoir :
   - **Connecter** : affiche la liste des bases de données.
   - **Modifier le serveur** : permet de modifier la configuration.
-  - **Delete le serveur** : supprime le serveur.
+  - **Supprimer le serveur** : supprime le serveur.
 
 ### 4. Explorer une base
 - Déroulez un serveur connecté
@@ -84,6 +83,7 @@ Cliquez sur l’icône **PHP DAO Generator** dans la barre latérale.
 
 Un explorateur de fichiers s’ouvre :
 - Si `D:\wamp64\www` existe, vous pouvez directement sélectionner votre projet PHP.
+- Si un projet avec le même nom que la base de données sélectionnée existe, il sera par défaut présélectionné.
 - Les fichiers DAO sont générés dans : `D:\wamp64\www\[projet]\local\__classes\DAO`
 
 ---
