@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.9...v1.6.0) (2025-09-25)
+
+
+### Features
+
+* ajouter la gestion du chemin par défaut pour la génération des DAO lorsqu'une BDD sélectionner pour le serveur ([24e010f](https://github.com/TabarBaptiste/dao-generation/commit/24e010fa0a23050429e8ce1e70d6a5763aa84054))
+
 ## [1.5.9](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.8...v1.5.9) (2025-09-25)
 
 
