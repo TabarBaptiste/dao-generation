@@ -1,3 +1,11 @@
+## [1.5.9](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.8...v1.5.9) (2025-09-25)
+
+
+### Bug Fixes
+
+* tester la connexion avant de marquer comme connectée lors de l'ajout ([15244c0](https://github.com/TabarBaptiste/dao-generation/commit/15244c003dbe0822e57ae955e262c7d2fe619cf6))
+* tester la connexion avant de trier ([901a313](https://github.com/TabarBaptiste/dao-generation/commit/901a313a4a39d273da59e90ac8b5dd74f35d9bbf))
+
 ## [1.5.8](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.7...v1.5.8) (2025-09-25)
 
 
