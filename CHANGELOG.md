@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.0...v1.6.1) (2025-09-26)
+
+
+### Bug Fixes
+
+* Test la connexion au reload ([3dd280b](https://github.com/TabarBaptiste/dao-generation/commit/3dd280b230211626f67aec73a080807d2084865d))
+
 # [1.6.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.5.9...v1.6.0) (2025-09-25)
 
 
