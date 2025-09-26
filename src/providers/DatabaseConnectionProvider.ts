@@ -161,7 +161,7 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
             // Reconnecter automatiquement les connexions marquées comme connectées
             sortedConnections.forEach(conn => {
-                if (conn.isConnected && !this.databaseService.isConnected(conn.id)) {
+                if (conn.isConnected && !this.databaseService.testConnection(conn)) {
                     this.databaseService.connect(conn).catch(error => {
                         // En cas d'échec, marquer comme déconnectée
                         this.connectionManager.updateConnection(conn.id, { isConnected: false });

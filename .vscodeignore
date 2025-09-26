@@ -27,3 +27,8 @@ eslint.config.mjs
 **/*.ts
 **/.vscode-test.*
 docs/**
+.venv
+assets/img/add_serveur.png
+assets/img/generation_dao.png
+structure.md
+.github
