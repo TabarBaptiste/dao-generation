@@ -1,3 +1,11 @@
+## [1.6.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.1...v1.6.2) (2025-09-29)
+
+
+### Bug Fixes
+
+* Désélectionner toutes les tables après la génération ([db658da](https://github.com/TabarBaptiste/dao-generation/commit/db658da387e0a5233a60b2227211ac0d695e2959))
+* isConnected = true après update si test OK ([9bcdf77](https://github.com/TabarBaptiste/dao-generation/commit/9bcdf77b65008585d99568cb2f3beeae0dd2269b))
+
 ## [1.6.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.0...v1.6.1) (2025-09-26)
 
 
