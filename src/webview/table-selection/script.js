@@ -146,6 +146,9 @@ function generateDao() {
         selectedTables: selectedTables,
         mode: mode
     });
+
+    // Désélectionner toutes les tables après la génération
+    selectNone();
 }
 
 // Utility function to escape HTML
