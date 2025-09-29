@@ -37,7 +37,7 @@
       ],
       "php-dao-explorer": [
         {
-          "id": "phpDaoConnections",
+          "id": "phpDaoServeurs",
           "name": "SERVEURS",
           "when": "true",
           "icon": "$(database)"
@@ -55,22 +55,22 @@
     },
     "commands": [
       {
-        "command": "phpDaoGenerator.addConnection",
+        "command": "phpDaoGenerator.addServeur",
         "title": "Ajouter un serveur",
         "icon": "$(add)"
       },
       {
-        "command": "phpDaoGenerator.refreshConnections",
+        "command": "phpDaoGenerator.refreshServeurs",
         "title": "Rafraîchir",
         "icon": "$(refresh)"
       },
       {
-        "command": "phpDaoGenerator.editConnection",
+        "command": "phpDaoGenerator.editServeur",
         "title": "Modifier le serveur",
         "icon": "$(edit)"
       },
       {
-        "command": "phpDaoGenerator.deleteConnection",
+        "command": "phpDaoGenerator.deleteServeur",
         "title": "Supprimer le serveur",
         "icon": "$(trash)"
       },
@@ -90,12 +90,12 @@
         "icon": "$(code)"
       },
       {
-        "command": "phpDaoGenerator.exportConnections",
+        "command": "phpDaoGenerator.exportServeurs",
         "title": "Exporter les serveurs",
         "icon": "$(cloud-upload)"
       },
       {
-        "command": "phpDaoGenerator.importConnections",
+        "command": "phpDaoGenerator.importServeurs",
         "title": "Importer les serveurs",
         "icon": "$(cloud-download)"
       },
@@ -108,55 +108,55 @@
     "menus": {
       "view/title": [
         {
-          "command": "phpDaoGenerator.addConnection",
-          "when": "view == phpDaoConnections",
+          "command": "phpDaoGenerator.addServeur",
+          "when": "view == phpDaoServeurs",
           "group": "navigation"
         },
         {
-          "command": "phpDaoGenerator.refreshConnections",
-          "when": "view == phpDaoConnections",
+          "command": "phpDaoGenerator.refreshServeurs",
+          "when": "view == phpDaoServeurs",
           "group": "navigation"
         },
         {
-          "command": "phpDaoGenerator.exportConnections",
-          "when": "view == phpDaoConnections",
+          "command": "phpDaoGenerator.exportServeurs",
+          "when": "view == phpDaoServeurs",
           "group": "navigation"
         },
         {
-          "command": "phpDaoGenerator.importConnections",
-          "when": "view == phpDaoConnections",
+          "command": "phpDaoGenerator.importServeurs",
+          "when": "view == phpDaoServeurs",
           "group": "navigation"
         },
         {
           "command": "phpDaoGenerator.toggleSort",
-          "when": "view == phpDaoConnections",
+          "when": "view == phpDaoServeurs",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "phpDaoGenerator.editConnection",
-          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
+          "command": "phpDaoGenerator.editServeur",
+          "when": "view == phpDaoServeurs && viewItem == disconnectedServeur",
           "group": "inline"
         },
         {
-          "command": "phpDaoGenerator.deleteConnection",
-          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
+          "command": "phpDaoGenerator.deleteServeur",
+          "when": "view == phpDaoServeurs && viewItem == disconnectedServeur",
           "group": "inline"
         },
         {
           "command": "phpDaoGenerator.connect",
-          "when": "view == phpDaoConnections && viewItem == disconnectedConnection",
+          "when": "view == phpDaoServeurs && viewItem == disconnectedServeur",
           "group": "inline"
         },
         {
           "command": "phpDaoGenerator.disconnect",
-          "when": "view == phpDaoConnections && viewItem == connectedConnection",
+          "when": "view == phpDaoServeurs && viewItem == connectedServeur",
           "group": "inline"
         },
         {
           "command": "phpDaoGenerator.openTableSelection",
-          "when": "view == phpDaoConnections && viewItem == database",
+          "when": "view == phpDaoServeurs && viewItem == database",
           "group": "inline"
         }
       ]

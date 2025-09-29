@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs';
-import { DatabaseConnection } from '../types/Connection';
+import { DatabaseServeur } from '../types/Connection';
 import { DatabaseService } from '../services/DatabaseService';
 import { DaoGeneratorService } from '../services/DaoGeneratorService';
 
@@ -13,7 +12,7 @@ export class TableSelectionPanel {
 
     private constructor(
         panel: vscode.WebviewPanel,
-        private readonly connection: DatabaseConnection,
+        private readonly serveurs: DatabaseServeur,
         private readonly database: string,
         private readonly databaseService: DatabaseService,
         private readonly extensionUri: vscode.Uri
@@ -25,7 +24,7 @@ export class TableSelectionPanel {
     }
 
     public static async createOrShow(
-        connection: DatabaseConnection,
+        serveurs: DatabaseServeur,
         database: string,
         databaseService: DatabaseService,
         extensionUri: vscode.Uri
@@ -37,7 +36,7 @@ export class TableSelectionPanel {
         // Si nous avons déjà un panneau pour cette même base de données, le mettre à jour
         if (TableSelectionPanel.currentPanel &&
             TableSelectionPanel.currentPanel.database === database &&
-            TableSelectionPanel.currentPanel.connection.id === connection.id) {
+            TableSelectionPanel.currentPanel.serveurs.id === serveurs.id) {
             TableSelectionPanel.currentPanel._panel.reveal(column);
             return;
         }
@@ -65,7 +64,7 @@ export class TableSelectionPanel {
             dark: vscode.Uri.joinPath(extensionUri, 'assets', 'img', 'logo.png')
         };
 
-        TableSelectionPanel.currentPanel = new TableSelectionPanel(panel, connection, database, databaseService, extensionUri);
+        TableSelectionPanel.currentPanel = new TableSelectionPanel(panel, serveurs, database, databaseService, extensionUri);
     }
 
     public dispose() {
@@ -113,12 +112,12 @@ export class TableSelectionPanel {
                 command: 'updateData',
                 data: {
                     database: this.database,
-                    host: this.connection.host
+                    host: this.serveurs.host
                 }
             });
 
             // Charger et envoyer les tables
-            const tables = await this.databaseService.getTables(this.connection, this.database);
+            const tables = await this.databaseService.getTables(this.serveurs, this.database);
             this._panel.webview.postMessage({
                 command: 'updateTables',
                 tables: tables
@@ -136,7 +135,7 @@ export class TableSelectionPanel {
             vscode.window.showInformationMessage(`Génération de ${selectedTables.length} DAO en cours...`);
 
             await this.daoGenerator.generateDaoFiles(
-                this.connection,
+                this.serveurs,
                 this.database,
                 selectedTables,
                 { mode }

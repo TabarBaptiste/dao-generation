@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
-import { ConnectionFormData } from '../types/Connection';
+import { ServeurFormData } from '../types/Connection';
 import { DatabaseService } from '../services/DatabaseService';
 import { BaseWebviewPanel } from './BaseWebviewPanel';
-import { DatabaseConnectionFactory } from '../utils/DatabaseConnectionFactory';
+import { DatabaseServeurFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS, DEFAULT_PATHS } from '../constants/AppConstants';
 
-export class ConnectionFormPanel extends BaseWebviewPanel {
+export class ServeurFormPanel extends BaseWebviewPanel {
     private databaseService = new DatabaseService();
-    private resolve?: (value: ConnectionFormData | undefined) => void;
-    private existingData?: ConnectionFormData;
+    private resolve?: (value: ServeurFormData | undefined) => void;
+    private existingData?: ServeurFormData;
 
-    constructor(extensionUri: vscode.Uri, existingData?: ConnectionFormData) {
+    constructor(extensionUri: vscode.Uri, existingData?: ServeurFormData) {
         super(
             extensionUri,
             WEBVIEW_TYPES.CONNECTION_FORM,
@@ -21,7 +21,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
         this.existingData = existingData;
     }
 
-    public async show(): Promise<ConnectionFormData | undefined> {
+    public async show(): Promise<ServeurFormData | undefined> {
         return new Promise(async (resolve) => {
             this.resolve = resolve;
             await this.createPanel();
@@ -68,7 +68,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
 
     private async handleTestConnection(data: any): Promise<void> {
         try {
-            const connectionData = DatabaseConnectionFactory.createTempConnection(data);
+            const connectionData = DatabaseServeurFactory.createTempServeur(data);
             const result = await this.databaseService.testConnection(connectionData);
 
             this.sendMessage({
@@ -87,7 +87,7 @@ export class ConnectionFormPanel extends BaseWebviewPanel {
     }
 
     private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
-        const connectionData = DatabaseConnectionFactory.createTempConnection(data);
+        const connectionData = DatabaseServeurFactory.createTempServeur(data);
 
         const databases = await ErrorHandler.handleAsync(
             'charger bases de données',

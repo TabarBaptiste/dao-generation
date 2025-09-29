@@ -1,80 +1,80 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { DatabaseConnection } from '../types/Connection';
+import { DatabaseServeur } from '../types/Connection';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { STORAGE_KEYS, ENCRYPTION } from '../constants/AppConstants';
 import { DatabaseService } from './DatabaseService';
 
-export class ConnectionManager {
+export class ServeurManager {
     private static readonly STORAGE_KEY = STORAGE_KEYS.CONNECTIONS;
     private static readonly ENCRYPTION_KEY = ENCRYPTION.KEY;
-    private connections: DatabaseConnection[] = [];
+    private serveurs: DatabaseServeur[] = [];
     private globalStoragePath: string;
 
     constructor(private context: vscode.ExtensionContext, private databaseService: DatabaseService) {
         // Utiliser le répertoire de stockage global de l'extension
-        this.globalStoragePath = path.join(context.globalStorageUri.fsPath, 'connections.json');
+        this.globalStoragePath = path.join(context.globalStorageUri.fsPath, 'serveurs.json');
         console.log('this.globalStoragePath :', this.globalStoragePath);
-        this.loadConnections();
+        this.loadServeurs();
     }
 
-    public getConnections(): DatabaseConnection[] {
-        return this.connections;
+    public getServeurs(): DatabaseServeur[] {
+        return this.serveurs;
     }
 
-    public async addConnection(connection: Omit<DatabaseConnection, 'id'>): Promise<boolean> {
-        const testResult = await this.databaseService.testConnection(connection);
-        // Créer la connexion finale avec le statut de connexion basé sur le test
-        const newConnection: DatabaseConnection = {
-            ...connection,
+    public async addServeur(serveurs: Omit<DatabaseServeur, 'id'>): Promise<boolean> {
+        const testResult = await this.databaseService.testConnection(serveurs);
+        // Créer le serveur finale avec le statut de connexion basé sur le test
+        const newServeur: DatabaseServeur = {
+            ...serveurs,
             id: this.generateId(),
             isConnected: testResult.success,
             // Ne sauvegarder le defaultDaoPath que si une database est définie
-            defaultDaoPath: connection.database ? connection.defaultDaoPath : undefined
+            defaultDaoPath: serveurs.database ? serveurs.defaultDaoPath : undefined
         };
 
         // Vérifier s'il existe déjà une connexion identique
-        const existingConnection = this.connections.find(conn => this.isSameConnection(conn, newConnection));
+        const existingServeur = this.serveurs.find(conn => this.isSameServeur(conn, newServeur));
 
-        if (existingConnection) {
-            return false; // Connexion en doublon
+        if (existingServeur) {
+            return false; // Serveur en doublon
         }
 
-        this.connections.push(newConnection);
-        await this.saveConnections();
+        this.serveurs.push(newServeur);
+        await this.saveServeurs();
 
         // Afficher un message informatif selon le résultat du test
         if (!testResult.success) {
             vscode.window.showWarningMessage(
-                `Connexion "${newConnection.name}" ajoutée mais le test a échoué : ${testResult.message} `
+                `Connexion "${newServeur.name}" ajouté mais le test a échoué : ${testResult.message} `
             );
         }
 
         return true;
     }
 
-    public async updateConnection(id: string, connection: Partial<DatabaseConnection>): Promise<void> {
-        const index = this.connections.findIndex(conn => conn.id === id);
+    public async updateServeur(id: string, serveurs: Partial<DatabaseServeur>): Promise<void> {
+        const index = this.serveurs.findIndex(conn => conn.id === id);
         if (index !== -1) {
             // Nettoyer le defaultDaoPath si pas de database
-            const updatedConnection = { ...this.connections[index], ...connection };
-            if (!updatedConnection.database) {
-                updatedConnection.defaultDaoPath = undefined;
+            const updatedServeur = { ...this.serveurs[index], ...serveurs };
+            if (!updatedServeur.database) {
+                updatedServeur.defaultDaoPath = undefined;
             }
-            this.connections[index] = updatedConnection;
-            await this.saveConnections();
+            this.serveurs[index] = updatedServeur;
+            await this.saveServeurs();
         }
     }
 
-    public async deleteConnection(id: string): Promise<void> {
-        this.connections = this.connections.filter(conn => conn.id !== id);
-        await this.saveConnections();
+    public async deleteServeur(id: string): Promise<void> {
+        this.serveurs = this.serveurs.filter(conn => conn.id !== id);
+        await this.saveServeurs();
     }
 
-    public getConnectionById(id: string): DatabaseConnection | undefined {
-        return this.connections.find(conn => conn.id === id);
+    public getServeurById(id: string): DatabaseServeur | undefined {
+        return this.serveurs.find(conn => conn.id === id);
     }
 
     /**
@@ -87,7 +87,7 @@ export class ConnectionManager {
     /**
      * Nettoie une connexion pour la sauvegarde/export en supprimant les propriétés temporaires
      */
-    private cleanConnectionForStorage(conn: DatabaseConnection, includeRuntimeProps = false, forExport = false): any {
+    private cleanServeurForStorage(conn: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
         const cleaned = { ...conn };
 
         if (!includeRuntimeProps) {
@@ -102,7 +102,7 @@ export class ConnectionManager {
         return cleaned;
     }
 
-    private async loadConnections(): Promise<void> {
+    private async loadServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
             'chargement des connexions',
             async () => {
@@ -112,7 +112,7 @@ export class ConnectionManager {
                 }
 
                 if (!fs.existsSync(this.globalStoragePath)) {
-                    this.connections = [];
+                    this.serveurs = [];
                     return;
                 }
 
@@ -121,27 +121,27 @@ export class ConnectionManager {
                 console.log('dao stored (stockage global):', stored);
 
                 if (!stored || !Array.isArray(stored)) {
-                    this.connections = [];
+                    this.serveurs = [];
                     return;
                 }
 
-                this.connections = stored.map(conn => {
-                    // Si la connexion a des données de chiffrement, déchiffrer le mot de passe
+                this.serveurs = stored.map(conn => {
+                    // Si le serveur a des données de chiffrement, déchiffrer le mot de passe
                     if (conn.encryptedPassword && conn.passwordIv) {
                         const decryptedPassword = EncryptionUtil.safeDecrypt(
                             conn.encryptedPassword,
                             conn.passwordIv,
-                            ConnectionManager.ENCRYPTION_KEY
+                            ServeurManager.ENCRYPTION_KEY
                         );
 
                         if (decryptedPassword === null) {
-                            ErrorHandler.logError('déchiffrement connexion', `Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
-                            // Retourner la connexion sans mot de passe en cas d'échec
+                            ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${conn.name}`);
+                            // Retourner le serveur sans mot de passe en cas d'échec
                             const { encryptedPassword, passwordIv, ...cleanConn } = conn;
                             return { ...cleanConn, password: '' };
                         }
 
-                        // Retourner la connexion avec le mot de passe déchiffré
+                        // Retourner le serveur avec le mot de passe déchiffré
                         const { encryptedPassword, passwordIv, ...cleanConn } = conn;
                         return { ...cleanConn, password: decryptedPassword };
                     }
@@ -154,18 +154,18 @@ export class ConnectionManager {
         );
 
         // S'assurer qu'on a toujours un tableau même en cas d'erreur
-        if (!this.connections) {
-            this.connections = [];
+        if (!this.serveurs) {
+            this.serveurs = [];
         }
     }
 
-    private async saveConnections(): Promise<void> {
+    private async saveServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
             'sauvegarde des connexions',
             async () => {
-                const connectionsToSave = this.connections.map(conn => {
+                const connectionsToSave = this.serveurs.map(conn => {
                     // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
-                    const cleanConn = this.cleanConnectionForStorage(conn, false, false);
+                    const cleanConn = this.cleanServeurForStorage(conn, false, false);
 
                     // Si pas de mot de passe valide, sauvegarder sans chiffrement
                     if (!this.isValidPassword(conn.password)) {
@@ -174,9 +174,9 @@ export class ConnectionManager {
                     }
 
                     // Chiffrer le mot de passe
-                    const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ConnectionManager.ENCRYPTION_KEY);
+                    const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ServeurManager.ENCRYPTION_KEY);
                     if (!encrypted) {
-                        ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
+                        ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
                         const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
                         return connWithoutPassword;
                     }
@@ -206,7 +206,7 @@ export class ConnectionManager {
     /**
      * Vérifie si deux connexions sont identiques (même serveur, même base de données)
      */
-    private isSameConnection(conn1: DatabaseConnection, conn2: DatabaseConnection): boolean {
+    private isSameServeur(conn1: DatabaseServeur, conn2: DatabaseServeur): boolean {
         // TODO : vérifier aussi avec "name"
         // Normaliser les valeurs de base de données
         const db1 = conn1.database || undefined;
@@ -222,18 +222,18 @@ export class ConnectionManager {
     /**
      * Génère une description lisible d'une connexion pour les messages utilisateur
      */
-    public getConnectionDescription(connection: DatabaseConnection | Omit<DatabaseConnection, 'id'>): string {
-        const database = connection.database || undefined;
+    public getServeurDescription(serveurs: DatabaseServeur | Omit<DatabaseServeur, 'id'>): string {
+        const database = serveurs.database || undefined;
         return database
-            ? `${connection.host}:${connection.port}/${database}`
-            : `${connection.host}:${connection.port}`;
+            ? `${serveurs.host}:${serveurs.port}/${database}`
+            : `${serveurs.host}:${serveurs.port}`;
     }
 
     /**
      * Compte le nombre de connexions avec des mots de passe valides
      */
-    private countConnectionsWithPasswords(connections: any[]): number {
-        return connections.filter(conn => this.isValidPassword(conn.password)).length;
+    private countServeursWithPasswords(serveurs: any[]): number {
+        return serveurs.filter(conn => this.isValidPassword(conn.password)).length;
     }
 
     /**
@@ -252,7 +252,7 @@ export class ConnectionManager {
                 value: 'plain'
             }
         ], {
-            placeHolder: `${passwordCount} connexion(s) ont des mots de passe. Souhaitez-vous les chiffrer ?`
+            placeHolder: `${passwordCount} serveurs(s) ont des mots de passe. Souhaitez-vous les chiffrer ?`
         });
 
         if (!encryptChoice) {
@@ -300,9 +300,9 @@ export class ConnectionManager {
     /**
      * Traite une connexion pour l'export (chiffrement ou nettoyage)
      */
-    private processConnectionForExport(conn: DatabaseConnection, encryptionConfig: { useEncryption: boolean; password?: string }): any {
+    private processServeurForExport(conn: DatabaseServeur, encryptionConfig: { useEncryption: boolean; password?: string }): any {
         // Pour l'export, supprimer l'état de connexion (forExport = true)
-        const cleanConn = this.cleanConnectionForStorage(conn, false, true);
+        const cleanConn = this.cleanServeurForStorage(conn, false, true);
 
         // Si pas de mot de passe valide, retourner sans le champ password
         if (!this.isValidPassword(conn.password)) {
@@ -314,7 +314,8 @@ export class ConnectionManager {
         if (encryptionConfig.useEncryption && encryptionConfig.password) {
             const encrypted = EncryptionUtil.safeEncrypt(conn.password!, encryptionConfig.password);
             if (!encrypted) {
-                ErrorHandler.logError('chiffrement exportation', `Échec du chiffrement du mot de passe pour la connexion : ${conn.name}`);
+                // TODO "Échec du chiffrement du mot de passe pour le serveur" deux fois. Factoriser !
+                ErrorHandler.logError('chiffrement exportation', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
                 const { password, ...connWithoutPassword } = cleanConn;
                 return connWithoutPassword;
             }
@@ -330,15 +331,15 @@ export class ConnectionManager {
         return cleanConn;
     }
 
-    public async exportConnections(): Promise<void> {
+    public async exportServeurs(): Promise<void> {
         try {
-            if (this.connections.length === 0) {
-                vscode.window.showInformationMessage('Aucune connexion à exporter.');
+            if (this.serveurs.length === 0) {
+                vscode.window.showInformationMessage('Aucun serveur à exporter.');
                 return;
             }
 
             // Compter les connexions avec mots de passe
-            const passwordCount = this.countConnectionsWithPasswords(this.connections);
+            const passwordCount = this.countServeursWithPasswords(this.serveurs);
 
             // Déterminer la stratégie de chiffrement
             let encryptionConfig: { useEncryption: boolean; password?: string };
@@ -349,24 +350,24 @@ export class ConnectionManager {
             }
 
             // Traiter les connexions pour l'export
-            const processedConnections = this.connections.map(conn =>
-                this.processConnectionForExport(conn, encryptionConfig)
+            const processedServeurs = this.serveurs.map(conn =>
+                this.processServeurForExport(conn, encryptionConfig)
             );
 
             // Vérifier s'il y a vraiment du chiffrement
-            const hasEncryptedData = processedConnections.some(conn => conn.passwordIv);
+            const hasEncryptedData = processedServeurs.some(conn => conn.passwordIv);
 
             // Créer les données d'export
             const exportData = {
                 exportDate: new Date().toISOString(),
                 // version: '1.0.0',
                 encrypted: hasEncryptedData,
-                connections: processedConnections
+                serveurs: processedServeurs
             };
 
             // Sauvegarder le fichier
             const saveUri = await vscode.window.showSaveDialog({
-                defaultUri: vscode.Uri.file('php-dao-connections.json'),
+                defaultUri: vscode.Uri.file('php-dao-serveurs.json'),
                 filters: {
                     'Fichiers JSON': ['json'],
                     'Tous les fichiers': ['*']
@@ -382,7 +383,7 @@ export class ConnectionManager {
             await vscode.workspace.fs.writeFile(saveUri, Buffer.from(jsonContent, 'utf8'));
 
             // Message de succès
-            let message = `${this.connections.length} connexion(s) exportée(s) avec succès vers ${saveUri.fsPath}`;
+            let message = `${this.serveurs.length} serveur(s) exportée(s) avec succès vers ${saveUri.fsPath}`;
             if (hasEncryptedData) {
                 message += ` (${passwordCount} mots de passe chiffrés)`;
             } else if (passwordCount > 0) {
@@ -404,7 +405,7 @@ export class ConnectionManager {
     /**
      * Valide la structure d'une connexion importée
      */
-    private validateImportedConnection(conn: any): boolean {
+    private validateImportedServeur(conn: any): boolean {
         return !!(conn.name && conn.host && conn.port && conn.username &&
             conn.type && ['mysql', 'mariadb'].includes(conn.type));
     }
@@ -412,9 +413,9 @@ export class ConnectionManager {
     /**
      * Traite une connexion importée (déchiffrement si nécessaire)
      */
-    private processImportedConnection(conn: any, decryptionPassword?: string): any {
+    private processImportedServeur(conn: any, decryptionPassword?: string): any {
         // Validation de base
-        if (!this.validateImportedConnection(conn)) {
+        if (!this.validateImportedServeur(conn)) {
             throw new Error(`Format de connexion invalide : ${conn.name || 'sans nom'}`);
         }
 
@@ -422,7 +423,7 @@ export class ConnectionManager {
         if (conn.passwordIv && decryptionPassword) {
             const decryptedPassword = EncryptionUtil.safeDecrypt(conn.password, conn.passwordIv, decryptionPassword);
             if (decryptedPassword === null) {
-                throw new Error(`Échec du déchiffrement du mot de passe pour la connexion : ${conn.name}`);
+                throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${conn.name}`);
             }
 
             const { passwordIv, ...cleanConn } = conn;
@@ -437,17 +438,17 @@ export class ConnectionManager {
     /**
      * Gère l'import d'une connexion (ajout/mise à jour)
      */
-    private async handleConnectionImport(
-        importedConn: DatabaseConnection,
+    private async handleServeurImport(
+        importedConn: DatabaseServeur,
         autoUpdate: boolean
     ): Promise<{ action: 'added' | 'updated' | 'skipped'; autoUpdate: boolean }> {
-        const existingIndex = this.connections.findIndex(conn =>
-            this.isSameConnection(conn, importedConn)
+        const existingIndex = this.serveurs.findIndex(conn =>
+            this.isSameServeur(conn, importedConn)
         );
 
         if (existingIndex === -1) {
             // Nouvelle connexion
-            this.connections.push(importedConn);
+            this.serveurs.push(importedConn);
             return { action: 'added', autoUpdate };
         }
 
@@ -455,7 +456,7 @@ export class ConnectionManager {
         if (!autoUpdate) {
             const updateChoice = await vscode.window.showQuickPick([
                 { label: 'Oui', description: 'Mettre à jour cette connexion', value: 'yes' },
-                { label: 'Non', description: 'Conserver la connexion existante', value: 'no' },
+                { label: 'Non', description: 'Conserver le serveur existante', value: 'no' },
                 { label: 'Oui pour tout', description: 'Mettre à jour celle-ci et tous les doublons restants', value: 'yesAll' }
             ], {
                 placeHolder: `La connexion "${importedConn.name}" existe déjà. La mettre à jour ?`
@@ -474,16 +475,16 @@ export class ConnectionManager {
             }
         }
 
-        // Mettre à jour la connexion en conservant l'ID original
-        this.connections[existingIndex] = {
+        // Mettre à jour le serveur en conservant l'ID original
+        this.serveurs[existingIndex] = {
             ...importedConn,
-            id: this.connections[existingIndex].id
+            id: this.serveurs[existingIndex].id
         };
 
         return { action: 'updated', autoUpdate };
     }
 
-    public async importConnections(): Promise<void> {
+    public async importServeurs(): Promise<void> {
         try {
             // Ouvrir le fichier
             const openUri = await vscode.window.showOpenDialog({
@@ -512,13 +513,13 @@ export class ConnectionManager {
                 throw new Error('Format de fichier JSON invalide');
             }
 
-            if (!importData.connections || !Array.isArray(importData.connections)) {
+            if (!importData.serveurs || !Array.isArray(importData.serveurs)) {
                 throw new Error('Format de fichier invalide : tableau de connexions manquant');
             }
 
             // Gestion du déchiffrement
             const isEncrypted = importData.encrypted === true;
-            const hasEncryptedPasswords = importData.connections.some((conn: any) => conn.passwordIv);
+            const hasEncryptedPasswords = importData.serveurs.some((conn: any) => conn.passwordIv);
 
             let decryptionPassword: string | undefined;
 
@@ -542,13 +543,13 @@ export class ConnectionManager {
             }
 
             // Traiter les connexions
-            const validConnections: DatabaseConnection[] = [];
+            const validServeurs: DatabaseServeur[] = [];
             const errors: string[] = [];
 
-            for (const conn of importData.connections) {
+            for (const conn of importData.serveurs) {
                 try {
-                    const processedConn = this.processImportedConnection(conn, decryptionPassword);
-                    validConnections.push({
+                    const processedConn = this.processImportedServeur(conn, decryptionPassword);
+                    validServeurs.push({
                         ...processedConn,
                         id: this.generateId(),
                         isConnected: false,
@@ -559,7 +560,7 @@ export class ConnectionManager {
                 }
             }
 
-            if (validConnections.length === 0) {
+            if (validServeurs.length === 0) {
                 const errorMessage = errors.length > 0
                     ? `Aucune connexion valide trouvée. Erreurs :\n${errors.join('\n')}`
                     : 'Aucune connexion valide trouvée dans le fichier d\'importation';
@@ -567,10 +568,10 @@ export class ConnectionManager {
             }
 
             // TODO : Modifier pour mettre à jour les connexions existantes et ajouter celles qui n'existe pas encore par défaut.
-            // TODO : Donc, Plus besoin de demander si on ajoute ou remplace. (Corriger/Supprimer aussi handleConnectionImport())
+            // TODO : Donc, Plus besoin de demander si on ajoute ou remplace. (Corriger/Supprimer aussi handleServeurImport())
             // Déterminer le mode d'importation
             let importMode = 'merge';
-            if (this.connections.length > 0) {
+            if (this.serveurs.length > 0) {
                 const choice = await vscode.window.showQuickPick([
                     {
                         label: 'Fusion',
@@ -601,15 +602,15 @@ export class ConnectionManager {
 
             if (importMode === 'replace') {
                 // Mode remplacement : traiter toutes les connexions automatiquement
-                for (const importedConn of validConnections) {
-                    const result = await this.handleConnectionImport(importedConn, true);
+                for (const importedConn of validServeurs) {
+                    const result = await this.handleServeurImport(importedConn, true);
                     if (result.action === 'added') addedCount++;
                     else if (result.action === 'updated') updatedCount++;
                 }
             } else {
                 // Mode fusion : demander confirmation pour les doublons
-                for (const importedConn of validConnections) {
-                    const result = await this.handleConnectionImport(importedConn, autoUpdate);
+                for (const importedConn of validServeurs) {
+                    const result = await this.handleServeurImport(importedConn, autoUpdate);
                     autoUpdate = result.autoUpdate;
 
                     if (result.action === 'added') addedCount++;
@@ -618,7 +619,7 @@ export class ConnectionManager {
                 }
             }
 
-            await this.saveConnections();
+            await this.saveServeurs();
 
             // Message de succès
             let message = `Import réussi : ${addedCount} ajoutées`;
