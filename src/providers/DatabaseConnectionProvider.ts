@@ -285,6 +285,8 @@ export class DatabaseConnectionProvider implements vscode.TreeDataProvider<Datab
 
         if (formData) {
             const updateData = DatabaseConnectionFactory.createConnectionData(formData);
+            const testConnection = await this.databaseService.testConnection(updateData);
+            updateData.isConnected = testConnection.success;
             await this.connectionManager.updateConnection(connection.id, updateData);
 
             this.refresh();
