@@ -102,6 +102,45 @@ export class ServeurManager {
         return cleaned;
     }
 
+    private encryptServeurPassword(
+        conn: DatabaseServeur,
+        masterKey: string,
+        forExport: boolean = false
+    ): any {
+        const cleanConn = this.cleanServeurForStorage(conn, false, forExport);
+
+        // Si pas de mot de passe valide, retourner sans chiffrement
+        if (!this.isValidPassword(conn.password)) {
+            const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
+            return connWithoutPassword;
+        }
+
+        // Tenter le chiffrement
+        const encrypted = EncryptionUtil.safeEncrypt(conn.password!, masterKey);
+        if (!encrypted) {
+            ErrorHandler.logError(
+                'chiffrement serveur',
+                `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`
+            );
+            const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
+            return connWithoutPassword;
+        }
+
+        // Retourner avec mot de passe chiffré
+        const { password, ...connWithoutClearPassword } = cleanConn;
+        return forExport
+            ? {
+                ...connWithoutClearPassword,
+                password: encrypted.encrypted,
+                passwordIv: encrypted.iv
+            }
+            : {
+                ...connWithoutClearPassword,
+                encryptedPassword: encrypted.encrypted,
+                passwordIv: encrypted.iv
+            };
+    }
+
     private async loadServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
             'chargement des serveurs',
@@ -163,31 +202,9 @@ export class ServeurManager {
         await ErrorHandler.handleAsync(
             'sauvegarde des serveurs',
             async () => {
-                const connectionsToSave = this.serveurs.map(conn => {
-                    // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
-                    const cleanConn = this.cleanServeurForStorage(conn, false, false);
-
-                    // Si pas de mot de passe valide, sauvegarder sans chiffrement
-                    if (!this.isValidPassword(conn.password)) {
-                        const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-                        return connWithoutPassword;
-                    }
-
-                    // Chiffrer le mot de passe
-                    const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ServeurManager.ENCRYPTION_KEY);
-                    if (!encrypted) {
-                        ErrorHandler.logError('chiffrement serveur', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
-                        const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-                        return connWithoutPassword;
-                    }
-
-                    const { password, ...connWithoutClearPassword } = cleanConn;
-                    return {
-                        ...connWithoutClearPassword,
-                        encryptedPassword: encrypted.encrypted,
-                        passwordIv: encrypted.iv
-                    };
-                });
+                const connectionsToSave = this.serveurs.map(conn =>
+                    this.encryptServeurPassword(conn, ServeurManager.ENCRYPTION_KEY, false)
+                );
 
                 // S'assurer que le répertoire existe
                 if (!fs.existsSync(path.dirname(this.globalStoragePath))) {
@@ -299,8 +316,16 @@ export class ServeurManager {
     /**
      * Traite un serveur pour l'export (chiffrement ou nettoyage)
      */
-    private processServeurForExport(conn: DatabaseServeur, encryptionConfig: { useEncryption: boolean; password?: string }): any {
-        // Pour l'export, supprimer l'état de connexion (forExport = true)
+    private processServeurForExport(
+        conn: DatabaseServeur,
+        encryptionConfig: { useEncryption: boolean; password?: string }
+    ): any {
+        // Si chiffrement demandé avec mot de passe valide
+        if (encryptionConfig.useEncryption && encryptionConfig.password) {
+            return this.encryptServeurPassword(conn, encryptionConfig.password, true);
+        }
+
+        // Export en clair
         const cleanConn = this.cleanServeurForStorage(conn, false, true);
 
         // Si pas de mot de passe valide, retourner sans le champ password
@@ -309,23 +334,6 @@ export class ServeurManager {
             return connWithoutPassword;
         }
 
-        // Si chiffrement demandé
-        if (encryptionConfig.useEncryption && encryptionConfig.password) {
-            const encrypted = EncryptionUtil.safeEncrypt(conn.password!, encryptionConfig.password);
-            if (!encrypted) {
-                ErrorHandler.logError('chiffrement exportation', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
-                const { password, ...connWithoutPassword } = cleanConn;
-                return connWithoutPassword;
-            }
-
-            return {
-                ...cleanConn,
-                password: encrypted.encrypted,
-                passwordIv: encrypted.iv
-            };
-        }
-
-        // Export en clair
         return cleanConn;
     }
 
