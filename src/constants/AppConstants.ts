@@ -42,8 +42,8 @@ export const DATABASE_SYSTEM_SCHEMAS = [
 ] as const;
 
 export const DEFAULT_PATHS = {
-    WAMP_WWW: 'D:\\wamp64\\www',
-    LOCAL_CLASSES: 'local/__classes/DAO',
+    WAMP_WWW: 'd:\\wamp64\\www',
+    LOCAL_CLASSES: 'local\\__classes\\DAO',
     DAO_FOLDER: 'DAO'
 } as const;
 
