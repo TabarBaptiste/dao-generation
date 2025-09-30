@@ -36,7 +36,7 @@ export class ServeurManager {
         };
 
         // Vérifier s'il existe déjà un serveur identique
-        const existingServeur = this.serveurs.find(conn => this.isSameServeur(conn, newServeur));
+        const existingServeur = this.serveurs.find(serv => this.isSameServeur(serv, newServeur));
 
         if (existingServeur) {
             return false; // Serveur en doublon
@@ -56,7 +56,7 @@ export class ServeurManager {
     }
 
     public async updateServeur(id: string, serveurs: Partial<DatabaseServeur>): Promise<void> {
-        const index = this.serveurs.findIndex(conn => conn.id === id);
+        const index = this.serveurs.findIndex(serv => serv.id === id);
         if (index !== -1) {
             // Nettoyer le defaultDaoPath si pas de database
             const updatedServeur = { ...this.serveurs[index], ...serveurs };
@@ -69,12 +69,12 @@ export class ServeurManager {
     }
 
     public async deleteServeur(id: string): Promise<void> {
-        this.serveurs = this.serveurs.filter(conn => conn.id !== id);
+        this.serveurs = this.serveurs.filter(serv => serv.id !== id);
         await this.saveServeurs();
     }
 
     public getServeurById(id: string): DatabaseServeur | undefined {
-        return this.serveurs.find(conn => conn.id === id);
+        return this.serveurs.find(serv => serv.id === id);
     }
 
     /**
@@ -87,8 +87,8 @@ export class ServeurManager {
     /**
      * Nettoie un serveur pour la sauvegarde/export en supprimant les propriétés temporaires
      */
-    private cleanServeurForStorage(conn: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
-        const cleaned = { ...conn };
+    private cleanServeurForStorage(serv: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
+        const cleaned = { ...serv };
 
         if (!includeRuntimeProps) {
             // Pour l'export, on supprime l'état de connexion
@@ -103,24 +103,24 @@ export class ServeurManager {
     }
 
     private encryptServeurPassword(
-        conn: DatabaseServeur,
+        serv: DatabaseServeur,
         masterKey: string,
         forExport: boolean = false
     ): any {
-        const cleanConn = this.cleanServeurForStorage(conn, false, forExport);
+        const cleanConn = this.cleanServeurForStorage(serv, false, forExport);
 
         // Si pas de mot de passe valide, retourner sans chiffrement
-        if (!this.isValidPassword(conn.password)) {
+        if (!this.isValidPassword(serv.password)) {
             const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
             return connWithoutPassword;
         }
 
         // Tenter le chiffrement
-        const encrypted = EncryptionUtil.safeEncrypt(conn.password!, masterKey);
+        const encrypted = EncryptionUtil.safeEncrypt(serv.password!, masterKey);
         if (!encrypted) {
             ErrorHandler.logError(
                 'chiffrement serveur',
-                `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`
+                `Échec du chiffrement du mot de passe pour le serveur : ${serv.name}`
             );
             const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
             return connWithoutPassword;
@@ -164,29 +164,29 @@ export class ServeurManager {
                     return;
                 }
 
-                this.serveurs = stored.map(conn => {
+                this.serveurs = stored.map(serv => {
                     // Si le serveur a des données de chiffrement, déchiffrer le mot de passe
-                    if (conn.encryptedPassword && conn.passwordIv) {
+                    if (serv.encryptedPassword && serv.passwordIv) {
                         const decryptedPassword = EncryptionUtil.safeDecrypt(
-                            conn.encryptedPassword,
-                            conn.passwordIv,
+                            serv.encryptedPassword,
+                            serv.passwordIv,
                             ServeurManager.ENCRYPTION_KEY
                         );
 
                         if (decryptedPassword === null) {
-                            ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${conn.name}`);
+                            ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
                             // Retourner le serveur sans mot de passe en cas d'échec
-                            const { encryptedPassword, passwordIv, ...cleanConn } = conn;
+                            const { encryptedPassword, passwordIv, ...cleanConn } = serv;
                             return { ...cleanConn, password: '' };
                         }
 
                         // Retourner le serveur avec le mot de passe déchiffré
-                        const { encryptedPassword, passwordIv, ...cleanConn } = conn;
+                        const { encryptedPassword, passwordIv, ...cleanConn } = serv;
                         return { ...cleanConn, password: decryptedPassword };
                     }
 
                     // Connexion non chiffrée (rétrocompatibilité)
-                    return conn;
+                    return serv;
                 });
             },
             false // Ne pas afficher d'erreur à l'utilisateur, juste initialiser à vide
@@ -202,8 +202,8 @@ export class ServeurManager {
         await ErrorHandler.handleAsync(
             'sauvegarde des serveurs',
             async () => {
-                const connectionsToSave = this.serveurs.map(conn =>
-                    this.encryptServeurPassword(conn, ServeurManager.ENCRYPTION_KEY, false)
+                const connectionsToSave = this.serveurs.map(serv =>
+                    this.encryptServeurPassword(serv, ServeurManager.ENCRYPTION_KEY, false)
                 );
 
                 // S'assurer que le répertoire existe
@@ -249,7 +249,7 @@ export class ServeurManager {
      * Compte le nombre de serveurs avec des mots de passe valides
      */
     private countServeursWithPasswords(serveurs: any[]): number {
-        return serveurs.filter(conn => this.isValidPassword(conn.password)).length;
+        return serveurs.filter(serv => this.isValidPassword(serv.password)).length;
     }
 
     /**
@@ -317,19 +317,19 @@ export class ServeurManager {
      * Traite un serveur pour l'export (chiffrement ou nettoyage)
      */
     private processServeurForExport(
-        conn: DatabaseServeur,
+        serv: DatabaseServeur,
         encryptionConfig: { useEncryption: boolean; password?: string }
     ): any {
         // Si chiffrement demandé avec mot de passe valide
         if (encryptionConfig.useEncryption && encryptionConfig.password) {
-            return this.encryptServeurPassword(conn, encryptionConfig.password, true);
+            return this.encryptServeurPassword(serv, encryptionConfig.password, true);
         }
 
         // Export en clair
-        const cleanConn = this.cleanServeurForStorage(conn, false, true);
+        const cleanConn = this.cleanServeurForStorage(serv, false, true);
 
         // Si pas de mot de passe valide, retourner sans le champ password
-        if (!this.isValidPassword(conn.password)) {
+        if (!this.isValidPassword(serv.password)) {
             const { password, ...connWithoutPassword } = cleanConn;
             return connWithoutPassword;
         }
@@ -356,12 +356,12 @@ export class ServeurManager {
             }
 
             // Traiter les serveurs pour l'export
-            const processedServeurs = this.serveurs.map(conn =>
-                this.processServeurForExport(conn, encryptionConfig)
+            const processedServeurs = this.serveurs.map(serv =>
+                this.processServeurForExport(serv, encryptionConfig)
             );
 
             // Vérifier s'il y a vraiment du chiffrement
-            const hasEncryptedData = processedServeurs.some(conn => conn.passwordIv);
+            const hasEncryptedData = processedServeurs.some(serv => serv.passwordIv);
 
             // Créer les données d'export
             const exportData = {
@@ -411,34 +411,34 @@ export class ServeurManager {
     /**
      * Valide la structure d'un serveur importée
      */
-    private validateImportedServeur(conn: any): boolean {
-        return !!(conn.name && conn.host && conn.port && conn.username &&
-            conn.type && ['mysql', 'mariadb'].includes(conn.type));
+    private validateImportedServeur(serv: any): boolean {
+        return !!(serv.name && serv.host && serv.port && serv.username &&
+            serv.type && ['mysql', 'mariadb'].includes(serv.type));
     }
 
     /**
      * Traite un serveur importée (déchiffrement si nécessaire)
      */
-    private processImportedServeur(conn: any, decryptionPassword?: string): any {
+    private processImportedServeur(serv: any, decryptionPassword?: string): any {
         // Validation de base
-        if (!this.validateImportedServeur(conn)) {
-            throw new Error(`Format du serveur invalide : ${conn.name || 'sans nom'}`);
+        if (!this.validateImportedServeur(serv)) {
+            throw new Error(`Format du serveur invalide : ${serv.name || 'sans nom'}`);
         }
 
         // Gestion du déchiffrement
-        if (conn.passwordIv && decryptionPassword) {
-            const decryptedPassword = EncryptionUtil.safeDecrypt(conn.password, conn.passwordIv, decryptionPassword);
+        if (serv.passwordIv && decryptionPassword) {
+            const decryptedPassword = EncryptionUtil.safeDecrypt(serv.password, serv.passwordIv, decryptionPassword);
             if (decryptedPassword === null) {
-                throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${conn.name}`);
+                throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
             }
 
-            const { passwordIv, ...cleanConn } = conn;
+            const { passwordIv, ...cleanConn } = serv;
             return { ...cleanConn, password: decryptedPassword };
         }
 
         // Connexion non chiffrée ou sans mot de passe
-        const { passwordIv, ...cleanConn } = conn;
-        return { ...cleanConn, password: conn.password || '' };
+        const { passwordIv, ...cleanConn } = serv;
+        return { ...cleanConn, password: serv.password || '' };
     }
 
     /**
@@ -448,8 +448,8 @@ export class ServeurManager {
         importedConn: DatabaseServeur,
         autoUpdate: boolean
     ): Promise<{ action: 'added' | 'updated' | 'skipped'; autoUpdate: boolean }> {
-        const existingIndex = this.serveurs.findIndex(conn =>
-            this.isSameServeur(conn, importedConn)
+        const existingIndex = this.serveurs.findIndex(serv =>
+            this.isSameServeur(serv, importedConn)
         );
 
         if (existingIndex === -1) {
@@ -525,7 +525,7 @@ export class ServeurManager {
 
             // Gestion du déchiffrement
             const isEncrypted = importData.encrypted === true;
-            const hasEncryptedPasswords = importData.serveurs.some((conn: any) => conn.passwordIv);
+            const hasEncryptedPasswords = importData.serveurs.some((serv: any) => serv.passwordIv);
 
             let decryptionPassword: string | undefined;
 
@@ -552,9 +552,9 @@ export class ServeurManager {
             const validServeurs: DatabaseServeur[] = [];
             const errors: string[] = [];
 
-            for (const conn of importData.serveurs) {
+            for (const serv of importData.serveurs) {
                 try {
-                    const processedConn = this.processImportedServeur(conn, decryptionPassword);
+                    const processedConn = this.processImportedServeur(serv, decryptionPassword);
                     validServeurs.push({
                         ...processedConn,
                         id: this.generateId(),

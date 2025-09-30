@@ -8,9 +8,9 @@ export class DatabaseService {
 
     public async testConnection(serveurs: Omit<DatabaseServeur, 'id'>): Promise<{ success: boolean, message: string }> {
         try {
-            const conn = await this.createServeur(serveurs);
-            await conn.ping();
-            await conn.end();
+            const serv = await this.createServeur(serveurs);
+            await serv.ping();
+            await serv.end();
             return { success: true, message: 'Connexion réussie !' };
         } catch (error: any) {
             console.log('Code d\'erreur MySQL:', error.code);
@@ -43,8 +43,8 @@ export class DatabaseService {
             await this.disconnect(serveurs.id);
 
             // Créer le serveur persistante
-            const conn = await this.createServeur(serveurs);
-            this.serveurs.set(serveurs.id, conn);
+            const serv = await this.createServeur(serveurs);
+            this.serveurs.set(serveurs.id, serv);
 
             console.log(`dao Connecté à ${serveurs.name}`);
         } catch (error) {
@@ -54,10 +54,10 @@ export class DatabaseService {
     }
 
     public async disconnect(connectionId: string): Promise<void> {
-        const conn = this.serveurs.get(connectionId);
-        if (conn) {
+        const serv = this.serveurs.get(connectionId);
+        if (serv) {
             try {
-                await conn.end();
+                await serv.end();
                 this.serveurs.delete(connectionId);
                 console.log(`dao Déconnecté du serveur ${connectionId}`);
             } catch (error) {
@@ -72,9 +72,9 @@ export class DatabaseService {
 
     public async getDatabases(serveurs: DatabaseServeur): Promise<string[]> {
         try {
-            const conn = await this.createServeur(serveurs);
-            const [rows] = await conn.execute('SHOW DATABASES');
-            await conn.end();
+            const serv = await this.createServeur(serveurs);
+            const [rows] = await serv.execute('SHOW DATABASES');
+            await serv.end();
 
             const databases = (rows as any[])
                 .map(row => row.Database)
@@ -94,12 +94,12 @@ export class DatabaseService {
 
         try {
             // Utiliser un serveur temporaire comme le fait getDatabases
-            const conn = await this.createServeur(serveurs);
+            const serv = await this.createServeur(serveurs);
 
             // Utiliser SHOW TABLES FROM database au lieu de USE + SHOW TABLES
-            const [rows] = await conn.execute(`SHOW TABLES FROM \`${database}\``);
+            const [rows] = await serv.execute(`SHOW TABLES FROM \`${database}\``);
 
-            await conn.end();
+            await serv.end();
 
             const tableKey = `Tables_in_${database}`;
             return (rows as any[]).map(row => row[tableKey]);
@@ -112,12 +112,12 @@ export class DatabaseService {
     public async getTableInfo(serveurs: DatabaseServeur, database: string, tableName: string): Promise<TableInfo> {
         try {
             // Utiliser un serveur temporaire comme les autres méthodes
-            const conn = await this.createServeur(serveurs);
+            const serv = await this.createServeur(serveurs);
 
             // Utiliser DESCRIBE database.table au lieu de USE + DESCRIBE
-            const [rows] = await conn.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
+            const [rows] = await serv.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
 
-            await conn.end();
+            await serv.end();
 
             const columns: ColumnInfo[] = (rows as any[]).map(row => ({
                 name: row.Field,

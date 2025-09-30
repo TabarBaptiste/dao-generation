@@ -160,20 +160,20 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
             const sortedServeurs = this.sortServeurs(serveurs);
 
             // Reconnecter automatiquement les serveurs marquées comme connectées
-            sortedServeurs.forEach(conn => {
-                if (conn.isConnected && !this.databaseService.testConnection(conn)) {
-                    this.databaseService.connect(conn).catch(error => {
+            sortedServeurs.forEach(serv => {
+                if (serv.isConnected && !this.databaseService.testConnection(serv)) {
+                    this.databaseService.connect(serv).catch(error => {
                         // En cas d'échec, marquer comme déconnectée
-                        this.serveurManager.updateServeur(conn.id, { isConnected: false });
-                        console.warn(`Échec de reconnexion automatique pour "${conn.name}":`, error);
+                        this.serveurManager.updateServeur(serv.id, { isConnected: false });
+                        console.warn(`Échec de reconnexion automatique pour "${serv.name}":`, error);
                     });
                 }
             });
 
             return Promise.resolve(
-                sortedServeurs.map((conn: DatabaseServeur) => new DatabaseServeurTreeItem(
-                    conn,
-                    conn.isConnected ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+                sortedServeurs.map((serv: DatabaseServeur) => new DatabaseServeurTreeItem(
+                    serv,
+                    serv.isConnected ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
                     'serveurs'
                 ))
             );
