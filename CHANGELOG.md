@@ -1,3 +1,11 @@
+## [1.6.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.3...v1.6.4) (2025-09-30)
+
+
+### Bug Fixes
+
+* Nom de l'utilisateur qui génère le fichier DAO dans [@author](https://github.com/author) ([0465c8d](https://github.com/TabarBaptiste/dao-generation/commit/0465c8df4486590ad3e8f4f4d402ba9c8854935a))
+* suppression de console.log ([d52150b](https://github.com/TabarBaptiste/dao-generation/commit/d52150ba78d968cdd90056979879a762e6c5e1fc))
+
 ## [1.6.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.2...v1.6.3) (2025-09-30)
 
 
