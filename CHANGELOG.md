@@ -1,3 +1,15 @@
+## [1.6.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.2...v1.6.3) (2025-09-30)
+
+
+### Bug Fixes
+
+* conn --> serv ([3978813](https://github.com/TabarBaptiste/dao-generation/commit/39788130240b4b8983246b9d7ae998291938e089))
+* Constate WAMP_WWW et LOCAL_CLASSES au bon format ([6ddbca6](https://github.com/TabarBaptiste/dao-generation/commit/6ddbca604c1b009fbd7a9221e6b0ff727f451fdd))
+* nombre de serveur correctement récupéré pour toggleSortMode() ([5751db3](https://github.com/TabarBaptiste/dao-generation/commit/5751db30d0b2349ba826790c6d12d4591a68c23a))
+* refactoring de la fonction de chiffrement des mots de passe des serveurs ([de8763f](https://github.com/TabarBaptiste/dao-generation/commit/de8763fbdac673453b2a0a488aa5b6d5f31ea993))
+* Remplacer toutes les occurrences de "connexion" par "serveur" dans le code. Et plus de "Fusion" ou "Remplacement" lors de l'importation ([281161b](https://github.com/TabarBaptiste/dao-generation/commit/281161bd34858c23c39e3fe8ce244bcb9ecf07e5))
+* suppression de @BDD et [@table](https://github.com/table), et suppression du prefix de la table ([0718b0e](https://github.com/TabarBaptiste/dao-generation/commit/0718b0e9236c3bee903289e036aa57a3d595a82b))
+
 ## [1.6.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.1...v1.6.2) (2025-09-29)
 
 
