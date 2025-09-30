@@ -5,7 +5,7 @@ const vscode = acquireVsCodeApi();
 let availableDatabases = [];
 let isEditMode = false;
 let autoLoadTimeout = null;
-let lastConnectionData = null;
+let lastServeurData = null;
 
 // Éléments DOM
 let formElements = {};
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function initializeElements() {
     formElements = {
-        form: document.getElementById('connectionForm'),
+        form: document.getElementById('serveurForm'),
         formTitle: document.getElementById('formTitle'),
         name: document.getElementById('name'),
         type: document.getElementById('type'),
@@ -49,8 +49,8 @@ function setupEventListeners() {
     formElements.form.addEventListener('submit', handleSubmit);
 
     // Écouteurs d'événements des boutons
-    formElements.testBtn.addEventListener('click', () => performConnectionTest(false));
-    formElements.loadDbBtn.addEventListener('click', () => performConnectionTest(true, false));
+    formElements.testBtn.addEventListener('click', () => performServeurTest(false));
+    formElements.loadDbBtn.addEventListener('click', () => performServeurTest(true, false));
     formElements.selectPathBtn.addEventListener('click', selectDefaultPath);
     formElements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
     formElements.cancelBtn.addEventListener('click', cancel);
@@ -66,10 +66,10 @@ function setupEventListeners() {
         e.target.value = e.target.value.replace(/[eE\+\-]/g, '');
     });
 
-    // Auto-génération du nom de connexion basé sur l'hôte et la base de données
-    formElements.host.addEventListener('input', updateConnectionName);
+    // Auto-génération du nom de serveur basé sur l'hôte et la base de données
+    formElements.host.addEventListener('input', updateServeurName);
     formElements.database.addEventListener('change', function() {
-        updateConnectionName();
+        updateServeurName();
         toggleDaoPathVisibility();
     });
 
@@ -166,13 +166,13 @@ function handleSubmit(e) {
  * @param {boolean} loadDatabasesAfterTest - Si true, charge les BDD après le test
  * @param {boolean} isAutoLoad - Si true, c'est un chargement automatique
  */
-function performConnectionTest(loadDatabasesAfterTest = false, isAutoLoad = false) {
+function performServeurTest(loadDatabasesAfterTest = false, isAutoLoad = false) {
     const data = getFormData();
 
     // Validation selon le type de test
-    const validationFn = loadDatabasesAfterTest ? validateConnectionFields : validateRequiredFields;
+    const validationFn = loadDatabasesAfterTest ? validateServeurFields : validateRequiredFields;
     const errorMessage = loadDatabasesAfterTest
-        ? 'Veuillez d\'abord remplir les détails de connexion'
+        ? 'Veuillez d\'abord remplir les détails du serveur'
         : 'Veuillez d\'abord remplir tous les champs obligatoires';
 
     if (!validationFn(data)) {
@@ -208,7 +208,7 @@ function performConnectionTest(loadDatabasesAfterTest = false, isAutoLoad = fals
 }
 
 function handleTestResult(success, message) {
-    setButtonLoading(formElements.testBtn, false, 'Test Connection');
+    setButtonLoading(formElements.testBtn, false, 'Test Serveur');
     showStatus(message, success);
 }
 
@@ -239,8 +239,8 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     // Afficher le message approprié
     showStatus(message, true);
 
-    // Mettre à jour le nom de connexion si le champ est vide
-    updateConnectionName();
+    // Mettre à jour le nom du serveur si le champ est vide
+    updateServeurName();
     
     // Mettre à jour la visibilité du champ de répertoire par défaut
     toggleDaoPathVisibility();
@@ -264,7 +264,7 @@ function validateRequiredFields(data) {
         data.port > 0 && data.port <= 65535 && data.username;
 }
 
-function validateConnectionFields(data) {
+function validateServeurFields(data) {
     return data.host && data.port && !isNaN(data.port) &&
         data.port > 0 && data.port <= 65535 && data.username;
 }
@@ -357,7 +357,7 @@ function handlePathSelected(path) {
     }
 }
 
-function updateConnectionName() {
+function updateServeurName() {
     const host = formElements.host.value.trim();
     const database = formElements.database.value.trim();
 
@@ -376,10 +376,10 @@ function scheduleAutoLoadDatabases() {
     }
 
     const data = getFormData();
-    const hasRequiredConnectionFields = validateConnectionFields(data);
+    const hasRequiredServeurFields = validateServeurFields(data);
 
-    if (hasRequiredConnectionFields) {
-        const currentConnectionData = {
+    if (hasRequiredServeurFields) {
+        const currentServeurData = {
             host: data.host,
             port: data.port,
             username: data.username,
@@ -387,19 +387,19 @@ function scheduleAutoLoadDatabases() {
             type: data.type
         };
 
-        const connectionDataChanged = !lastConnectionData ||
-            JSON.stringify(currentConnectionData) !== JSON.stringify(lastConnectionData);
+        const connectionDataChanged = !lastServeurData ||
+            JSON.stringify(currentServeurData) !== JSON.stringify(lastServeurData);
 
         if (connectionDataChanged) {
             autoLoadTimeout = setTimeout(() => {
-                performConnectionTest(true, true); // Test + chargement BDD en auto-load
+                performServeurTest(true, true); // Test + chargement BDD en auto-load
                 autoLoadTimeout = null;
             }, 1500);
 
-            lastConnectionData = currentConnectionData;
+            lastServeurData = currentServeurData;
         }
     } else {
-        lastConnectionData = null;
+        lastServeurData = null;
     }
 }
 

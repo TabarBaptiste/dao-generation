@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { DatabaseConnectionProvider } from './providers/DatabaseConnectionProvider';
-import { ConnectionManager } from './services/ConnectionManager';
+import { DatabaseServeurProvider } from './providers/DatabaseConnectionProvider';
+import { ServeurManager } from './services/ConnectionManager';
 import { DatabaseService } from './services/DatabaseService';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -9,34 +9,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Initialize services
 	const databaseService = new DatabaseService();
-	const connectionManager = new ConnectionManager(context, databaseService);
-	const connectionProvider = new DatabaseConnectionProvider(connectionManager, databaseService, context.extensionUri);
+	const serveurManager = new ServeurManager(context, databaseService);
+	const connectionProvider = new DatabaseServeurProvider(serveurManager, databaseService, context.extensionUri);
 
 	// Register tree data provider
-	vscode.window.createTreeView('phpDaoConnections', {
+	vscode.window.createTreeView('phpDaoServeurs', {
 		treeDataProvider: connectionProvider,
 		showCollapseAll: true
 	});
 
 	// Register commands
-	const addConnectionCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.addConnection',
-		() => connectionProvider.addConnection()
+	const addServeurCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.addServeur',
+		() => connectionProvider.addServeur()
 	);
 
-	const refreshConnectionsCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.refreshConnections',
+	const refreshServeursCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.refreshServeurs',
 		() => connectionProvider.refresh()
 	);
 
-	const editConnectionCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.editConnection',
-		(item) => connectionProvider.editConnection(item)
+	const editServeurCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.editServeur',
+		(item) => connectionProvider.editServeur(item)
 	);
 
-	const deleteConnectionCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.deleteConnection',
-		(item) => connectionProvider.deleteConnection(item)
+	const deleteServeurCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.deleteServeur',
+		(item) => connectionProvider.deleteServeur(item)
 	);
 
 	const connectCommand = vscode.commands.registerCommand(
@@ -54,14 +54,14 @@ export function activate(context: vscode.ExtensionContext) {
 		(item) => connectionProvider.openTableSelection(item)
 	);
 
-	const exportConnectionsCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.exportConnections',
-		() => connectionProvider.exportConnections()
+	const exportServeursCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.exportServeurs',
+		() => connectionProvider.exportServeurs()
 	);
 
-	const importConnectionsCommand = vscode.commands.registerCommand(
-		'phpDaoGenerator.importConnections',
-		() => connectionProvider.importConnections()
+	const importServeursCommand = vscode.commands.registerCommand(
+		'phpDaoGenerator.importServeurs',
+		() => connectionProvider.importServeurs()
 	);
 
 	const toggleSortCommand = vscode.commands.registerCommand(
@@ -71,15 +71,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Add to subscriptions
 	context.subscriptions.push(
-		addConnectionCommand,
-		refreshConnectionsCommand,
-		editConnectionCommand,
-		deleteConnectionCommand,
+		addServeurCommand,
+		refreshServeursCommand,
+		editServeurCommand,
+		deleteServeurCommand,
 		connectCommand,
 		disconnectCommand,
 		openTableSelectionCommand,
-		exportConnectionsCommand,
-		importConnectionsCommand,
+		exportServeursCommand,
+		importServeursCommand,
 		toggleSortCommand
 	);
 

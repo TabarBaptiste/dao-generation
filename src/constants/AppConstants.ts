@@ -2,7 +2,7 @@
  * Application constants to eliminate magic strings and numbers
  */
 export const STORAGE_KEYS = {
-    CONNECTIONS: 'phpDaoGenerator.connections'
+    CONNECTIONS: 'phpDaoGenerator.serveurs'
 } as const;
 
 export const ENCRYPTION = {
@@ -12,18 +12,18 @@ export const ENCRYPTION = {
 } as const;
 
 export const WEBVIEW_TYPES = {
-    CONNECTION_FORM: 'connectionForm',
+    CONNECTION_FORM: 'serveurForm',
     TABLE_SELECTION: 'tableSelection'
 } as const;
 
 export const WEBVIEW_FOLDERS = {
-    CONNECTION_FORM: 'connection-form',
+    CONNECTION_FORM: 'serveurs-form',
     TABLE_SELECTION: 'table-selection'
 } as const;
 
 export const VIEW_TITLES = {
     ADD_CONNECTION: 'Ajouter un serveur',
-    EDIT_CONNECTION: 'Modifier la connexion du serveur',
+    EDIT_CONNECTION: 'Modifier les informations du serveur',
     TABLE_SELECTION: 'Tables'
 } as const;
 
@@ -31,7 +31,7 @@ export const BUTTON_LABELS = {
     CREATE: 'Créer',
     UPDATE: 'Mettre à jour',
     CANCEL: 'Annuler',
-    TEST_CONNECTION: 'Tester la Connexion'
+    TEST_CONNECTION: 'Tester la Serveur'
 } as const;
 
 export const DATABASE_SYSTEM_SCHEMAS = [
@@ -42,8 +42,8 @@ export const DATABASE_SYSTEM_SCHEMAS = [
 ] as const;
 
 export const DEFAULT_PATHS = {
-    WAMP_WWW: 'D:\\wamp64\\www',
-    LOCAL_CLASSES: 'local/__classes/DAO',
+    WAMP_WWW: 'd:\\wamp64\\www',
+    LOCAL_CLASSES: 'local\\__classes\\DAO',
     DAO_FOLDER: 'DAO'
 } as const;
 

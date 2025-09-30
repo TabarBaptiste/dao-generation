@@ -35,7 +35,7 @@ select {
     width: 100%;
     padding: 8px 12px;
     /* border: 1px solid white; */
-    border: 1px solid var(--vscode-input-border);
+    border: 1px solid var(--vscode-editorWidget-border);
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border-radius: 2px;
@@ -46,7 +46,7 @@ select {
 input:focus,
 select:focus {
     outline: none;
-    border-color: var(--vscode-focusBorder);
+    /* border-color: var(--vscode-focusBorder); */
 }
 
 .required {
@@ -258,7 +258,7 @@ h1 {
     cursor: not-allowed;
 }
 
-.test-connection {
+.test-serveurs {
     margin-bottom: 20px;
 }
 
@@ -307,12 +307,14 @@ h1 {
 }
 
 /* Form validation styles */
-input:invalid {
-    border-color: var(--vscode-inputValidation-errorBorder);
+input:required:invalid:not(:placeholder-shown) {
+    border-color: var(--vscode-focusBorder);
+    background-color: var(--vscode-input-background);
 }
 
-input:valid {
-    border-color: var(--vscode-input-border);
+input:required:valid {
+    border-color: var(--vscode-editorWidget-border);
+    background-color: var(--vscode-input-background);
 }
 
 /* Loading states */

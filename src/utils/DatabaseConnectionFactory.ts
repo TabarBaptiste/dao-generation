@@ -1,16 +1,16 @@
-import { DatabaseConnection, ConnectionFormData } from '../types/Connection';
+import { DatabaseServeur, ServeurFormData } from '../types/Connection';
 
 /**
- * Factory class for creating database connection objects
- * Centralizes connection creation logic to eliminate duplication
+ * Factory class for creating database serveurs objects
+ * Centralizes serveurs creation logic to eliminate duplication
  */
-export class DatabaseConnectionFactory {
+export class DatabaseServeurFactory {
     /**
-     * Creates a complete DatabaseConnection object with generated ID
-     * @param data Connection form data
-     * @returns Complete DatabaseConnection object
+     * Creates a complete DatabaseServeur object with generated ID
+     * @param data Serveur form data
+     * @returns Complete DatabaseServeur object
      */
-    static createConnectionData(data: ConnectionFormData): Omit<DatabaseConnection, 'id'> {
+    static createServeurData(data: ServeurFormData): Omit<DatabaseServeur, 'id'> {
         return {
             name: data.name,
             host: data.host,
@@ -25,11 +25,11 @@ export class DatabaseConnectionFactory {
     }
 
     /**
-     * Creates a temporary connection for testing purposes
-     * @param data Raw connection data from forms/UI
-     * @returns DatabaseConnection with temporary ID
+     * Creates a temporary serveurs for testing purposes
+     * @param data Raw serveurs data from forms/UI
+     * @returns DatabaseServeur with temporary ID
      */
-    static createTempConnection(data: {
+    static createTempServeur(data: {
         name: string;
         host: string;
         port: number;
@@ -37,7 +37,7 @@ export class DatabaseConnectionFactory {
         password?: string;
         database?: string;
         type: 'mysql' | 'mariadb';
-    }): DatabaseConnection {
+    }): DatabaseServeur {
         return {
             id: 'temp',
             name: data.name,

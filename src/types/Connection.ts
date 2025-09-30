@@ -1,4 +1,4 @@
-export interface DatabaseConnection {
+export interface DatabaseServeur {
     id: string;
     name: string;
     host: string;
@@ -12,7 +12,7 @@ export interface DatabaseConnection {
     defaultDaoPath?: string;
 }
 
-export interface ConnectionFormData {
+export interface ServeurFormData {
     name: string;
     host: string;
     port: number;

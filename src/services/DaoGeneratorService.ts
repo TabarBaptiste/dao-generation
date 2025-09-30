@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DatabaseConnection, TableInfo, ColumnInfo } from '../types/Connection';
+import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Connection';
 import { DatabaseService } from './DatabaseService';
 import { StringUtil } from '../utils/StringUtil';
 import { DateUtil } from '../utils/DateUtil';
@@ -17,15 +17,15 @@ export class DaoGeneratorService {
     constructor(private databaseService: DatabaseService) { }
 
     public async generateDaoFiles(
-        connection: DatabaseConnection,
+        serveurs: DatabaseServeur,
         database: string,
         tableNames: string[],
         options: DaoGenerationOptions
     ): Promise<void> {
         try {
-            // Utiliser le defaultDaoPath de la connexion si disponible, sinon demander le dossier
-            const suggestedPath = connection.defaultDaoPath || options.outputPath;
-            const outputFolder = await this.getOutputFolder(suggestedPath, database, connection.defaultDaoPath);
+            // Utiliser le defaultDaoPath du serveur si disponible, sinon demander le dossier
+            const suggestedPath = serveurs.defaultDaoPath || options.outputPath;
+            const outputFolder = await this.getOutputFolder(suggestedPath, database, serveurs.defaultDaoPath);
             if (!outputFolder) {
                 vscode.window.showWarningMessage('Génération annulée : aucun dossier sélectionné.');
                 return;
@@ -43,7 +43,7 @@ export class DaoGeneratorService {
             for (const tableName of tableNames) {
                 try {
                     // Récupérer les informations de la table
-                    const tableInfo = await this.databaseService.getTableInfo(connection, database, tableName);
+                    const tableInfo = await this.databaseService.getTableInfo(serveurs, database, tableName);
 
                     // Nom du fichier DAO
                     const fileName = StringUtil.generatePhpFileName(tableName);
@@ -207,7 +207,7 @@ export class DaoGeneratorService {
         const mappingArray = this.generateMappingArray(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
-
+        const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
         // Déterminer la version à utiliser
         let version: string = VERSION_PATTERN.INITIAL;
         if (filePath && fs.existsSync(filePath)) {
@@ -216,12 +216,10 @@ export class DaoGeneratorService {
 
         return `<?php
 /** 
- * Classe d'accès aux données -> table ${tableName}
+ * Classe d'accès aux données -> table ${tableNameWithoutPrefix}
  * @version	${version}
  * @date	${DateUtil.formatForPhpDoc()}
- * @Create	Généré automatiquement par PHP DAO Generator
- * @BDD	    ${database}
- * @table	${tableName}
+ * @author	Généré automatiquement par PHP DAO Generator
  */
 
 class ${className} extends Debug {
