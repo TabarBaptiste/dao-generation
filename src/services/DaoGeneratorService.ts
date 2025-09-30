@@ -207,7 +207,7 @@ export class DaoGeneratorService {
         const mappingArray = this.generateMappingArray(tableInfo.columns);
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
-
+        const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
         // Déterminer la version à utiliser
         let version: string = VERSION_PATTERN.INITIAL;
         if (filePath && fs.existsSync(filePath)) {
@@ -216,12 +216,10 @@ export class DaoGeneratorService {
 
         return `<?php
 /** 
- * Classe d'accès aux données -> table ${tableName}
+ * Classe d'accès aux données -> table ${tableNameWithoutPrefix}
  * @version	${version}
  * @date	${DateUtil.formatForPhpDoc()}
- * @Create	Généré automatiquement par PHP DAO Generator
- * @BDD     ${database.trim()}
- * @table	${tableName}
+ * @author	Généré automatiquement par PHP DAO Generator
  */
 
 class ${className} extends Debug {
