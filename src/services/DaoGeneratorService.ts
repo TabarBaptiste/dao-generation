@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Connection';
 import { DatabaseService } from './DatabaseService';
 import { StringUtil } from '../utils/StringUtil';
@@ -208,6 +209,7 @@ export class DaoGeneratorService {
         const accessors = this.generateAccessors(tableInfo.columns);
         const crudMethods = this.generateCrudMethods(tableName, tableInfo.columns, database);
         const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
+        const userName = StringUtil.toPascalCase(os.userInfo().username);
         // Déterminer la version à utiliser
         let version: string = VERSION_PATTERN.INITIAL;
         if (filePath && fs.existsSync(filePath)) {
@@ -219,7 +221,7 @@ export class DaoGeneratorService {
  * Classe d'accès aux données -> table ${tableNameWithoutPrefix}
  * @version	${version}
  * @date	${DateUtil.formatForPhpDoc()}
- * @author	Généré automatiquement par PHP DAO Generator
+ * @author	Généré automatiquement par ${userName} via PHP DAO Generator
  */
 
 class ${className} extends Debug {
