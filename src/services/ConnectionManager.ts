@@ -16,7 +16,6 @@ export class ServeurManager {
     constructor(private context: vscode.ExtensionContext, private databaseService: DatabaseService) {
         // Utiliser le répertoire de stockage global de l'extension
         this.globalStoragePath = path.join(context.globalStorageUri.fsPath, 'serveurs.json');
-        console.log('this.globalStoragePath :', this.globalStoragePath);
         this.loadServeurs();
     }
 
