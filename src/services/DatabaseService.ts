@@ -93,7 +93,7 @@ export class DatabaseService {
         }
 
         try {
-            // Utiliser une connexion temporaire comme le fait getDatabases
+            // Utiliser un serveur temporaire comme le fait getDatabases
             const conn = await this.createServeur(serveurs);
 
             // Utiliser SHOW TABLES FROM database au lieu de USE + SHOW TABLES
@@ -111,7 +111,7 @@ export class DatabaseService {
 
     public async getTableInfo(serveurs: DatabaseServeur, database: string, tableName: string): Promise<TableInfo> {
         try {
-            // Utiliser une connexion temporaire comme les autres méthodes
+            // Utiliser un serveur temporaire comme les autres méthodes
             const conn = await this.createServeur(serveurs);
 
             // Utiliser DESCRIBE database.table au lieu de USE + DESCRIBE

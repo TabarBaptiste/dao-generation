@@ -21,7 +21,7 @@ export class EmptyStateTreeItem extends vscode.TreeItem {
 }
 
 /**
- * Élément d'arbre représentant une connexion, base de données ou table
+ * Élément d'arbre représentant un serveur, base de données ou table
  * Hérite de vscode.TreeItem pour l'affichage dans la vue arbre avec icônes et commandes
  */
 export class DatabaseServeurTreeItem extends vscode.TreeItem {
@@ -44,7 +44,7 @@ export class DatabaseServeurTreeItem extends vscode.TreeItem {
             this.description = `${serveurs.host}:${serveurs.port}${serveurs.database ? '/' + serveurs.database : ''}`;
             this.contextValue = serveurs.isConnected ? 'connectedServeur' : 'disconnectedServeur';
 
-            // Icône basée sur le statut de connexion
+            // Icône basée sur le statut du serveur
             this.iconPath = new vscode.ThemeIcon(
                 serveurs.isConnected ? 'database' : 'circle-outline',
                 serveurs.isConnected ? new vscode.ThemeColor('charts.green') : new vscode.ThemeColor('charts.red')
@@ -72,7 +72,7 @@ export class DatabaseServeurTreeItem extends vscode.TreeItem {
 }
 
 /**
- * Fournisseur de données pour la vue arbre des connexions de base de données
+ * Fournisseur de données pour la vue arbre des serveurs de base de données
  * Implémente l'interface TreeDataProvider de VS Code pour gérer l'affichage hiérarchique
  */
 export class DatabaseServeurProvider implements vscode.TreeDataProvider<DatabaseServeurTreeItem> {
@@ -90,14 +90,14 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
 
     /**
      * Rafraîchit la vue arbre en déclenchant un événement de changement
-     * Utilisé après ajout, modification ou suppression de connexions
+     * Utilisé après ajout, modification ou suppression de serveurs
      */
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
     /**
-     * Trie les connexions selon le mode de tri actuel
+     * Trie les serveurs selon le mode de tri actuel
      */
     private sortServeurs(serveurs: DatabaseServeur[]): DatabaseServeur[] {
         const sorted = [...serveurs]; // Copie pour éviter de muter l'original
@@ -145,21 +145,21 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
 
     /**
      * Retourne les éléments enfants d'un élément donné ou les éléments racine
-     * Gère l'affichage hiérarchique : connexions -> bases de données -> tables
+     * Gère l'affichage hiérarchique : serveurs -> bases de données -> tables
      */
     getChildren(element?: DatabaseServeurTreeItem): Thenable<DatabaseServeurTreeItem[]> {
         if (!element) {
-            // Retourner toutes les connexions avec tri
+            // Retourner toutes les serveurs avec tri
             const serveurs = this.serveurManager.getServeurs();
 
-            // Si aucune connexion n'existe, afficher le message d'état vide
+            // Si aucun serveur n'existe, afficher le message d'état vide
             if (serveurs.length === 0) {
                 return Promise.resolve([new EmptyStateTreeItem() as any]);
             }
 
             const sortedServeurs = this.sortServeurs(serveurs);
 
-            // Reconnecter automatiquement les connexions marquées comme connectées
+            // Reconnecter automatiquement les serveurs marquées comme connectées
             sortedServeurs.forEach(conn => {
                 if (conn.isConnected && !this.databaseService.testConnection(conn)) {
                     this.databaseService.connect(conn).catch(error => {
@@ -193,7 +193,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Récupère les bases de données disponibles pour une connexion donnée
+     * Récupère les bases de données disponibles pour un serveur donnée
      * Retourne soit la base spécifique du serveur, soit toutes les bases disponibles
      */
     private async getDatabasesForServeur(serveurs: DatabaseServeur): Promise<DatabaseServeurTreeItem[]> {
@@ -243,7 +243,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Ajoute une nouvelle connexion de base de données
+     * Ajoute un nouveau serveur de base de données
      * Ouvre un formulaire de saisie et sauvegardu serveur si valide
      */
     public async addServeur(): Promise<void> {
@@ -260,13 +260,13 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
             } else {
                 // Utiliser la nouvelle fonction pour générer une description lisible
                 const serverInfo = this.serveurManager.getServeurDescription(connectionData);
-                vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos connexions.`);
+                vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos serveurs.`);
             }
         }
     }
 
     /**
-     * Modifie une connexion existante
+     * Modifie un serveur existant
      * Ouvre un formulaire pré-rempli avec les données actuelles du serveur
      */
     public async editServeur(item: DatabaseServeurTreeItem): Promise<void> {
@@ -295,7 +295,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Supprime une connexion après confirmation de l'utilisateur
+     * Supprime un serveur après confirmation de l'utilisateur
      * Affiche une boîte de dialogue de confirmation avant suppression
      */
     public async deleteServeur(item: DatabaseServeurTreeItem): Promise<void> {
@@ -314,7 +314,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Établit une connexion physique à la base de données
+     * Établit un serveur physique à la base de données
      * Met à jour le statut et rafraîchit l'affichage en cas de succès
      */
     public async connectToDatabase(item: DatabaseServeurTreeItem): Promise<void> {
@@ -337,7 +337,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Ferme une connexion active à la base de données
+     * Ferme un serveur active à la base de données
      * Met à jour le statut de connexion et rafraîchit l'affichage
      */
     public async disconnectFromDatabase(item: DatabaseServeurTreeItem): Promise<void> {
@@ -381,7 +381,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Exporte toutes les connexions vers un fichier JSON
+     * Exporte toutes les serveurs vers un fichier JSON
      * Délègue le traitement au ServeurManager
      */
     public async exportServeurs(): Promise<void> {
@@ -389,11 +389,11 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     }
 
     /**
-     * Importe des connexions depuis un fichier JSON
-     * Rafraîchit automatiquement la vue après import pour afficher les nouvelles connexions
+     * Importe des serveurs depuis un fichier JSON
+     * Rafraîchit automatiquement la vue après import pour afficher les nouvelles serveurs
      */
     public async importServeurs(): Promise<void> {
         await this.serveurManager.importServeurs();
-        this.refresh(); // Rafraîchir la vue de l'arbre pour afficher les connexions importées
+        this.refresh(); // Rafraîchir la vue de l'arbre pour afficher les serveurs importées
     }
 }

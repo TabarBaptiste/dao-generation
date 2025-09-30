@@ -35,7 +35,7 @@ export class ServeurManager {
             defaultDaoPath: serveurs.database ? serveurs.defaultDaoPath : undefined
         };
 
-        // Vérifier s'il existe déjà une connexion identique
+        // Vérifier s'il existe déjà un serveur identique
         const existingServeur = this.serveurs.find(conn => this.isSameServeur(conn, newServeur));
 
         if (existingServeur) {
@@ -85,7 +85,7 @@ export class ServeurManager {
     }
 
     /**
-     * Nettoie une connexion pour la sauvegarde/export en supprimant les propriétés temporaires
+     * Nettoie un serveur pour la sauvegarde/export en supprimant les propriétés temporaires
      */
     private cleanServeurForStorage(conn: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
         const cleaned = { ...conn };
@@ -104,7 +104,7 @@ export class ServeurManager {
 
     private async loadServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
-            'chargement des connexions',
+            'chargement des serveurs',
             async () => {
                 // S'assurer que le répertoire existe
                 if (!fs.existsSync(path.dirname(this.globalStoragePath))) {
@@ -161,7 +161,7 @@ export class ServeurManager {
 
     private async saveServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
-            'sauvegarde des connexions',
+            'sauvegarde des serveurs',
             async () => {
                 const connectionsToSave = this.serveurs.map(conn => {
                     // Garder l'état de connexion pour la sauvegarde locale (forExport = false)
@@ -176,7 +176,7 @@ export class ServeurManager {
                     // Chiffrer le mot de passe
                     const encrypted = EncryptionUtil.safeEncrypt(conn.password!, ServeurManager.ENCRYPTION_KEY);
                     if (!encrypted) {
-                        ErrorHandler.logError('chiffrement connexion', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
+                        ErrorHandler.logError('chiffrement serveur', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
                         const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
                         return connWithoutPassword;
                     }
@@ -204,10 +204,9 @@ export class ServeurManager {
     }
 
     /**
-     * Vérifie si deux connexions sont identiques (même serveur, même base de données)
+     * Vérifie si deux serveurs sont identiques (même serveur, même base de données)
      */
     private isSameServeur(conn1: DatabaseServeur, conn2: DatabaseServeur): boolean {
-        // TODO : vérifier aussi avec "name"
         // Normaliser les valeurs de base de données
         const db1 = conn1.database || undefined;
         const db2 = conn2.database || undefined;
@@ -220,7 +219,7 @@ export class ServeurManager {
     }
 
     /**
-     * Génère une description lisible d'une connexion pour les messages utilisateur
+     * Génère une description lisible d'un serveur pour les messages utilisateur
      */
     public getServeurDescription(serveurs: DatabaseServeur | Omit<DatabaseServeur, 'id'>): string {
         const database = serveurs.database || undefined;
@@ -230,7 +229,7 @@ export class ServeurManager {
     }
 
     /**
-     * Compte le nombre de connexions avec des mots de passe valides
+     * Compte le nombre de serveurs avec des mots de passe valides
      */
     private countServeursWithPasswords(serveurs: any[]): number {
         return serveurs.filter(conn => this.isValidPassword(conn.password)).length;
@@ -276,7 +275,7 @@ export class ServeurManager {
 
         // Demander le mot de passe maître
         const encryptionPassword = await vscode.window.showInputBox({
-            prompt: 'Entrez un mot de passe maître pour chiffrer les mots de passe des connexions',
+            prompt: 'Entrez un mot de passe maître pour chiffrer les mots de passe des serveurs',
             password: true,
             placeHolder: 'Mot de passe maître',
             validateInput: (value) => {
@@ -298,7 +297,7 @@ export class ServeurManager {
     }
 
     /**
-     * Traite une connexion pour l'export (chiffrement ou nettoyage)
+     * Traite un serveur pour l'export (chiffrement ou nettoyage)
      */
     private processServeurForExport(conn: DatabaseServeur, encryptionConfig: { useEncryption: boolean; password?: string }): any {
         // Pour l'export, supprimer l'état de connexion (forExport = true)
@@ -314,7 +313,6 @@ export class ServeurManager {
         if (encryptionConfig.useEncryption && encryptionConfig.password) {
             const encrypted = EncryptionUtil.safeEncrypt(conn.password!, encryptionConfig.password);
             if (!encrypted) {
-                // TODO "Échec du chiffrement du mot de passe pour le serveur" deux fois. Factoriser !
                 ErrorHandler.logError('chiffrement exportation', `Échec du chiffrement du mot de passe pour le serveur : ${conn.name}`);
                 const { password, ...connWithoutPassword } = cleanConn;
                 return connWithoutPassword;
@@ -338,7 +336,7 @@ export class ServeurManager {
                 return;
             }
 
-            // Compter les connexions avec mots de passe
+            // Compter les serveurs avec mots de passe
             const passwordCount = this.countServeursWithPasswords(this.serveurs);
 
             // Déterminer la stratégie de chiffrement
@@ -349,7 +347,7 @@ export class ServeurManager {
                 encryptionConfig = await this.askEncryptionChoice(passwordCount);
             }
 
-            // Traiter les connexions pour l'export
+            // Traiter les serveurs pour l'export
             const processedServeurs = this.serveurs.map(conn =>
                 this.processServeurForExport(conn, encryptionConfig)
             );
@@ -372,7 +370,7 @@ export class ServeurManager {
                     'Fichiers JSON': ['json'],
                     'Tous les fichiers': ['*']
                 },
-                saveLabel: 'Exporter les connexions'
+                saveLabel: 'Exporter les serveurs'
             });
 
             if (!saveUri) {
@@ -397,13 +395,13 @@ export class ServeurManager {
             if (error instanceof Error && error.message.includes('annulé par l\'utilisateur')) {
                 return; // Ne pas afficher d'erreur si l'utilisateur a annulé
             }
-            ErrorHandler.logError('exportation connexions', error);
-            ErrorHandler.showError('exportation connexions', error);
+            ErrorHandler.logError('exportation serveurs', error);
+            ErrorHandler.showError('exportation serveurs', error);
         }
     }
 
     /**
-     * Valide la structure d'une connexion importée
+     * Valide la structure d'un serveur importée
      */
     private validateImportedServeur(conn: any): boolean {
         return !!(conn.name && conn.host && conn.port && conn.username &&
@@ -411,12 +409,12 @@ export class ServeurManager {
     }
 
     /**
-     * Traite une connexion importée (déchiffrement si nécessaire)
+     * Traite un serveur importée (déchiffrement si nécessaire)
      */
     private processImportedServeur(conn: any, decryptionPassword?: string): any {
         // Validation de base
         if (!this.validateImportedServeur(conn)) {
-            throw new Error(`Format de connexion invalide : ${conn.name || 'sans nom'}`);
+            throw new Error(`Format du serveur invalide : ${conn.name || 'sans nom'}`);
         }
 
         // Gestion du déchiffrement
@@ -436,7 +434,7 @@ export class ServeurManager {
     }
 
     /**
-     * Gère l'import d'une connexion (ajout/mise à jour)
+     * Gère l'import d'un serveur (ajout/mise à jour)
      */
     private async handleServeurImport(
         importedConn: DatabaseServeur,
@@ -447,7 +445,7 @@ export class ServeurManager {
         );
 
         if (existingIndex === -1) {
-            // Nouvelle connexion
+            // Nouveau serveur
             this.serveurs.push(importedConn);
             return { action: 'added', autoUpdate };
         }
@@ -455,11 +453,11 @@ export class ServeurManager {
         // Connexion existante
         if (!autoUpdate) {
             const updateChoice = await vscode.window.showQuickPick([
-                { label: 'Oui', description: 'Mettre à jour cette connexion', value: 'yes' },
+                { label: 'Oui', description: 'Mettre à jour ce serveur', value: 'yes' },
                 { label: 'Non', description: 'Conserver le serveur existante', value: 'no' },
                 { label: 'Oui pour tout', description: 'Mettre à jour celle-ci et tous les doublons restants', value: 'yesAll' }
             ], {
-                placeHolder: `La connexion "${importedConn.name}" existe déjà. La mettre à jour ?`
+                placeHolder: `Le serveur "${importedConn.name}" existe déjà. Le mettre à jour ?`
             });
 
             if (!updateChoice) {
@@ -494,7 +492,7 @@ export class ServeurManager {
                     'Fichiers JSON': ['json'],
                     'Tous les fichiers': ['*']
                 },
-                openLabel: 'Importer les connexions'
+                openLabel: 'Importer les serveurs'
             });
 
             if (!openUri || openUri.length === 0) {
@@ -514,7 +512,7 @@ export class ServeurManager {
             }
 
             if (!importData.serveurs || !Array.isArray(importData.serveurs)) {
-                throw new Error('Format de fichier invalide : tableau de connexions manquant');
+                throw new Error('Format de fichier invalide : tableau de serveurs manquant');
             }
 
             // Gestion du déchiffrement
@@ -542,7 +540,7 @@ export class ServeurManager {
                 }
             }
 
-            // Traiter les connexions
+            // Traiter les serveurs
             const validServeurs: DatabaseServeur[] = [];
             const errors: string[] = [];
 
@@ -562,71 +560,35 @@ export class ServeurManager {
 
             if (validServeurs.length === 0) {
                 const errorMessage = errors.length > 0
-                    ? `Aucune connexion valide trouvée. Erreurs :\n${errors.join('\n')}`
-                    : 'Aucune connexion valide trouvée dans le fichier d\'importation';
+                    ? `Aucun serveur valide trouvé. Erreurs :\n${errors.join('\n')}`
+                    : 'Aucun serveur valide trouvé dans le fichier d\'importation';
                 throw new Error(errorMessage);
             }
 
-            // TODO : Modifier pour mettre à jour les connexions existantes et ajouter celles qui n'existe pas encore par défaut.
-            // TODO : Donc, Plus besoin de demander si on ajoute ou remplace. (Corriger/Supprimer aussi handleServeurImport())
-            // Déterminer le mode d'importation
-            let importMode = 'merge';
-            if (this.serveurs.length > 0) {
-                const choice = await vscode.window.showQuickPick([
-                    {
-                        label: 'Fusion',
-                        description: 'Ajouter de nouvelles connexions et mettre à jour les existantes',
-                        value: 'merge'
-                    },
-                    {
-                        label: 'Remplacement',
-                        description: 'Remplacer uniquement les connexions importées',
-                        value: 'replace'
-                    }
-                ], {
-                    placeHolder: 'Choisir le mode d\'importation'
-                });
-
-                if (!choice) {
-                    return;
-                }
-
-                importMode = choice.value;
-            }
-
-            // Importer les connexions
+            // Importer uniquement les nouveaux serveurs
             let addedCount = 0;
-            let updatedCount = 0;
             let skippedCount = 0;
-            let autoUpdate = false;
 
-            if (importMode === 'replace') {
-                // Mode remplacement : traiter toutes les connexions automatiquement
-                for (const importedConn of validServeurs) {
-                    const result = await this.handleServeurImport(importedConn, true);
-                    if (result.action === 'added') addedCount++;
-                    else if (result.action === 'updated') updatedCount++;
-                }
-            } else {
-                // Mode fusion : demander confirmation pour les doublons
-                for (const importedConn of validServeurs) {
-                    const result = await this.handleServeurImport(importedConn, autoUpdate);
-                    autoUpdate = result.autoUpdate;
+            for (const importedConn of validServeurs) {
+                const existingIndex = this.serveurs.findIndex(s => this.isSameServeur(s, importedConn));
 
-                    if (result.action === 'added') addedCount++;
-                    else if (result.action === 'updated') updatedCount++;
-                    else if (result.action === 'skipped') skippedCount++;
+                if (existingIndex === -1) {
+                    // Nouveau serveur : l'ajouter
+                    this.serveurs.push(importedConn);
+                    addedCount++;
+                } else {
+                    // Serveur existant : l'ignorer
+                    skippedCount++;
                 }
             }
 
             await this.saveServeurs();
 
             // Message de succès
-            let message = `Import réussi : ${addedCount} ajoutées`;
-            if (updatedCount > 0) message += `, ${updatedCount} mises à jour`;
-            if (skippedCount > 0) message += `, ${skippedCount} ignorées`;
-            if (errors.length > 0) message += ` (${errors.length} erreurs)`;
-            if (hasEncryptedPasswords && decryptionPassword) message += ` |  Mots de passe déchiffrés`;
+            let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
+            if (skippedCount > 0) message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`;
+            if (errors.length > 0) message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`;
+            if (hasEncryptedPasswords && decryptionPassword) message += ` | Mots de passe déchiffrés`;
             else if (!isEncrypted) message += ` | Fichier non chiffré`;
 
             vscode.window.showInformationMessage(message);
@@ -634,7 +596,7 @@ export class ServeurManager {
             // Afficher les erreurs si nécessaire
             if (errors.length > 0 && errors.length < 10) {
                 const showErrors = await vscode.window.showWarningMessage(
-                    `Certaines connexions n'ont pas pu être importées. Afficher les détails ?`,
+                    `Certains serveurs n'ont pas pu être importés. Afficher les détails ?`,
                     'Afficher les détails'
                 );
                 if (showErrors) {
@@ -642,8 +604,8 @@ export class ServeurManager {
                 }
             }
         } catch (error) {
-            ErrorHandler.logError('importation connexions', error);
-            ErrorHandler.showError('importation connexions', error);
+            ErrorHandler.logError('importation serveurs', error);
+            ErrorHandler.showError('importation serveurs', error);
         }
     }
 }

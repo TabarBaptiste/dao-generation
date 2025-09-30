@@ -66,7 +66,7 @@ function setupEventListeners() {
         e.target.value = e.target.value.replace(/[eE\+\-]/g, '');
     });
 
-    // Auto-génération du nom de connexion basé sur l'hôte et la base de données
+    // Auto-génération du nom de serveur basé sur l'hôte et la base de données
     formElements.host.addEventListener('input', updateServeurName);
     formElements.database.addEventListener('change', function() {
         updateServeurName();
@@ -172,7 +172,7 @@ function performServeurTest(loadDatabasesAfterTest = false, isAutoLoad = false) 
     // Validation selon le type de test
     const validationFn = loadDatabasesAfterTest ? validateServeurFields : validateRequiredFields;
     const errorMessage = loadDatabasesAfterTest
-        ? 'Veuillez d\'abord remplir les détails de connexion'
+        ? 'Veuillez d\'abord remplir les détails du serveur'
         : 'Veuillez d\'abord remplir tous les champs obligatoires';
 
     if (!validationFn(data)) {
@@ -239,7 +239,7 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     // Afficher le message approprié
     showStatus(message, true);
 
-    // Mettre à jour le nom de connexion si le champ est vide
+    // Mettre à jour le nom du serveur si le champ est vide
     updateServeurName();
     
     // Mettre à jour la visibilité du champ de répertoire par défaut
