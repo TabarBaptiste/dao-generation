@@ -80,7 +80,6 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
     readonly onDidChangeTreeData: vscode.Event<DatabaseServeurTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private sortMode: 'alphabetical' | 'date' = SORT.DATE;
-    private serveurs: DatabaseServeur[] = [];
 
     constructor(
         private serveurManager: ServeurManager,
@@ -121,7 +120,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * Alterne entre tri alphabétique et tri par date d'ajout
      */
     public toggleSortMode(): void {
-        if (this.serveurs.length === 0) {
+        if (this.serveurManager.getServeurs().length === 0) {
             vscode.window.showInformationMessage('Aucun serveur à trier.');
             return;
         }
