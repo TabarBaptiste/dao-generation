@@ -30,7 +30,6 @@ docs/**
 .venv
 assets/img/*
 !assets/img/logo.png
-structure.md
 config.md
 .github
-eval.md
+aide/*
