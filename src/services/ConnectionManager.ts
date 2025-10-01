@@ -4,11 +4,12 @@ import * as fs from 'fs';
 import { DatabaseServeur } from '../types/Connection';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
-import { STORAGE_KEYS, ENCRYPTION } from '../constants/AppConstants';
+import { ENCRYPTION } from '../constants/AppConstants';
 import { DatabaseService } from './DatabaseService';
 
+// TODO : Utiliser une interface TypeScript au lieu d'utiliser 'any' partout.
+
 export class ServeurManager {
-    private static readonly STORAGE_KEY = STORAGE_KEYS.CONNECTIONS;
     private static readonly ENCRYPTION_KEY = ENCRYPTION.KEY;
     private serveurs: DatabaseServeur[] = [];
     private globalStoragePath: string;
@@ -19,10 +20,28 @@ export class ServeurManager {
         this.loadServeurs();
     }
 
+    /**
+     * Retourne la liste complète de tous les serveurs de base de données configurés.
+     * Cette méthode fournit un accès en lecture seule à tous les serveurs stockés,
+     * incluant leurs informations de connexion et leur état actuel.
+     *
+     * @return {DatabaseServeur[]} Tableau complet de tous les serveurs configurés avec leurs métadonnées complètes
+     * @memberof ServeurManager
+     */
+    // TODO : Utiliser la fonction getServeurs au lieu de this.serveurs;
     public getServeurs(): DatabaseServeur[] {
         return this.serveurs;
     }
 
+    /**
+     * Ajoute un nouveau serveur de base de données après validation et test de connexion.
+     * Cette méthode teste automatiquement la connexion, vérifie l'absence de doublon,
+     * génère un ID unique et sauvegarde la configuration de façon persistante.
+     *
+     * @param {Omit<DatabaseServeur, 'id'>} serveurs Configuration complète du nouveau serveur sans l'ID (généré automatiquement)
+     * @return {Promise<boolean>} Promesse qui retourne true si le serveur a été ajouté avec succès, false si c'est un doublon existant
+     * @memberof ServeurManager
+     */
     public async addServeur(serveurs: Omit<DatabaseServeur, 'id'>): Promise<boolean> {
         const testResult = await this.databaseService.testConnection(serveurs);
         // Créer le serveur finale avec le statut de connexion basé sur le test
@@ -47,13 +66,23 @@ export class ServeurManager {
         // Afficher un message informatif selon le résultat du test
         if (!testResult.success) {
             vscode.window.showWarningMessage(
-                `Connexion "${newServeur.name}" ajouté mais le test a échoué : ${testResult.message} `
+                `Serveur "${newServeur.name}" ajouté mais le test a échoué : ${testResult.message} `
             );
         }
 
         return true;
     }
 
+    /**
+     * Met à jour les informations d'un serveur existant avec de nouvelles valeurs.
+     * Cette méthode effectue une mise à jour partielle en fusionnant les nouvelles données
+     * avec les données existantes, puis sauvegarde automatiquement les modifications.
+     *
+     * @param {string} id Identifiant unique du serveur à mettre à jour
+     * @param {Partial<DatabaseServeur>} serveurs Objet contenant uniquement les propriétés à modifier (mise à jour partielle)
+     * @return {Promise<void>} Promesse qui se résout une fois la mise à jour et la sauvegarde terminées
+     * @memberof ServeurManager
+     */
     public async updateServeur(id: string, serveurs: Partial<DatabaseServeur>): Promise<void> {
         const index = this.serveurs.findIndex(serv => serv.id === id);
         if (index !== -1) {
@@ -67,24 +96,59 @@ export class ServeurManager {
         }
     }
 
+    /**
+     * Supprime définitivement un serveur de la liste et de la sauvegarde persistante.
+     * Cette action est irréversible et supprime toutes les informations de serveur
+     * associées au serveur spécifié.
+     *
+     * @param {string} id Identifiant unique du serveur à supprimer de façon permanente
+     * @return {Promise<void>} Promesse qui se résout une fois la suppression et la sauvegarde terminées
+     * @memberof ServeurManager
+     */
     public async deleteServeur(id: string): Promise<void> {
         this.serveurs = this.serveurs.filter(serv => serv.id !== id);
         await this.saveServeurs();
     }
 
+    /**
+     * Recherche et retourne un serveur spécifique par son identifiant unique.
+     * Cette méthode permet de récupérer toutes les informations d'un serveur
+     * particulier pour consultation ou modification.
+     *
+     * @param {string} id Identifiant unique du serveur recherché
+     * @return {(DatabaseServeur | undefined)} Objet DatabaseServeur complet si trouvé, undefined si l'ID n'existe pas
+     * @memberof ServeurManager
+     */
+    // TODO : Supprimer ou utiliser cette fonction
     public getServeurById(id: string): DatabaseServeur | undefined {
         return this.serveurs.find(serv => serv.id === id);
     }
 
     /**
-     * Vérifie si un mot de passe est valide (non vide et non null/undefined)
+     * Vérifie si un mot de passe est considéré comme valide selon les critères de sécurité.
+     * Un mot de passe valide ne doit pas être null, undefined ou une chaîne vide/espaces.
+     * Cette validation est utilisée avant le chiffrement et la sauvegarde.
+     *
+     * @private
+     * @param {string} [password] Mot de passe à valider (peut être undefined ou null)
+     * @return {boolean} true si le mot de passe est valide (non vide et défini), false sinon
+     * @memberof ServeurManager
      */
     private isValidPassword(password?: string): boolean {
         return password !== undefined && password !== null && password.trim().length > 0;
     }
 
     /**
-     * Nettoie un serveur pour la sauvegarde/export en supprimant les propriétés temporaires
+     * Nettoie et prépare un objet serveur pour la sauvegarde ou l'export en supprimant les propriétés temporaires.
+     * Cette méthode élimine les données runtime qui ne doivent pas être persistées
+     * et adapte le format selon le contexte (sauvegarde locale vs export).
+     *
+     * @private
+     * @param {DatabaseServeur} serv Objet serveur complet à nettoyer
+     * @param {boolean} [includeRuntimeProps=false] Si true, conserve les propriétés runtime comme isConnected (par défaut false)
+     * @param {boolean} [forExport=false] Si true, prépare pour export externe en supprimant l'état de connexion (par défaut false)
+     * @return {*} Objet serveur nettoyé prêt pour la sauvegarde ou l'export
+     * @memberof ServeurManager
      */
     private cleanServeurForStorage(serv: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
         const cleaned = { ...serv };
@@ -101,17 +165,29 @@ export class ServeurManager {
         return cleaned;
     }
 
+    /**
+     * Chiffre de façon sécurisée le mot de passe d'un serveur pour la sauvegarde ou l'export.
+     * Cette méthode utilise un chiffrement AES avec clé maître et gère automatiquement
+     * les cas d'échec en supprimant le mot de passe plutôt qu'en le stockant en clair.
+     *
+     * @private
+     * @param {DatabaseServeur} serv Serveur dont le mot de passe doit être chiffré
+     * @param {string} masterKey Clé maître utilisée pour le chiffrement AES
+     * @param {boolean} [forExport=false] Si true, formate pour export (password chiffré), si false pour sauvegarde locale (encryptedPassword)
+     * @return {*} Objet serveur avec mot de passe chiffré ou sans mot de passe si chiffrement impossible
+     * @memberof ServeurManager
+     */
     private encryptServeurPassword(
         serv: DatabaseServeur,
         masterKey: string,
         forExport: boolean = false
     ): any {
-        const cleanConn = this.cleanServeurForStorage(serv, false, forExport);
+        const cleanServ = this.cleanServeurForStorage(serv, false, forExport);
 
         // Si pas de mot de passe valide, retourner sans chiffrement
         if (!this.isValidPassword(serv.password)) {
-            const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-            return connWithoutPassword;
+            const { password, encryptedPassword, passwordIv, ...servWithoutPassword } = cleanServ;
+            return servWithoutPassword;
         }
 
         // Tenter le chiffrement
@@ -121,25 +197,34 @@ export class ServeurManager {
                 'chiffrement serveur',
                 `Échec du chiffrement du mot de passe pour le serveur : ${serv.name}`
             );
-            const { password, encryptedPassword, passwordIv, ...connWithoutPassword } = cleanConn;
-            return connWithoutPassword;
+            const { password, encryptedPassword, passwordIv, ...servWithoutPassword } = cleanServ;
+            return servWithoutPassword;
         }
 
         // Retourner avec mot de passe chiffré
-        const { password, ...connWithoutClearPassword } = cleanConn;
+        const { password, ...servWithoutClearPassword } = cleanServ;
         return forExport
             ? {
-                ...connWithoutClearPassword,
+                ...servWithoutClearPassword,
                 password: encrypted.encrypted,
                 passwordIv: encrypted.iv
             }
             : {
-                ...connWithoutClearPassword,
+                ...servWithoutClearPassword,
                 encryptedPassword: encrypted.encrypted,
                 passwordIv: encrypted.iv
             };
     }
 
+    /**
+     * Charge de façon asynchrone tous les serveurs depuis le stockage persistant de l'extension.
+     * Cette méthode crée le répertoire de stockage si nécessaire, déchiffre automatiquement
+     * les mots de passe et gère la rétrocompatibilité avec les anciens formats.
+     *
+     * @private
+     * @return {Promise<void>} Promesse qui se résout une fois tous les serveurs chargés et déchiffrés avec succès
+     * @memberof ServeurManager
+     */
     private async loadServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
             'chargement des serveurs',
@@ -156,7 +241,7 @@ export class ServeurManager {
 
                 const fileContent = fs.readFileSync(this.globalStoragePath, 'utf-8');
                 const stored = JSON.parse(fileContent);
-                console.log('dao stored (stockage global):', stored);
+                // console.log('dao stored (stockage global):', stored);
 
                 if (!stored || !Array.isArray(stored)) {
                     this.serveurs = [];
@@ -175,16 +260,16 @@ export class ServeurManager {
                         if (decryptedPassword === null) {
                             ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
                             // Retourner le serveur sans mot de passe en cas d'échec
-                            const { encryptedPassword, passwordIv, ...cleanConn } = serv;
-                            return { ...cleanConn, password: '' };
+                            const { encryptedPassword, passwordIv, ...cleanServ } = serv;
+                            return { ...cleanServ, password: '' };
                         }
 
                         // Retourner le serveur avec le mot de passe déchiffré
-                        const { encryptedPassword, passwordIv, ...cleanConn } = serv;
-                        return { ...cleanConn, password: decryptedPassword };
+                        const { encryptedPassword, passwordIv, ...cleanServ } = serv;
+                        return { ...cleanServ, password: decryptedPassword };
                     }
 
-                    // Connexion non chiffrée (rétrocompatibilité)
+                    // Serveur non chiffrée (rétrocompatibilité)
                     return serv;
                 });
             },
@@ -197,11 +282,20 @@ export class ServeurManager {
         }
     }
 
+    /**
+     * Sauvegarde de façon persistante tous les serveurs dans le stockage global de l'extension.
+     * Cette méthode chiffre automatiquement tous les mots de passe avant la sauvegarde
+     * et crée le répertoire de stockage si nécessaire.
+     *
+     * @private
+     * @return {Promise<void>} Promesse qui se résout une fois la sauvegarde chiffrée terminée avec succès
+     * @memberof ServeurManager
+     */
     private async saveServeurs(): Promise<void> {
         await ErrorHandler.handleAsync(
             'sauvegarde des serveurs',
             async () => {
-                const connectionsToSave = this.serveurs.map(serv =>
+                const serveursToSave = this.serveurs.map(serv =>
                     this.encryptServeurPassword(serv, ServeurManager.ENCRYPTION_KEY, false)
                 );
 
@@ -210,32 +304,57 @@ export class ServeurManager {
                     fs.mkdirSync(path.dirname(this.globalStoragePath), { recursive: true });
                 }
 
-                fs.writeFileSync(this.globalStoragePath, JSON.stringify(connectionsToSave, null, 2), 'utf-8');
+                fs.writeFileSync(this.globalStoragePath, JSON.stringify(serveursToSave, null, 2), 'utf-8');
             }
         );
     }
 
-    private generateId(): string {
-        return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-
     /**
-     * Vérifie si deux serveurs sont identiques (même serveur, même base de données)
+     * Génère un identifiant unique et sécurisé pour un nouveau serveur.
+     * L'ID combine un timestamp précis et une chaîne aléatoire pour garantir
+     * l'unicité même en cas de créations simultanées.
+     *
+     * @private
+     * @return {string} Identifiant unique au format "serv_[timestamp]_[chaîne_aléatoire]"
+     * @memberof ServeurManager
      */
-    private isSameServeur(conn1: DatabaseServeur, conn2: DatabaseServeur): boolean {
-        // Normaliser les valeurs de base de données
-        const db1 = conn1.database || undefined;
-        const db2 = conn2.database || undefined;
-
-        return conn1.host === conn2.host &&
-            conn1.port === conn2.port &&
-            conn1.username === conn2.username &&
-            db1 === db2 &&
-            conn1.type === conn2.type;
+    // TODO : vérifier l'utilisation de cette fonction lorsque Omit est utilisé
+    // TODO : La déclaration a été marquée ici comme étant dépréciée.
+    private generateId(): string {
+        return `serv_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
 
     /**
-     * Génère une description lisible d'un serveur pour les messages utilisateur
+     * Compare deux serveurs pour déterminer s'ils représentent le même serveur de base de données.
+     * La comparaison se base sur l'host, le port, l'utilisateur, le type de serveur et la base de données.
+     * Cette méthode est utilisée pour éviter les doublons lors des ajouts.
+     *
+     * @private
+     * @param {DatabaseServeur} serv1 Premier serveur à comparer
+     * @param {DatabaseServeur} serv2 Second serveur à comparer
+     * @return {boolean} true si les serveurs pointent vers la même base de données, false sinon
+     * @memberof ServeurManager
+     */
+    private isSameServeur(serv1: DatabaseServeur, serv2: DatabaseServeur): boolean {
+        // Normaliser les valeurs de base de données
+        const db1 = serv1.database || undefined;
+        const db2 = serv2.database || undefined;
+
+        return serv1.host === serv2.host &&
+            serv1.port === serv2.port &&
+            serv1.username === serv2.username &&
+            db1 === db2 &&
+            serv1.type === serv2.type;
+    }
+
+    /**
+     * Génère une description textuelle lisible et concise d'un serveur pour l'affichage utilisateur.
+     * Le format inclut host:port et optionnellement la base de données si spécifiée.
+     * Cette description est utilisée dans les messages d'information et les listes.
+     *
+     * @param {(DatabaseServeur | Omit<DatabaseServeur, 'id'>)} serveurs Serveur dont générer la description (avec ou sans ID)
+     * @return {string} Description formatée du type "host:port" ou "host:port/database"
+     * @memberof ServeurManager
      */
     public getServeurDescription(serveurs: DatabaseServeur | Omit<DatabaseServeur, 'id'>): string {
         const database = serveurs.database || undefined;
@@ -245,14 +364,28 @@ export class ServeurManager {
     }
 
     /**
-     * Compte le nombre de serveurs avec des mots de passe valides
+     * Compte le nombre de serveurs dans une liste qui possèdent des mots de passe valides.
+     * Cette statistique est utilisée pour déterminer les options de chiffrement
+     * lors de l'export et informer l'utilisateur des risques de sécurité.
+     *
+     * @private
+     * @param {any[]} serveurs Tableau de serveurs à analyser (format peut varier selon le contexte)
+     * @return {number} Nombre total de serveurs ayant un mot de passe non vide et valide
+     * @memberof ServeurManager
      */
     private countServeursWithPasswords(serveurs: any[]): number {
         return serveurs.filter(serv => this.isValidPassword(serv.password)).length;
     }
 
     /**
-     * Demande à l'utilisateur s'il veut chiffrer les mots de passe lors de l'export
+     * Présente à l'utilisateur les options de chiffrement lors de l'export de serveurs avec mots de passe.
+     * Cette méthode interactive propose soit le chiffrement avec mot de passe maître,
+     * soit l'export en texte clair avec avertissement de sécurité explicite.
+     *
+     * @private
+     * @param {number} passwordCount Nombre de serveurs possédant des mots de passe (affiché dans l'invite)
+     * @return {Promise<{ useEncryption: boolean; password?: string }>} Promesse retournant la stratégie choisie et le mot de passe maître si applicable
+     * @memberof ServeurManager
      */
     private async askEncryptionChoice(passwordCount: number): Promise<{ useEncryption: boolean; password?: string }> {
         const encryptChoice = await vscode.window.showQuickPick([
@@ -313,7 +446,15 @@ export class ServeurManager {
     }
 
     /**
-     * Traite un serveur pour l'export (chiffrement ou nettoyage)
+     * Traite et prépare un serveur individuel pour l'export selon la stratégie de chiffrement choisie.
+     * Cette méthode applique le chiffrement ou l'export en clair tout en gérant
+     * automatiquement les cas de mots de passe invalides ou d'échec de chiffrement.
+     *
+     * @private
+     * @param {DatabaseServeur} serv Serveur à traiter pour l'export
+     * @param {{ useEncryption: boolean; password?: string }} encryptionConfig Configuration de chiffrement incluant la stratégie et le mot de passe maître
+     * @return {*} Objet serveur formaté pour l'export (chiffré, en clair, ou sans mot de passe selon les cas)
+     * @memberof ServeurManager
      */
     private processServeurForExport(
         serv: DatabaseServeur,
@@ -325,17 +466,25 @@ export class ServeurManager {
         }
 
         // Export en clair
-        const cleanConn = this.cleanServeurForStorage(serv, false, true);
+        const cleanServ = this.cleanServeurForStorage(serv, false, true);
 
         // Si pas de mot de passe valide, retourner sans le champ password
         if (!this.isValidPassword(serv.password)) {
-            const { password, ...connWithoutPassword } = cleanConn;
-            return connWithoutPassword;
+            const { password, ...servWithoutPassword } = cleanServ;
+            return servWithoutPassword;
         }
 
-        return cleanConn;
+        return cleanServ;
     }
 
+    /**
+     * Orchestre l'export complet des serveurs vers un fichier JSON externe avec gestion du chiffrement.
+     * Cette méthode guide l'utilisateur à travers le choix de chiffrement, traite tous les serveurs,
+     * et sauvegarde le fichier avec un résumé détaillé de l'opération.
+     *
+     * @return {Promise<void>} Promesse qui se résout une fois l'export terminé ou annulé par l'utilisateur
+     * @memberof ServeurManager
+     */
     public async exportServeurs(): Promise<void> {
         try {
             if (this.serveurs.length === 0) {
@@ -408,7 +557,14 @@ export class ServeurManager {
     }
 
     /**
-     * Valide la structure d'un serveur importée
+     * Valide la structure et les champs obligatoires d'un serveur importé depuis un fichier externe.
+     * Cette validation vérifie la présence des champs essentiels et la compatibilité
+     * du type de serveur avec les systèmes supportés (MySQL/MariaDB).
+     *
+     * @private
+     * @param {*} serv Objet serveur à valider (format libre depuis fichier JSON externe)
+     * @return {boolean} true si la structure est valide et complète, false si des champs essentiels manquent
+     * @memberof ServeurManager
      */
     private validateImportedServeur(serv: any): boolean {
         return !!(serv.name && serv.host && serv.port && serv.username &&
@@ -416,7 +572,15 @@ export class ServeurManager {
     }
 
     /**
-     * Traite un serveur importée (déchiffrement si nécessaire)
+     * Traite un serveur importé en gérant le déchiffrement automatique des mots de passe si nécessaire.
+     * Cette méthode valide la structure, déchiffre les mots de passe chiffrés avec le mot de passe maître,
+     * et nettoie les données pour l'intégration dans le système local.
+     *
+     * @private
+     * @param {*} serv Serveur brut importé depuis fichier JSON (structure variable selon origine)
+     * @param {string} [decryptionPassword] Mot de passe maître pour déchiffrer les mots de passe chiffrés (optionnel si non chiffré)
+     * @return {*} Serveur traité et nettoyé prêt pour intégration locale
+     * @memberof ServeurManager
      */
     private processImportedServeur(serv: any, decryptionPassword?: string): any {
         // Validation de base
@@ -431,64 +595,23 @@ export class ServeurManager {
                 throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
             }
 
-            const { passwordIv, ...cleanConn } = serv;
-            return { ...cleanConn, password: decryptedPassword };
+            const { passwordIv, ...cleanServ } = serv;
+            return { ...cleanServ, password: decryptedPassword };
         }
 
-        // Connexion non chiffrée ou sans mot de passe
-        const { passwordIv, ...cleanConn } = serv;
-        return { ...cleanConn, password: serv.password || '' };
+        // Serveur non chiffrée ou sans mot de passe
+        const { passwordIv, ...cleanServ } = serv;
+        return { ...cleanServ, password: serv.password || '' };
     }
 
     /**
-     * Gère l'import d'un serveur (ajout/mise à jour)
+     * Orchestre l'import complet de serveurs depuis un fichier JSON externe avec gestion du déchiffrement.
+     * Cette méthode guide l'utilisateur dans la sélection du fichier, gère les mots de passe chiffrés,
+     * et importe uniquement les nouveaux serveurs en évitant les doublons.
+     *
+     * @return {Promise<void>} Promesse qui se résout une fois l'import terminé avec un résumé des opérations effectuées
+     * @memberof ServeurManager
      */
-    private async handleServeurImport(
-        importedConn: DatabaseServeur,
-        autoUpdate: boolean
-    ): Promise<{ action: 'added' | 'updated' | 'skipped'; autoUpdate: boolean }> {
-        const existingIndex = this.serveurs.findIndex(serv =>
-            this.isSameServeur(serv, importedConn)
-        );
-
-        if (existingIndex === -1) {
-            // Nouveau serveur
-            this.serveurs.push(importedConn);
-            return { action: 'added', autoUpdate };
-        }
-
-        // Connexion existante
-        if (!autoUpdate) {
-            const updateChoice = await vscode.window.showQuickPick([
-                { label: 'Oui', description: 'Mettre à jour ce serveur', value: 'yes' },
-                { label: 'Non', description: 'Conserver le serveur existante', value: 'no' },
-                { label: 'Oui pour tout', description: 'Mettre à jour celle-ci et tous les doublons restants', value: 'yesAll' }
-            ], {
-                placeHolder: `Le serveur "${importedConn.name}" existe déjà. Le mettre à jour ?`
-            });
-
-            if (!updateChoice) {
-                return { action: 'skipped', autoUpdate };
-            }
-
-            if (updateChoice.value === 'no') {
-                return { action: 'skipped', autoUpdate };
-            }
-
-            if (updateChoice.value === 'yesAll') {
-                autoUpdate = true;
-            }
-        }
-
-        // Mettre à jour le serveur en conservant l'ID original
-        this.serveurs[existingIndex] = {
-            ...importedConn,
-            id: this.serveurs[existingIndex].id
-        };
-
-        return { action: 'updated', autoUpdate };
-    }
-
     public async importServeurs(): Promise<void> {
         try {
             // Ouvrir le fichier
@@ -553,9 +676,9 @@ export class ServeurManager {
 
             for (const serv of importData.serveurs) {
                 try {
-                    const processedConn = this.processImportedServeur(serv, decryptionPassword);
+                    const processedServ = this.processImportedServeur(serv, decryptionPassword);
                     validServeurs.push({
-                        ...processedConn,
+                        ...processedServ,
                         id: this.generateId(),
                         isConnected: false,
                         lastConnected: undefined
@@ -576,12 +699,12 @@ export class ServeurManager {
             let addedCount = 0;
             let skippedCount = 0;
 
-            for (const importedConn of validServeurs) {
-                const existingIndex = this.serveurs.findIndex(s => this.isSameServeur(s, importedConn));
+            for (const importedServ of validServeurs) {
+                const existingIndex = this.serveurs.findIndex(s => this.isSameServeur(s, importedServ));
 
                 if (existingIndex === -1) {
                     // Nouveau serveur : l'ajouter
-                    this.serveurs.push(importedConn);
+                    this.serveurs.push(importedServ);
                     addedCount++;
                 } else {
                     // Serveur existant : l'ignorer

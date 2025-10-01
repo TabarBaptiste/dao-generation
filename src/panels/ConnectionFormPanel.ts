@@ -6,6 +6,15 @@ import { DatabaseServeurFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS, DEFAULT_PATHS } from '../constants/AppConstants';
 
+/**
+ * Panneau webview pour la gestion des formulaires de connexion aux serveurs de base de données.
+ * Cette classe hérite de BaseWebviewPanel et fournit une interface utilisateur complète pour
+ * créer, modifier et tester les connexions aux bases de données avec validation en temps réel.
+ *
+ * @export
+ * @class ServeurFormPanel
+ * @extends {BaseWebviewPanel}
+ */
 export class ServeurFormPanel extends BaseWebviewPanel {
     private databaseService = new DatabaseService();
     private resolve?: (value: ServeurFormData | undefined) => void;
@@ -21,6 +30,14 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         this.existingData = existingData;
     }
 
+    /**
+     * Affiche le formulaire de connexion et retourne les données saisies par l'utilisateur.
+     * Cette méthode crée le panneau webview de manière asynchrone et attend que l'utilisateur
+     * soumette le formulaire ou l'annule, retournant les données appropriées.
+     *
+     * @return {Promise<ServeurFormData | undefined>} Promise qui se résout avec les données du formulaire si validées et soumises, ou undefined si annulé
+     * @memberof ServeurFormPanel
+     */
     public async show(): Promise<ServeurFormData | undefined> {
         return new Promise(async (resolve) => {
             this.resolve = resolve;
@@ -28,6 +45,16 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         });
     }
 
+    /**
+     * Traite les messages reçus du webview et exécute les actions correspondantes.
+     * Cette méthode gère toutes les interactions utilisateur du formulaire incluant la soumission,
+     * l'annulation, les tests de connexion, le chargement des bases de données et la sélection de chemins.
+     *
+     * @protected
+     * @param {*} message - Objet message contenant la commande et les données associées provenant du webview
+     * @return {Promise<void>} Promise qui se résout une fois l'action du message traitée complètement
+     * @memberof ServeurFormPanel
+     */
     protected async handleMessage(message: any): Promise<void> {
         switch (message.command) {
             case 'ready':
@@ -66,6 +93,16 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         }
     }
 
+    /**
+     * Gère le test de connexion à la base de données avec les paramètres fournis.
+     * Cette méthode valide la connectivité en temps réel sans sauvegarder la configuration,
+     * permettant à l'utilisateur de vérifier ses paramètres avant la soumission finale.
+     *
+     * @private
+     * @param {*} data - Données de connexion à tester contenant host, port, username, password, etc.
+     * @return {Promise<void>} Promise qui se résout après avoir envoyé le résultat du test au webview
+     * @memberof ServeurFormPanel
+     */
     private async handleTestConnection(data: any): Promise<void> {
         try {
             const connectionData = DatabaseServeurFactory.createTempServeur(data);
@@ -86,6 +123,17 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         }
     }
 
+    /**
+     * Charge la liste des bases de données disponibles sur le serveur spécifié.
+     * Cette méthode peut être déclenchée automatiquement (après un test de connexion réussi)
+     * ou manuellement (par action utilisateur), et gère différents messages selon le contexte.
+     *
+     * @private
+     * @param {*} data - Données de connexion utilisées pour se connecter au serveur et récupérer les bases
+     * @param {boolean} [isAutoLoad=false] - Indique si le chargement est automatique (true) ou manuel (false), affectant les messages affichés
+     * @return {Promise<void>} Promise qui se résout après avoir envoyé la liste des bases de données ou un message d'erreur au webview
+     * @memberof ServeurFormPanel
+     */
     private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
         const connectionData = DatabaseServeurFactory.createTempServeur(data);
 
@@ -126,6 +174,15 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         }
     }
 
+    /**
+     * Ouvre une boîte de dialogue pour permettre à l'utilisateur de sélectionner un répertoire.
+     * Cette méthode facilite la sélection du chemin de destination pour la génération des fichiers DAO,
+     * en proposant par défaut le répertoire WAMP www comme point de départ.
+     *
+     * @private
+     * @return {Promise<void>} Promise qui se résout après avoir envoyé le chemin sélectionné au webview, ou ne rien envoyer si annulé
+     * @memberof ServeurFormPanel
+     */
     private async handleSelectPath(): Promise<void> {
         const result = await ErrorHandler.handleAsync(
             'sélection du répertoire',

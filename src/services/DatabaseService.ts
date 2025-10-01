@@ -6,6 +6,15 @@ import { ErrorHandler } from '../utils/ErrorHandler';
 export class DatabaseService {
     private serveurs: Map<string, mysql.Connection> = new Map();
 
+    /**
+     * Teste la connectivité à un serveur de base de données avec gestion détaillée des erreurs.
+     * Cette méthode établit une connexion temporaire, effectue un ping de vérification,
+     * et retourne un diagnostic précis en cas d'échec avec messages d'erreur explicites.
+     *
+     * @param {Omit<DatabaseServeur, 'id'>} serveurs Configuration complète du serveur à tester (sans l'ID car pas encore persisté)
+     * @return {Promise<{ success: boolean, message: string }>} Résultat du test avec statut booléen et message explicatif pour l'utilisateur
+     * @memberof DatabaseService
+     */
     public async testConnection(serveurs: Omit<DatabaseServeur, 'id'>): Promise<{ success: boolean, message: string }> {
         try {
             const serv = await this.createServeur(serveurs);
@@ -30,6 +39,15 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Établit une connexion persistante à un serveur de base de données après validation.
+     * Cette méthode teste d'abord la connexion, ferme toute connexion existante pour ce serveur,
+     * puis établit une nouvelle connexion maintenue dans le pool interne.
+     *
+     * @param {DatabaseServeur} serveurs Configuration complète du serveur incluant l'ID unique pour le pool de connexions
+     * @return {Promise<void>} Promesse qui se résout une fois la connexion établie et stockée, ou rejette en cas d'échec
+     * @memberof DatabaseService
+     */
     public async connect(serveurs: DatabaseServeur): Promise<void> {
         // Tester le serveur d'abord avec gestion d'erreur personnalisée
         const testResult = await this.testConnection(serveurs);
@@ -53,6 +71,15 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Ferme proprement une connexion spécifique et la supprime du pool de connexions actives.
+     * Cette méthode gère automatiquement les erreurs de déconnexion et nettoie
+     * les références internes même en cas d'échec de fermeture.
+     *
+     * @param {string} connectionId Identifiant unique de la connexion à fermer (correspond à l'ID du serveur)
+     * @return {Promise<void>} Promesse qui se résout une fois la déconnexion terminée (succès ou échec géré silencieusement)
+     * @memberof DatabaseService
+     */
     public async disconnect(connectionId: string): Promise<void> {
         const serv = this.serveurs.get(connectionId);
         if (serv) {
@@ -66,10 +93,28 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Vérifie si une connexion spécifique est actuellement active dans le pool de connexions.
+     * Cette méthode permet de connaître l'état d'une connexion avant d'effectuer
+     * des opérations nécessitant une connexion établie.
+     *
+     * @param {string} connectionId Identifiant unique de la connexion à vérifier (correspond à l'ID du serveur)
+     * @return {boolean} true si la connexion existe et est active dans le pool, false sinon
+     * @memberof DatabaseService
+     */
     public isConnected(connectionId: string): boolean {
         return this.serveurs.has(connectionId);
     }
 
+    /**
+     * Récupère la liste de toutes les bases de données accessibles sur un serveur en filtrant les schémas système.
+     * Cette méthode établit une connexion temporaire, exécute SHOW DATABASES,
+     * et retourne uniquement les bases utilisateur (excluant information_schema, mysql, etc.).
+     *
+     * @param {DatabaseServeur} serveurs Configuration du serveur dont lister les bases de données
+     * @return {Promise<string[]>} Promesse retournant la liste des noms de bases de données utilisateur disponibles
+     * @memberof DatabaseService
+     */
     public async getDatabases(serveurs: DatabaseServeur): Promise<string[]> {
         try {
             const serv = await this.createServeur(serveurs);
@@ -87,6 +132,16 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Récupère la liste de toutes les tables d'une base de données spécifique sur un serveur.
+     * Cette méthode utilise une connexion temporaire et la commande SHOW TABLES
+     * pour obtenir les tables sans affecter les connexions persistantes.
+     *
+     * @param {DatabaseServeur} serveurs Configuration du serveur contenant la base de données
+     * @param {string} database Nom de la base de données dont lister les tables
+     * @return {Promise<string[]>} Promesse retournant la liste des noms de tables dans la base, ou tableau vide si base non spécifiée
+     * @memberof DatabaseService
+     */
     public async getTables(serveurs: DatabaseServeur, database: string): Promise<string[]> {
         if (!database) {
             return [];
@@ -109,6 +164,17 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Récupère les métadonnées complètes d'une table spécifique incluant toutes ses colonnes et leurs propriétés.
+     * Cette méthode utilise DESCRIBE pour obtenir structure, types, contraintes, valeurs par défaut
+     * et propriétés spéciales (auto_increment, etc.) de chaque colonne.
+     *
+     * @param {DatabaseServeur} serveurs Configuration du serveur contenant la table
+     * @param {string} database Nom de la base de données contenant la table
+     * @param {string} tableName Nom de la table dont récupérer les métadonnées complètes
+     * @return {Promise<TableInfo>} Promesse retournant l'objet TableInfo avec nom et tableau détaillé de toutes les colonnes
+     * @memberof DatabaseService
+     */
     public async getTableInfo(serveurs: DatabaseServeur, database: string, tableName: string): Promise<TableInfo> {
         try {
             // Utiliser un serveur temporaire comme les autres méthodes
@@ -138,6 +204,16 @@ export class DatabaseService {
         }
     }
 
+    /**
+     * Crée une nouvelle connexion MySQL temporaire avec la configuration fournie.
+     * Cette méthode privée est utilisée pour les opérations ponctuelles qui ne nécessitent
+     * pas de connexion persistante (tests, requêtes d'information, etc.).
+     *
+     * @private
+     * @param {Omit<DatabaseServeur, 'id'>} serveurs Configuration de connexion (host, port, credentials, etc.) sans l'ID
+     * @return {Promise<mysql.Connection>} Promesse retournant une nouvelle connexion MySQL configurée et prête à utiliser
+     * @memberof DatabaseService
+     */
     private async createServeur(serveurs: Omit<DatabaseServeur, 'id'>): Promise<mysql.Connection> {
         const config: mysql.ConnectionOptions = {
             host: serveurs.host,
@@ -151,6 +227,14 @@ export class DatabaseService {
         return await mysql.createConnection(config);
     }
 
+    /**
+     * Ferme toutes les connexions actives du pool et nettoie complètement les ressources.
+     * Cette méthode de nettoyage est généralement appelée lors de l'arrêt de l'extension
+     * ou pour réinitialiser complètement l'état des connexions.
+     *
+     * @return {Promise<void>} Promesse qui se résout une fois toutes les connexions fermées et le pool vidé
+     * @memberof DatabaseService
+     */
     public async disconnectAll(): Promise<void> {
         const disconnectPromises = Array.from(this.serveurs.keys()).map(id => this.disconnect(id));
         await Promise.all(disconnectPromises);

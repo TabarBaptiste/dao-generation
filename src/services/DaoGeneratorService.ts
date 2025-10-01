@@ -17,6 +17,18 @@ interface DaoGenerationOptions {
 export class DaoGeneratorService {
     constructor(private databaseService: DatabaseService) { }
 
+    /**
+     * Génère automatiquement les fichiers DAO PHP pour les tables sélectionnées d'une base de données.
+     * Cette méthode orchestre tout le processus de génération : création du dossier de destination,
+     * récupération des métadonnées des tables, génération du code PHP et sauvegarde des fichiers.
+     *
+     * @param {DatabaseServeur} serveurs Objet contenant les informations de connexion au serveur de base de données (host, port, user, etc.)
+     * @param {string} database Nom de la base de données contenant les tables à traiter
+     * @param {string[]} tableNames Liste des noms de tables pour lesquelles générer les fichiers DAO
+     * @param {DaoGenerationOptions} options Options de génération incluant le mode (save/overwrite) et le chemin de sortie optionnel
+     * @return {Promise<void>} Promesse qui se résout une fois la génération terminée (succès ou échec)
+     * @memberof DaoGeneratorService
+     */
     public async generateDaoFiles(
         serveurs: DatabaseServeur,
         database: string,
@@ -87,6 +99,18 @@ export class DaoGeneratorService {
         }
     }
 
+    /**
+     * Détermine et prépare le dossier de destination pour la génération des fichiers DAO.
+     * Cette méthode gère plusieurs cas : utilisation du chemin par défaut du serveur,
+     * détection automatique des projets WAMP, ou demande interactive à l'utilisateur.
+     *
+     * @private
+     * @param {string} [suggestedPath] Chemin suggéré fourni par les options de génération (optionnel)
+     * @param {string} [database] Nom de la base de données utilisé pour la détection automatique de projet (optionnel)
+     * @param {string} [defaultDaoPath] Chemin par défaut configuré dans les paramètres du serveur (optionnel)
+     * @return {(Promise<string | undefined>)} Promesse qui retourne le chemin absolu du dossier de destination ou undefined si annulé
+     * @memberof DaoGeneratorService
+     */
     private async getOutputFolder(suggestedPath?: string, database?: string, defaultDaoPath?: string): Promise<string | undefined> {
         // Si on a un defaultDaoPath et qu'il existe, l'utiliser directement
         if (defaultDaoPath && fs.existsSync(defaultDaoPath)) {
@@ -161,9 +185,14 @@ export class DaoGeneratorService {
     }
 
     /**
-     * Traite le chemin sélectionné pour créer la structure DAO appropriée
-     * @param selectedPath Le chemin sélectionné par l'utilisateur ou le defaultDaoPath
-     * @returns Le chemin final où générer les DAO
+     * Traite le chemin sélectionné pour créer automatiquement la structure de dossiers appropriée selon le type de projet.
+     * Pour les projets WAMP (détectés par le chemin), crée la structure local/__classes/DAO.
+     * Pour les autres projets, crée simplement un sous-dossier DAO.
+     * 
+     * @private
+     * @param {string} selectedPath Chemin absolu du dossier sélectionné par l'utilisateur ou défini par défaut
+     * @return {(string | undefined)} Chemin absolu final où générer les fichiers DAO, ou undefined en cas d'erreur de création
+     * @memberof DaoGeneratorService
      */
     private processSelectedPath(selectedPath: string): string | undefined {
         // Vérifier si le dossier sélectionné est dans wamp64\www
@@ -202,6 +231,19 @@ export class DaoGeneratorService {
         }
     }
 
+    /**
+     * Génère le code PHP complet d'un fichier DAO pour une table donnée.
+     * Cette méthode assemble tous les composants : en-tête de classe, attributs, constructeur,
+     * méthodes d'accès (getters/setters) et méthodes CRUD (Create, Read, Update, Delete).
+     *
+     * @private
+     * @param {string} tableName Nom complet de la table en base de données (avec préfixe éventuel)
+     * @param {TableInfo} tableInfo Métadonnées complètes de la table incluant colonnes, contraintes et index
+     * @param {string} database Nom de la base de données contenant la table
+     * @param {string} [filePath] Chemin du fichier DAO existant pour la gestion de version (optionnel)
+     * @return {string} Code PHP complet prêt à être écrit dans un fichier .php
+     * @memberof DaoGeneratorService
+     */
     private generateDaoContent(tableName: string, tableInfo: TableInfo, database: string, filePath?: string): string {
         const className = StringUtil.generateDaoClassName(tableName);
         const attributes = this.generateAttributes(tableInfo.columns);
@@ -259,6 +301,16 @@ ${crudMethods}
 }`;
     }
 
+    /**
+     * Génère les déclarations d'attributs privés de la classe DAO avec leur documentation PHPDoc.
+     * Chaque attribut correspond à une colonne de la table et inclut le type PHP approprié
+     * ainsi qu'un commentaire descriptif basé sur les métadonnées de la colonne.
+     *
+     * @private
+     * @param {ColumnInfo[]} columns Tableau des métadonnées de toutes les colonnes de la table
+     * @return {string} Code PHP des attributs privés avec documentation PHPDoc, prêt à insérer dans la classe
+     * @memberof DaoGeneratorService
+     */
     private generateAttributes(columns: ColumnInfo[]): string {
         return columns.map(column => {
             const phpType = this.mapSqlTypeToPhpType(column.type);
@@ -272,6 +324,16 @@ ${crudMethods}
         }).join('\n\n');
     }
 
+    /**
+     * Génère le tableau de mapping objet-relationnel utilisé dans le constructeur du DAO.
+     * Ce tableau associe chaque nom de colonne de la base de données à sa méthode setter correspondante,
+     * permettant l'hydratation automatique de l'objet lors des opérations de lecture.
+     *
+     * @private
+     * @param {ColumnInfo[]} columns Tableau des métadonnées de toutes les colonnes de la table
+     * @return {string} Code PHP du tableau associatif formaté pour insertion dans le constructeur
+     * @memberof DaoGeneratorService
+     */
     private generateMappingArray(columns: ColumnInfo[]): string {
         return columns.map(column => {
             const setterName = 'set' + StringUtil.toPascalCase(column.name);
@@ -279,6 +341,16 @@ ${crudMethods}
         }).join(',\n');
     }
 
+    /**
+     * Génère toutes les méthodes d'accès (getters et setters) pour chaque colonne de la table.
+     * Ces méthodes permettent de lire et modifier de façon contrôlée les valeurs des attributs
+     * de l'objet DAO en respectant les conventions de nommage PHP.
+     *
+     * @private
+     * @param {ColumnInfo[]} columns Tableau des métadonnées de toutes les colonnes de la table
+     * @return {string} Code PHP complet de toutes les méthodes getter/setter avec documentation PHPDoc
+     * @memberof DaoGeneratorService
+     */
     private generateAccessors(columns: ColumnInfo[]): string {
         return columns.map(column => {
             const methodName = StringUtil.toPascalCase(column.name);
@@ -300,6 +372,18 @@ ${crudMethods}
         }).join('\n\n');
     }
 
+    /**
+     * Génère toutes les méthodes CRUD (Create, Read, Update, Delete) PHP pour manipuler les données de la table.
+     * Ces méthodes incluent : read() pour charger un enregistrement, insert() pour créer un nouvel enregistrement,
+     * update() pour modifier un enregistrement existant, et delete() pour supprimer un enregistrement.
+     *
+     * @private
+     * @param {string} tableName Nom complet de la table en base de données (avec préfixe éventuel)
+     * @param {ColumnInfo[]} columns Tableau des métadonnées de toutes les colonnes de la table
+     * @param {string} database Nom de la base de données (utilisé pour les commentaires et la documentation)
+     * @return {string} Code PHP complet des quatre méthodes CRUD avec gestion d'erreurs et documentation
+     * @memberof DaoGeneratorService
+     */
     private generateCrudMethods(tableName: string, columns: ColumnInfo[], database: string): string {
         const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
         const primaryKey = this.findPrimaryKey(columns);
@@ -387,6 +471,16 @@ ${crudMethods}
 	}`;
     }
 
+    /**
+     * Génère un commentaire descriptif complet pour une colonne de base de données.
+     * Le commentaire inclut le nom, le type SQL, les contraintes (clé primaire, unique, etc.),
+     * la nullabilité, la valeur par défaut et les propriétés spéciales (auto_increment, etc.).
+     *
+     * @private
+     * @param {ColumnInfo} column Métadonnées complètes de la colonne (nom, type, contraintes, valeur par défaut, etc.)
+     * @return {string} Commentaire descriptif formaté prêt à être inséré dans la documentation PHPDoc
+     * @memberof DaoGeneratorService
+     */
     private generateColumnComment(column: ColumnInfo): string {
         let comment = `${column.name} (${column.type})`;
 
@@ -413,6 +507,16 @@ ${crudMethods}
         return comment;
     }
 
+    /**
+     * Convertit les types de données SQL en types PHP équivalents pour les annotations PHPDoc.
+     * Cette fonction garantit que les commentaires générés utilisent les types PHP corrects
+     * pour améliorer l'autocomplétion et la validation des IDE.
+     *
+     * @private
+     * @param {string} sqlType Type de données SQL complet (ex: "VARCHAR(255)", "INT(11)", "DECIMAL(10,2)")
+     * @return {string} Type PHP correspondant (int, float, bool, string) pour les annotations @var et @param
+     * @memberof DaoGeneratorService
+     */
     private mapSqlTypeToPhpType(sqlType: string): string {
         const type = sqlType.toLowerCase();
 
@@ -438,14 +542,29 @@ ${crudMethods}
         return 'string';
     }
 
+    /**
+     * Recherche et retourne la colonne définie comme clé primaire dans la table.
+     * Cette information est cruciale pour la génération des méthodes CRUD qui ont besoin
+     * d'identifier de façon unique les enregistrements.
+     *
+     * @private
+     * @param {ColumnInfo[]} columns Tableau complet des métadonnées de toutes les colonnes de la table
+     * @return {(ColumnInfo | null)} Objet ColumnInfo de la clé primaire trouvée, ou null si aucune clé primaire n'est définie
+     * @memberof DaoGeneratorService
+     */
     private findPrimaryKey(columns: ColumnInfo[]): ColumnInfo | null {
         return columns.find(col => col.key === 'PRI') || null;
     }
 
     /**
-     * Extrait la version actuelle d'un fichier DAO existant
-     * @param filePath Chemin vers le fichier DAO
-     * @returns La version actuelle (ex: "1.00")
+     * Extrait et retourne la version actuelle d'un fichier DAO existant en analysant son en-tête PHPDoc.
+     * Cette méthode recherche la balise @version dans le commentaire d'en-tête pour déterminer
+     * le numéro de version actuel avant de générer la version suivante.
+     *
+     * @private
+     * @param {string} filePath Chemin absolu vers le fichier DAO existant à analyser
+     * @return {string} Numéro de version actuelle au format "X.YY" (ex: "1.00"), ou version initiale par défaut si non trouvée
+     * @memberof DaoGeneratorService
      */
     private getCurrentVersion(filePath: string): string {
         try {
@@ -458,9 +577,14 @@ ${crudMethods}
     }
 
     /**
-     * Calcule la version suivante selon le pattern 1.00 → 1.10 → 1.20
-     * @param filePath Chemin vers le fichier DAO existant
-     * @returns La version incrémentée
+     * Calcule et retourne la version suivante selon le schéma de versioning personnalisé.
+     * Le pattern utilisé incrémente la partie mineure de 10 : 1.00 → 1.10 → 1.20 → 1.30, etc.
+     * Cette approche permet de maintenir un historique clair des modifications automatiques.
+     *
+     * @private
+     * @param {string} filePath Chemin absolu vers le fichier DAO existant pour lequel calculer la version suivante
+     * @return {string} Nouveau numéro de version incrémenté au format "X.YY" (ex: "1.10" si version actuelle est "1.00")
+     * @memberof DaoGeneratorService
      */
     private getNextVersion(filePath: string): string {
         const currentVersion = this.getCurrentVersion(filePath);
@@ -472,6 +596,16 @@ ${crudMethods}
         return `${major}.${newMinor.toString().padStart(2, '0')}`;
     }
 
+    /**
+     * Crée une copie de sauvegarde horodatée d'un fichier DAO existant avant de le remplacer.
+     * Le backup est stocké dans un sous-dossier 'backup' avec un nom incluant la date/heure
+     * et un en-tête explicatif pour faciliter la récupération en cas de problème.
+     *
+     * @private
+     * @param {string} filePath Chemin absolu vers le fichier DAO existant à sauvegarder
+     * @return {Promise<void>} Promesse qui se résout une fois la sauvegarde créée avec succès
+     * @memberof DaoGeneratorService
+     */
     private async createBackup(filePath: string): Promise<void> {
         if (!fs.existsSync(filePath)) {
             return; // Le fichier n'existe pas, pas besoin de backup
@@ -512,6 +646,20 @@ ${originalContent.replace(/^<\?php\s*/, '')}`;
         }
     }
 
+    /**
+     * Affiche un résumé détaillé de la génération DAO avec statistiques et actions possibles.
+     * Cette méthode présente le nombre de fichiers créés, ignorés, les erreurs rencontrées
+     * et propose à l'utilisateur d'ouvrir le dossier de destination ou des fichiers spécifiques.
+     *
+     * @private
+     * @param {number} generatedCount Nombre total de fichiers DAO générés avec succès
+     * @param {number} skippedCount Nombre de fichiers ignorés (non générés pour diverses raisons)
+     * @param {string[]} errors Tableau des messages d'erreur rencontrés pendant la génération
+     * @param {string} [outputFolder] Chemin absolu du dossier contenant les fichiers générés (optionnel)
+     * @param {number} [backupCount=0] Nombre de fichiers de sauvegarde créés (par défaut 0)
+     * @param {string[]} [generatedFiles=[]] Liste des chemins absolus des fichiers générés pour actions rapides (par défaut tableau vide)
+     * @memberof DaoGeneratorService
+     */
     private showGenerationResult(generatedCount: number, skippedCount: number, errors: string[], outputFolder?: string, backupCount: number = 0, generatedFiles: string[] = []): void {
         let message = `Génération terminée: ${generatedCount} fichier(s) créé(s)`;
 

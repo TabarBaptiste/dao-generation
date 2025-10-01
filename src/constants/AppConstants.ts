@@ -1,5 +1,5 @@
 /**
- * Application constants to eliminate magic strings and numbers
+ * Constantes d'application pour éliminer les chaînes et les nombres magiques
  */
 export const STORAGE_KEYS = {
     CONNECTIONS: 'phpDaoGenerator.serveurs'
