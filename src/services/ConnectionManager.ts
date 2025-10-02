@@ -28,7 +28,6 @@ export class ServeurManager {
      * @return {DatabaseServeur[]} Tableau complet de tous les serveurs configurés avec leurs métadonnées complètes
      * @memberof ServeurManager
      */
-    // TODO : Utiliser la fonction getServeurs au lieu de this.serveurs;
     public getServeurs(): DatabaseServeur[] {
         return this.serveurs;
     }
@@ -613,129 +612,129 @@ export class ServeurManager {
      * @memberof ServeurManager
      */
     public async importServeurs(): Promise<void> {
-        try {
-            // Ouvrir le fichier
-            const openUri = await vscode.window.showOpenDialog({
-                canSelectFiles: true,
-                canSelectMany: false,
-                filters: {
-                    'Fichiers JSON': ['json'],
-                    'Tous les fichiers': ['*']
-                },
-                openLabel: 'Importer les serveurs'
-            });
-
-            if (!openUri || openUri.length === 0) {
-                return;
-            }
-
-            // Lire et parser le fichier
-            const fileUri = openUri[0];
-            const fileContent = await vscode.workspace.fs.readFile(fileUri);
-            const jsonContent = Buffer.from(fileContent).toString('utf8');
-
-            let importData: any;
-            try {
-                importData = JSON.parse(jsonContent);
-            } catch (parseError) {
-                throw new Error('Format de fichier JSON invalide');
-            }
-
-            if (!importData.serveurs || !Array.isArray(importData.serveurs)) {
-                throw new Error('Format de fichier invalide : tableau de serveurs manquant');
-            }
-
-            // Gestion du déchiffrement
-            const isEncrypted = importData.encrypted === true;
-            const hasEncryptedPasswords = importData.serveurs.some((serv: any) => serv.passwordIv);
-
-            let decryptionPassword: string | undefined;
-
-            if (isEncrypted && hasEncryptedPasswords) {
-                decryptionPassword = await vscode.window.showInputBox({
-                    prompt: 'Ce fichier contient des mots de passe chiffrés. Entrez le mot de passe maître pour les déchiffrer :',
-                    password: true,
-                    placeHolder: 'Mot de passe maître',
-                    validateInput: (value) => {
-                        if (!value || value.trim().length === 0) {
-                            return 'Le mot de passe maître ne peut pas être vide';
-                        }
-                        return undefined;
-                    }
+        await ErrorHandler.handleAsync(
+            'importation serveurs',
+            async () => {
+                // Ouvrir le fichier
+                const openUri = await vscode.window.showOpenDialog({
+                    canSelectFiles: true,
+                    canSelectMany: false,
+                    filters: {
+                        'Fichiers JSON': ['json'],
+                        'Tous les fichiers': ['*']
+                    },
+                    openLabel: 'Importer les serveurs'
                 });
 
-                if (!decryptionPassword) {
-                    vscode.window.showWarningMessage('Importation annulée : un mot de passe maître est requis pour déchiffrer les fichiers chiffrés.');
+                if (!openUri || openUri.length === 0) {
                     return;
                 }
-            }
 
-            // Traiter les serveurs
-            const validServeurs: DatabaseServeur[] = [];
-            const errors: string[] = [];
+                // Lire et parser le fichier
+                const fileUri = openUri[0];
+                const fileContent = await vscode.workspace.fs.readFile(fileUri);
+                const jsonContent = Buffer.from(fileContent).toString('utf8');
 
-            for (const serv of importData.serveurs) {
+                let importData: any;
                 try {
-                    const processedServ = this.processImportedServeur(serv, decryptionPassword);
-                    validServeurs.push({
-                        ...processedServ,
-                        id: this.generateId(),
-                        isConnected: false,
-                        lastConnected: undefined
+                    importData = JSON.parse(jsonContent);
+                } catch (parseError) {
+                    throw new Error('Format de fichier JSON invalide');
+                }
+
+                if (!importData.serveurs || !Array.isArray(importData.serveurs)) {
+                    throw new Error('Format de fichier invalide : tableau de serveurs manquant');
+                }
+
+                // Gestion du déchiffrement
+                const isEncrypted = importData.encrypted === true;
+                const hasEncryptedPasswords = importData.serveurs.some((serv: any) => serv.passwordIv);
+
+                let decryptionPassword: string | undefined;
+
+                if (isEncrypted && hasEncryptedPasswords) {
+                    decryptionPassword = await vscode.window.showInputBox({
+                        prompt: 'Ce fichier contient des mots de passe chiffrés. Entrez le mot de passe maître pour les déchiffrer :',
+                        password: true,
+                        placeHolder: 'Mot de passe maître',
+                        validateInput: (value) => {
+                            if (!value || value.trim().length === 0) {
+                                return 'Le mot de passe maître ne peut pas être vide';
+                            }
+                            return undefined;
+                        }
                     });
-                } catch (error) {
-                    errors.push(error instanceof Error ? error.message : 'Erreur inconnue');
+
+                    if (!decryptionPassword) {
+                        vscode.window.showWarningMessage('Importation annulée : un mot de passe maître est requis pour déchiffrer les fichiers chiffrés.');
+                        return;
+                    }
+                }
+
+                // Traiter les serveurs
+                const validServeurs: DatabaseServeur[] = [];
+                const errors: string[] = [];
+
+                for (const serv of importData.serveurs) {
+                    try {
+                        const processedServ = this.processImportedServeur(serv, decryptionPassword);
+                        validServeurs.push({
+                            ...processedServ,
+                            id: this.generateId(),
+                            isConnected: false,
+                            lastConnected: undefined
+                        });
+                    } catch (error) {
+                        errors.push(error instanceof Error ? error.message : 'Erreur inconnue');
+                    }
+                }
+
+                if (validServeurs.length === 0) {
+                    const errorMessage = errors.length > 0
+                        ? `Aucun serveur valide trouvé. Erreurs :\n${errors.join('\n')}`
+                        : 'Aucun serveur valide trouvé dans le fichier d\'importation';
+                    throw new Error(errorMessage);
+                }
+
+                // Importer uniquement les nouveaux serveurs
+                let addedCount = 0;
+                let skippedCount = 0;
+
+                for (const importedServ of validServeurs) {
+                    const existingIndex = this.serveurs.findIndex(s => this.isSameServeur(s, importedServ));
+
+                    if (existingIndex === -1) {
+                        // Nouveau serveur : l'ajouter
+                        this.serveurs.push(importedServ);
+                        addedCount++;
+                    } else {
+                        // Serveur existant : l'ignorer
+                        skippedCount++;
+                    }
+                }
+
+                await this.saveServeurs();
+
+                // Message de succès
+                let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
+                if (skippedCount > 0) message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`;
+                if (errors.length > 0) message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`;
+                if (hasEncryptedPasswords && decryptionPassword) message += ` | Mots de passe déchiffrés`;
+                else if (!isEncrypted) message += ` | Fichier non chiffré`;
+
+                vscode.window.showInformationMessage(message);
+
+                // Afficher les erreurs si nécessaire
+                if (errors.length > 0 && errors.length < 10) {
+                    const showErrors = await vscode.window.showWarningMessage(
+                        `Certains serveurs n'ont pas pu être importés. Afficher les détails ?`,
+                        'Afficher les détails'
+                    );
+                    if (showErrors) {
+                        vscode.window.showErrorMessage(`Erreurs d'importation :\n${errors.join('\n')}`);
+                    }
                 }
             }
-
-            if (validServeurs.length === 0) {
-                const errorMessage = errors.length > 0
-                    ? `Aucun serveur valide trouvé. Erreurs :\n${errors.join('\n')}`
-                    : 'Aucun serveur valide trouvé dans le fichier d\'importation';
-                throw new Error(errorMessage);
-            }
-
-            // Importer uniquement les nouveaux serveurs
-            let addedCount = 0;
-            let skippedCount = 0;
-
-            for (const importedServ of validServeurs) {
-                const existingIndex = this.serveurs.findIndex(s => this.isSameServeur(s, importedServ));
-
-                if (existingIndex === -1) {
-                    // Nouveau serveur : l'ajouter
-                    this.serveurs.push(importedServ);
-                    addedCount++;
-                } else {
-                    // Serveur existant : l'ignorer
-                    skippedCount++;
-                }
-            }
-
-            await this.saveServeurs();
-
-            // Message de succès
-            let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
-            if (skippedCount > 0) message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`;
-            if (errors.length > 0) message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`;
-            if (hasEncryptedPasswords && decryptionPassword) message += ` | Mots de passe déchiffrés`;
-            else if (!isEncrypted) message += ` | Fichier non chiffré`;
-
-            vscode.window.showInformationMessage(message);
-
-            // Afficher les erreurs si nécessaire
-            if (errors.length > 0 && errors.length < 10) {
-                const showErrors = await vscode.window.showWarningMessage(
-                    `Certains serveurs n'ont pas pu être importés. Afficher les détails ?`,
-                    'Afficher les détails'
-                );
-                if (showErrors) {
-                    vscode.window.showErrorMessage(`Erreurs d'importation :\n${errors.join('\n')}`);
-                }
-            }
-        } catch (error) {
-            ErrorHandler.logError('importation serveurs', error);
-            ErrorHandler.showError('importation serveurs', error);
-        }
+        );
     }
 }

@@ -43,6 +43,66 @@ body {
     gap: 8px;
 }
 
+.search-container {
+    margin-bottom: 15px;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    gap: 8px;
+}
+
+.search-box:focus-within {
+    border-color: var(--vscode-focusBorder);
+}
+
+.search-box .codicon-search {
+    color: var(--vscode-input-placeholderForeground);
+    font-size: 14px;
+}
+
+.search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--vscode-input-foreground);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    padding: 0;
+}
+
+.search-box input::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.clear-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    color: var(--vscode-input-placeholderForeground);
+    cursor: pointer;
+    border-radius: 2px;
+    display: none;
+    min-width: auto;
+    gap: 0;
+}
+
+.clear-btn:hover {
+    background-color: var(--vscode-toolbar-hoverBackground);
+    color: var(--vscode-foreground);
+}
+
+.clear-btn.visible {
+    display: flex;
+}
+
 .table-controls {
     margin-bottom: 15px;
     display: flex;
@@ -54,7 +114,7 @@ body {
     max-height: 400px;
     overflow-y: auto;
     /* border: 1px solid white; */
-    border: 1px solid var(--vscode-panel-border);
+    border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 4px;
     padding: 10px;
     background-color: var(--vscode-input-background);
@@ -85,7 +145,7 @@ body {
 .options-section {
     margin-bottom: 30px;
     padding: 15px;
-    border: 1px solid var(--vscode-panel-border);
+    border: 1px solid var(--vscode-editorWidget-border);
     border-radius: 4px;
     background-color: var(--vscode-input-background);
 }
