@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.4...v1.7.0) (2025-10-02)
+
+
+### Features
+
+* ajout de la fonctionnalité de recherche dans la sélection des tables resolved [#24](https://github.com/TabarBaptiste/dao-generation/issues/24) ([9f65ecd](https://github.com/TabarBaptiste/dao-generation/commit/9f65ecd7ac943db8bd6aefb273a5745f09c1eaa2))
+
 ## [1.6.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.3...v1.6.4) (2025-09-30)
 
 
