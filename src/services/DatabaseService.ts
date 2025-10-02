@@ -56,19 +56,20 @@ export class DatabaseService {
             throw new Error(testResult.message);
         }
 
-        try {
-            // Fermer le serveur existante s'il y en a une
-            await this.disconnect(serveurs.id);
+        await ErrorHandler.handleAsync(
+            `connexion au serveur ${serveurs.name}`,
+            async () => {
+                // Fermer le serveur existante s'il y en a une
+                await this.disconnect(serveurs.id);
 
-            // Créer le serveur persistante
-            const serv = await this.createServeur(serveurs);
-            this.serveurs.set(serveurs.id, serv);
+                // Créer le serveur persistante
+                const serv = await this.createServeur(serveurs);
+                this.serveurs.set(serveurs.id, serv);
 
-            console.log(`dao Connecté à ${serveurs.name}`);
-        } catch (error) {
-            console.error(`Échec du serveur à ${serveurs.name}:`, error);
-            throw error;
-        }
+                console.log(`dao Connecté à ${serveurs.name}`);
+            },
+            false
+        );
     }
 
     /**
@@ -83,13 +84,14 @@ export class DatabaseService {
     public async disconnect(connectionId: string): Promise<void> {
         const serv = this.serveurs.get(connectionId);
         if (serv) {
-            try {
-                await serv.end();
-                this.serveurs.delete(connectionId);
-                console.log(`dao Déconnecté du serveur ${connectionId}`);
-            } catch (error) {
-                console.error(`Erreur lors de la déconnexion de ${connectionId}:`, error);
-            }
+            await ErrorHandler.handleAsync(
+                `déconnexion du serveur ${connectionId}`,
+                async () => {
+                    await serv.end();
+                    this.serveurs.delete(connectionId);
+                    console.log(`dao Déconnecté du serveur ${connectionId}`);
+                }
+            );
         }
     }
 
@@ -116,20 +118,22 @@ export class DatabaseService {
      * @memberof DatabaseService
      */
     public async getDatabases(serveurs: DatabaseServeur): Promise<string[]> {
-        try {
-            const serv = await this.createServeur(serveurs);
-            const [rows] = await serv.execute('SHOW DATABASES');
-            await serv.end();
+        const result = await ErrorHandler.handleAsync(
+            'récupération des bases de données',
+            async () => {
+                const serv = await this.createServeur(serveurs);
+                const [rows] = await serv.execute('SHOW DATABASES');
+                await serv.end();
 
-            const databases = (rows as any[])
-                .map(row => row.Database)
-                .filter(db => !DATABASE_SYSTEM_SCHEMAS.includes(db));
+                const databases = (rows as any[])
+                    .map(row => row.Database)
+                    .filter(db => !DATABASE_SYSTEM_SCHEMAS.includes(db));
 
-            return databases;
-        } catch (error) {
-            console.error('Échec de la récupération des bases de données:', error);
-            throw error;
-        }
+                return databases;
+            }
+        );
+
+        return result || [];
     }
 
     /**
@@ -147,21 +151,23 @@ export class DatabaseService {
             return [];
         }
 
-        try {
-            // Utiliser un serveur temporaire comme le fait getDatabases
-            const serv = await this.createServeur(serveurs);
+        const result = await ErrorHandler.handleAsync(
+            'récupération des tables',
+            async () => {
+                // Utiliser un serveur temporaire comme le fait getDatabases
+                const serv = await this.createServeur(serveurs);
 
-            // Utiliser SHOW TABLES FROM database au lieu de USE + SHOW TABLES
-            const [rows] = await serv.execute(`SHOW TABLES FROM \`${database}\``);
+                // Utiliser SHOW TABLES FROM database au lieu de USE + SHOW TABLES
+                const [rows] = await serv.execute(`SHOW TABLES FROM \`${database}\``);
 
-            await serv.end();
+                await serv.end();
 
-            const tableKey = `Tables_in_${database}`;
-            return (rows as any[]).map(row => row[tableKey]);
-        } catch (error) {
-            console.error('Échec de la récupération des tables:', error);
-            throw error;
-        }
+                const tableKey = `Tables_in_${database}`;
+                return (rows as any[]).map(row => row[tableKey]);
+            }
+        );
+
+        return result || [];
     }
 
     /**
@@ -176,32 +182,34 @@ export class DatabaseService {
      * @memberof DatabaseService
      */
     public async getTableInfo(serveurs: DatabaseServeur, database: string, tableName: string): Promise<TableInfo> {
-        try {
-            // Utiliser un serveur temporaire comme les autres méthodes
-            const serv = await this.createServeur(serveurs);
+        const result = await ErrorHandler.handleAsync(
+            'récupération des informations de table',
+            async () => {
+                // Utiliser un serveur temporaire comme les autres méthodes
+                const serv = await this.createServeur(serveurs);
 
-            // Utiliser DESCRIBE database.table au lieu de USE + DESCRIBE
-            const [rows] = await serv.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
+                // Utiliser DESCRIBE database.table au lieu de USE + DESCRIBE
+                const [rows] = await serv.execute(`DESCRIBE \`${database}\`.\`${tableName}\``);
 
-            await serv.end();
+                await serv.end();
 
-            const columns: ColumnInfo[] = (rows as any[]).map(row => ({
-                name: row.Field,
-                type: row.Type,
-                nullable: row.Null === 'YES',
-                key: row.Key || '',
-                default: row.Default,
-                extra: row.Extra || ''
-            }));
+                const columns: ColumnInfo[] = (rows as any[]).map(row => ({
+                    name: row.Field,
+                    type: row.Type,
+                    nullable: row.Null === 'YES',
+                    key: row.Key || '',
+                    default: row.Default,
+                    extra: row.Extra || ''
+                }));
 
-            return {
-                name: tableName,
-                columns
-            };
-        } catch (error) {
-            console.error('Échec de la récupération des informations de table:', error);
-            throw error;
-        }
+                return {
+                    name: tableName,
+                    columns
+                };
+            }
+        );
+
+        return result || { name: tableName, columns: [] };
     }
 
     /**

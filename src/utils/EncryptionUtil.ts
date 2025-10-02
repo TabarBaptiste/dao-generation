@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 import { ENCRYPTION } from '../constants/AppConstants';
+import { ErrorHandler } from './ErrorHandler';
 
 /**
  * Classe utilitaire pour les opérations de chiffrement et déchiffrement sécurisées en utilisant AES-256-CBC.
@@ -69,12 +70,12 @@ export class EncryptionUtil {
      * @memberof EncryptionUtil
      */
     static safeEncrypt(data: string, masterKey: string): { encrypted: string; iv: string } | null {
-        try {
-            return this.encrypt(data, masterKey);
-        } catch (error) {
-            console.error('Encryption failed:', error);
-            return null;
-        }
+        const success = ErrorHandler.handleSync(
+            'Encryption failed',
+            () => {
+                return this.encrypt(data, masterKey);
+            });
+        return success || null;
     }
 
     /**
@@ -90,11 +91,11 @@ export class EncryptionUtil {
      * @memberof EncryptionUtil
      */
     static safeDecrypt(encryptedData: string, iv: string, masterKey: string): string | null {
-        try {
-            return this.decrypt(encryptedData, iv, masterKey);
-        } catch (error) {
-            console.error('Decryption failed:', error);
-            return null;
-        }
+        const success = ErrorHandler.handleSync(
+            'Decryption failed',
+            () => {
+                return this.decrypt(encryptedData, iv, masterKey);
+            });
+        return success || null;
     }
 }

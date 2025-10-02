@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { DatabaseServeur } from '../types/Connection';
 import { DatabaseService } from '../services/DatabaseService';
 import { DaoGeneratorService } from '../services/DaoGeneratorService';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 export class TableSelectionPanel {
     private static currentPanel: TableSelectionPanel | undefined;
@@ -142,31 +143,29 @@ export class TableSelectionPanel {
      * @memberof TableSelectionPanel
      */
     private async sendInitialData() {
-        try {
-            // Envoyer d'abord l'état de chargement
-            this._panel.webview.postMessage({ command: 'showLoading' });
+        const success = await ErrorHandler.handleAsync(
+            'chargement des données initiales',
+            async () => {
+                // Envoyer d'abord l'état de chargement
+                this._panel.webview.postMessage({ command: 'showLoading' });
 
-            // Envoyer les données de la page
-            this._panel.webview.postMessage({
-                command: 'updateData',
-                data: {
-                    database: this.database,
-                    host: this.serveurs.host
-                }
-            });
+                // Envoyer les données de la page
+                this._panel.webview.postMessage({
+                    command: 'updateData',
+                    data: {
+                        database: this.database,
+                        host: this.serveurs.host
+                    }
+                });
 
-            // Charger et envoyer les tables
-            const tables = await this.databaseService.getTables(this.serveurs, this.database);
-            this._panel.webview.postMessage({
-                command: 'updateTables',
-                tables: tables
-            });
-        } catch (error) {
-            this._panel.webview.postMessage({
-                command: 'showError',
-                error: error instanceof Error ? error.message : 'Erreur inconnue'
-            });
-        }
+                // Charger et envoyer les tables
+                const tables = await this.databaseService.getTables(this.serveurs, this.database);
+                this._panel.webview.postMessage({
+                    command: 'updateTables',
+                    tables: tables
+                });
+            }
+        )
     }
 
     /**
@@ -181,18 +180,19 @@ export class TableSelectionPanel {
      * @memberof TableSelectionPanel
      */
     private async handleGenerate(selectedTables: string[], mode: 'save' | 'overwrite'): Promise<void> {
-        try {
-            vscode.window.showInformationMessage(`Génération de ${selectedTables.length} DAO en cours...`);
+        await ErrorHandler.handleAsync(
+            'génération des fichiers DAO',
+            async () => {
+                vscode.window.showInformationMessage(`Génération de ${selectedTables.length} DAO en cours...`);
 
-            await this.daoGenerator.generateDaoFiles(
-                this.serveurs,
-                this.database,
-                selectedTables,
-                { mode }
-            );
-        } catch (error) {
-            vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-        }
+                await this.daoGenerator.generateDaoFiles(
+                    this.serveurs,
+                    this.database,
+                    selectedTables,
+                    { mode }
+                );
+            }
+        );
     }
 
     /**

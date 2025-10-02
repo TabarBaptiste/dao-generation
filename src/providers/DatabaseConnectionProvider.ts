@@ -238,29 +238,30 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * @memberof DatabaseServeurProvider
      */
     private async getDatabasesForServeur(serveurs: DatabaseServeur): Promise<DatabaseServeurTreeItem[]> {
-        try {
-            // Si le serveur a une base de données spécifique, afficher uniquement celle-ci
-            if (serveurs.database) {
-                return [new DatabaseServeurTreeItem(
+        const result = await ErrorHandler.handleAsync(
+            'récupération des bases de données',
+            async () => {
+                // Si le serveur a une base de données spécifique, afficher uniquement celle-ci
+                if (serveurs.database) {
+                    return [new DatabaseServeurTreeItem(
+                        serveurs,
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        'database',
+                        serveurs.database
+                    )];
+                }
+
+                // Sinon, afficher toutes les bases de données disponibles
+                const databases = await this.databaseService.getDatabases(serveurs);
+                return databases.map(db => new DatabaseServeurTreeItem(
                     serveurs,
                     vscode.TreeItemCollapsibleState.Collapsed,
                     'database',
-                    serveurs.database
-                )];
+                    db
+                ));
             }
-
-            // Sinon, afficher toutes les bases de données disponibles
-            const databases = await this.databaseService.getDatabases(serveurs);
-            return databases.map(db => new DatabaseServeurTreeItem(
-                serveurs,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                'database',
-                db
-            ));
-        } catch (error) {
-            console.error('Échec de récupération des bases de données :', error);
-            return [];
-        }
+        );
+        return result || [];
     }
 
     /**
@@ -275,19 +276,20 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * @memberof DatabaseServeurProvider
      */
     private async getTablesForDatabase(serveurs: DatabaseServeur, database: string): Promise<DatabaseServeurTreeItem[]> {
-        try {
-            const tables = await this.databaseService.getTables(serveurs, database);
-            return tables.map(table => new DatabaseServeurTreeItem(
-                serveurs,
-                vscode.TreeItemCollapsibleState.None,
-                'table',
-                database,
-                table
-            ));
-        } catch (error) {
-            console.error('Échec de récupération des tables :', error);
-            return [];
-        }
+        const success = await ErrorHandler.handleAsync(
+            'récupération des tables',
+            async () => {
+                const tables = await this.databaseService.getTables(serveurs, database);
+                return tables.map(table => new DatabaseServeurTreeItem(
+                    serveurs,
+                    vscode.TreeItemCollapsibleState.None,
+                    'table',
+                    database,
+                    table
+                ));
+            }
+        );
+        return success || [];
     }
 
     /**

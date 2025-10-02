@@ -104,17 +104,23 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      * @memberof ServeurFormPanel
      */
     private async handleTestConnection(data: any): Promise<void> {
-        try {
-            const connectionData = DatabaseServeurFactory.createTempServeur(data);
-            const result = await this.databaseService.testConnection(connectionData);
+        const result = await ErrorHandler.handleAsync(
+            'test de connexion',
+            async () => {
 
+                const connectionData = DatabaseServeurFactory.createTempServeur(data);
+                return await this.databaseService.testConnection(connectionData);
+            },
+            false
+        );
+
+        if (result) {
             this.sendMessage({
                 command: 'testConnectionResult',
                 success: result.success,
                 message: result.message
             });
-        } catch (error) {
-            ErrorHandler.logError('handleTestConnection', error);
+        } else {
             this.sendMessage({
                 command: 'testConnectionResult',
                 success: false,

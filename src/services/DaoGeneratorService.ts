@@ -35,68 +35,68 @@ export class DaoGeneratorService {
         tableNames: string[],
         options: DaoGenerationOptions
     ): Promise<void> {
-        try {
-            // Utiliser le defaultDaoPath du serveur si disponible, sinon demander le dossier
-            const suggestedPath = serveurs.defaultDaoPath || options.outputPath;
-            const outputFolder = await this.getOutputFolder(suggestedPath, database, serveurs.defaultDaoPath);
-            if (!outputFolder) {
-                vscode.window.showWarningMessage('Génération annulée : aucun dossier sélectionné.');
-                return;
-            }
-
-            // Afficher un message de confirmation avec le chemin de destination
-            // vscode.window.showInformationMessage(`Génération des DAO dans: ${outputFolder}`);
-
-            let generatedCount = 0;
-            let skippedCount = 0;
-            let backupCount = 0;
-            const errors: string[] = [];
-            const generatedFiles: string[] = [];
-
-            for (const tableName of tableNames) {
-                try {
-                    // Récupérer les informations de la table
-                    const tableInfo = await this.databaseService.getTableInfo(serveurs, database, tableName);
-
-                    // Nom du fichier DAO
-                    const fileName = StringUtil.generatePhpFileName(tableName);
-                    const filePath = path.join(outputFolder, fileName);
-
-                    // Générer le contenu du DAO (après avoir défini filePath)
-                    const daoContent = this.generateDaoContent(tableName, tableInfo, database, filePath);
-
-                    // Vérifier si le fichier existe déjà
-                    if (fs.existsSync(filePath)) {
-                        if (options.mode === 'save') {
-                            // Mode Sauvegarder: créer un backup et continuer
-                            try {
-                                await this.createBackup(filePath);
-                                backupCount++;
-                            } catch (backupError) {
-                                errors.push(`Erreur lors du backup pour ${tableName}: ${backupError instanceof Error ? backupError.message : 'Erreur inconnue'}`);
-                                skippedCount++;
-                                continue;
-                            }
-                        }
-                        // Mode Écraser: ne pas créer de backup, continuer directement
-                    }
-
-                    // Écrire le fichier (nouveau ou remplacement)
-                    fs.writeFileSync(filePath, daoContent, 'utf8');
-                    generatedCount++;
-                    generatedFiles.push(filePath);
-
-                } catch (error) {
-                    errors.push(`Erreur pour la table ${tableName}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+        await ErrorHandler.handleAsync(
+            'génération des fichiers DAO',
+            async () => {
+                // Utiliser le defaultDaoPath du serveur si disponible, sinon demander le dossier
+                const suggestedPath = serveurs.defaultDaoPath || options.outputPath;
+                const outputFolder = await this.getOutputFolder(suggestedPath, database, serveurs.defaultDaoPath);
+                if (!outputFolder) {
+                    vscode.window.showWarningMessage('Génération annulée : aucun dossier sélectionné.');
+                    return;
                 }
-            }
 
-            // Afficher le résultat
-            this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount, generatedFiles);
+                // Afficher un message de confirmation avec le chemin de destination
+                // vscode.window.showInformationMessage(`Génération des DAO dans: ${outputFolder}`);
 
-        } catch (error) {
-            vscode.window.showErrorMessage(`Erreur lors de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-        }
+                let generatedCount = 0;
+                let skippedCount = 0;
+                let backupCount = 0;
+                const errors: string[] = [];
+                const generatedFiles: string[] = [];
+
+                for (const tableName of tableNames) {
+                    try {
+                        // Récupérer les informations de la table
+                        const tableInfo = await this.databaseService.getTableInfo(serveurs, database, tableName);
+
+                        // Nom du fichier DAO
+                        const fileName = StringUtil.generatePhpFileName(tableName);
+                        const filePath = path.join(outputFolder, fileName);
+
+                        // Générer le contenu du DAO (après avoir défini filePath)
+                        const daoContent = this.generateDaoContent(tableName, tableInfo, database, filePath);
+
+                        // Vérifier si le fichier existe déjà
+                        if (fs.existsSync(filePath)) {
+                            if (options.mode === 'save') {
+                                // Mode Sauvegarder: créer un backup et continuer
+                                try {
+                                    await this.createBackup(filePath);
+                                    backupCount++;
+                                } catch (backupError) {
+                                    errors.push(`Erreur lors du backup pour ${tableName}: ${backupError instanceof Error ? backupError.message : 'Erreur inconnue'}`);
+                                    skippedCount++;
+                                    continue;
+                                }
+                            }
+                            // Mode Écraser: ne pas créer de backup, continuer directement
+                        }
+
+                        // Écrire le fichier (nouveau ou remplacement)
+                        fs.writeFileSync(filePath, daoContent, 'utf8');
+                        generatedCount++;
+                        generatedFiles.push(filePath);
+
+                    } catch (error) {
+                        errors.push(`Erreur pour la table ${tableName}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+                    }
+                }
+
+                // Afficher le résultat
+                this.showGenerationResult(generatedCount, skippedCount, errors, outputFolder, backupCount, generatedFiles);
+
+            });
     }
 
     /**
@@ -200,34 +200,36 @@ export class DaoGeneratorService {
             // Créer la structure local/__classes/DAO pour les projets wamp
             const daoPath = path.join(selectedPath, ...DEFAULT_PATHS.LOCAL_CLASSES.split('/'));
 
-            try {
-                // Créer le dossier DAO s'il n'existe pas
-                if (!fs.existsSync(daoPath)) {
-                    fs.mkdirSync(daoPath, { recursive: true });
-                    vscode.window.showInformationMessage(`Structure DAO créée: ${daoPath}`);
+            const result = ErrorHandler.handleSync(
+                `création de la structure ${DEFAULT_PATHS.LOCAL_CLASSES.split('/').join('/')}`,
+                () => {
+                    // Créer le dossier DAO s'il n'existe pas
+                    if (!fs.existsSync(daoPath)) {
+                        fs.mkdirSync(daoPath, { recursive: true });
+                        vscode.window.showInformationMessage(`Structure DAO créée: ${daoPath}`);
+                    }
+                    return daoPath;
                 }
+            );
 
-                return daoPath;
-            } catch (error) {
-                vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-                return undefined;
-            }
+            return result ?? undefined;
         } else {
             // Pour les autres projets, créer un sous-dossier DAO
             const daoPath = path.join(selectedPath, DEFAULT_PATHS.DAO_FOLDER);
 
-            try {
-                // Créer le dossier DAO s'il n'existe pas
-                if (!fs.existsSync(daoPath)) {
-                    fs.mkdirSync(daoPath, { recursive: true });
-                    vscode.window.showInformationMessage(`Dossier DAO créé: ${daoPath}`);
+            const result = ErrorHandler.handleSync(
+                `création du dossier ${DEFAULT_PATHS.DAO_FOLDER}`,
+                () => {
+                    // Créer le dossier DAO s'il n'existe pas
+                    if (!fs.existsSync(daoPath)) {
+                        fs.mkdirSync(daoPath, { recursive: true });
+                        vscode.window.showInformationMessage(`Dossier DAO créé: ${daoPath}`);
+                    }
+                    return daoPath;
                 }
+            );
 
-                return daoPath;
-            } catch (error) {
-                vscode.window.showErrorMessage(`Erreur lors de la création du dossier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-                return selectedPath; // Retourner le dossier original si on ne peut pas créer le sous-dossier
-            }
+            return result ?? selectedPath; // Retourner le dossier original si on ne peut pas créer le sous-dossier
         }
     }
 
