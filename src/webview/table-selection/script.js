@@ -7,9 +7,12 @@ let selectedCount;
 let generateBtn;
 let selectAllBtn;
 let selectNoneBtn;
+let searchInput;
+let clearSearchBtn;
 
 // State
 let tablesData = [];
+let filteredTables = [];
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
@@ -26,6 +29,8 @@ function initializeElements() {
     generateBtn = document.getElementById('generateBtn');
     selectAllBtn = document.getElementById('selectAllBtn');
     selectNoneBtn = document.getElementById('selectNoneBtn');
+    searchInput = document.getElementById('searchInput');
+    clearSearchBtn = document.getElementById('clearSearchBtn');
 }
 
 function setupEventListeners() {
@@ -33,6 +38,16 @@ function setupEventListeners() {
     selectAllBtn.addEventListener('click', selectAll);
     selectNoneBtn.addEventListener('click', selectNone);
     generateBtn.addEventListener('click', generateDao);
+    
+    // Search functionality
+    searchInput.addEventListener('input', handleSearch);
+    clearSearchBtn.addEventListener('click', clearSearch);
+    
+    // Show/hide clear button based on input content
+    searchInput.addEventListener('input', toggleClearButton);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
 
     // Listen for messages from the extension
     window.addEventListener('message', event => {
@@ -62,6 +77,7 @@ function updatePageData(data) {
 
 function updateTablesList(tables) {
     tablesData = tables;
+    filteredTables = tables; // Initially, no filter applied
 
     if (tables.length === 0) {
         tableList.innerHTML = '<div class="loading">Aucune table trouvée dans cette base de données.</div>';
@@ -69,8 +85,18 @@ function updateTablesList(tables) {
         return;
     }
 
+    renderTables(filteredTables);
+    updateSelectedCount();
+}
+
+function renderTables(tables) {
+    if (tables.length === 0) {
+        tableList.innerHTML = '<div class="loading">Aucune table ne correspond à votre recherche.</div>';
+        return;
+    }
+
     const tableItems = tables.map(table => `
-        <div class="table-item">
+        <div class="table-item" data-table="${escapeHtml(table)}">
             <label>
                 <input type="checkbox" value="${escapeHtml(table)}">
                 <i class="codicon codicon-table"></i>
@@ -86,8 +112,6 @@ function updateTablesList(tables) {
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateSelectedCount);
     });
-
-    updateSelectedCount();
 }
 
 function showLoading() {
@@ -131,6 +155,103 @@ function selectNone() {
     updateSelectedCount();
 }
 
+// Search functionality
+function handleSearch() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+        filteredTables = tablesData;
+    } else {
+        filteredTables = tablesData.filter(table => {
+            // Remove common prefixes for better search
+            const cleanTableName = removeCommonPrefixes(table.toLowerCase());
+            return cleanTableName.includes(searchTerm) || table.toLowerCase().includes(searchTerm);
+        });
+    }
+    
+    renderTables(filteredTables);
+    updateSelectedCount();
+}
+
+function removeCommonPrefixes(tableName) {
+    // Detect common prefix dynamically from all tables
+    const commonPrefix = detectCommonPrefix();
+    
+    if (commonPrefix && tableName.startsWith(commonPrefix)) {
+        return tableName.substring(commonPrefix.length);
+    }
+    
+    return tableName;
+}
+
+function detectCommonPrefix() {
+    if (tablesData.length === 0) {
+        return '';
+    }
+    
+    // Find the longest common prefix ending with underscore
+    let commonPrefix = '';
+    
+    // Start with the first table as reference
+    const firstTable = tablesData[0].toLowerCase();
+    
+    // Look for underscore positions in the first table
+    for (let i = 0; i < firstTable.length; i++) {
+        if (firstTable[i] === '_') {
+            const potentialPrefix = firstTable.substring(0, i + 1);
+            
+            // Check if this prefix is common to at least 70% of tables
+            const tablesWithPrefix = tablesData.filter(table => 
+                table.toLowerCase().startsWith(potentialPrefix)
+            ).length;
+            
+            const percentage = tablesWithPrefix / tablesData.length;
+            
+            if (percentage >= 0.7) { // 70% threshold
+                commonPrefix = potentialPrefix;
+            }
+        }
+    }
+    
+    return commonPrefix;
+}
+
+function clearSearch() {
+    searchInput.value = '';
+    filteredTables = tablesData;
+    renderTables(filteredTables);
+    updateSelectedCount();
+    toggleClearButton();
+    searchInput.focus();
+}
+
+function toggleClearButton() {
+    if (searchInput.value.trim() !== '') {
+        clearSearchBtn.classList.add('visible');
+    } else {
+        clearSearchBtn.classList.remove('visible');
+    }
+}
+
+// Keyboard shortcuts
+function handleKeyboardShortcuts(event) {
+    // Ctrl+F or Cmd+F to focus search
+    if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+    }
+    
+    // Escape to clear search when search input is focused
+    if (event.key === 'Escape' && document.activeElement === searchInput) {
+        if (searchInput.value.trim() !== '') {
+            clearSearch();
+        } else {
+            searchInput.blur();
+        }
+    }
+}
+
 function generateDao() {
     const selectedTables = Array.from(document.querySelectorAll('.table-item input[type="checkbox"]:checked'))
         .map(cb => cb.value);
@@ -166,11 +287,13 @@ function saveState() {
         .map(cb => cb.value);
 
     const mode = document.querySelector('input[name="mode"]:checked')?.value || 'save';
+    const searchTerm = searchInput.value;
 
     vscode.setState({
         selectedTables: selectedTables,
         mode: mode,
-        tablesData: tablesData
+        tablesData: tablesData,
+        searchTerm: searchTerm
     });
 }
 
@@ -184,6 +307,13 @@ function restoreState() {
         if (modeRadio) {
             modeRadio.checked = true;
         }
+    }
+
+    // Restore search term
+    if (state.searchTerm) {
+        searchInput.value = state.searchTerm;
+        handleSearch();
+        toggleClearButton();
     }
 
     // Restore table selections
