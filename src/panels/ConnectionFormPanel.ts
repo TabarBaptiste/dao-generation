@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ServeurFormData } from '../types/Connection';
+import { ServeurFormData } from '../types/Serveur';
 import { DatabaseService } from '../services/DatabaseService';
 import { BaseWebviewPanel } from './BaseWebviewPanel';
 import { DatabaseServeurFactory } from '../utils/DatabaseConnectionFactory';
@@ -142,9 +142,34 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      */
     private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
         const connectionData = DatabaseServeurFactory.createTempServeur(data);
+        
+        // Test de connexion d'abord avec gestion d'erreur harmonisée
+        const testResult = await ErrorHandler.handleAsync(
+            'test de connexion',
+            async () => await this.databaseService.testConnection(connectionData),
+            false
+        );
 
+        // Si le test de connexion échoue, arrêter ici
+        if (!testResult || !testResult.success) {
+            const errorMessage = testResult?.message || 'Erreur de connexion';
+            const message = isAutoLoad
+                ? `${errorMessage}`
+                : `Test de connexion échoué : ${errorMessage}`;
+
+            this.sendMessage({
+                command: 'databasesLoaded',
+                databases: [],
+                success: false,
+                message,
+                isAutoLoad
+            });
+            return;
+        }
+
+        // Si la connexion réussit, charger les bases de données
         const databases = await ErrorHandler.handleAsync(
-            'charger bases de données',
+            'chargement des bases de données',
             () => this.databaseService.getDatabases(connectionData),
             false
         );
@@ -165,10 +190,10 @@ export class ServeurFormPanel extends BaseWebviewPanel {
                 isAutoLoad
             });
         } else {
-            // Échec : message différent selon le contexte
+            // Échec du chargement des bases (mais connexion OK)
             const message = isAutoLoad
-                ? 'Connexion échouée. Veuillez vérifier vos identifiants.'
-                : 'Échec du chargement des bases de données';
+                ? 'Connexion réussie mais impossible de récupérer les bases de données'
+                : 'Échec du chargement des bases de données (connexion OK)';
 
             this.sendMessage({
                 command: 'databasesLoaded',

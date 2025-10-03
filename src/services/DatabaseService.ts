@@ -1,5 +1,5 @@
 import * as mysql from 'mysql2/promise';
-import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Connection';
+import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Serveur';
 import { DATABASE_SYSTEM_SCHEMAS } from '../constants/AppConstants';
 import { ErrorHandler } from '../utils/ErrorHandler';
 
@@ -118,22 +118,15 @@ export class DatabaseService {
      * @memberof DatabaseService
      */
     public async getDatabases(serveurs: DatabaseServeur): Promise<string[]> {
-        const result = await ErrorHandler.handleAsync(
-            'récupération des bases de données',
-            async () => {
-                const serv = await this.createServeur(serveurs);
-                const [rows] = await serv.execute('SHOW DATABASES');
-                await serv.end();
+        const serv = await this.createServeur(serveurs);
+        const [rows] = await serv.execute('SHOW DATABASES');
+        await serv.end();
 
-                const databases = (rows as any[])
-                    .map(row => row.Database)
-                    .filter(db => !DATABASE_SYSTEM_SCHEMAS.includes(db));
+        const databases = (rows as any[])
+            .map(row => row.Database)
+            .filter(db => !DATABASE_SYSTEM_SCHEMAS.includes(db));
 
-                return databases;
-            }
-        );
-
-        return result || [];
+        return databases;
     }
 
     /**

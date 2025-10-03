@@ -1,13 +1,18 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { DatabaseServeur } from '../types/Connection';
+import { 
+    DatabaseServeur, 
+    ServeurForStorage, 
+    ServeurForExport, 
+    ServeurForImport, 
+    ExportData, 
+    ImportData 
+} from '../types/Serveur';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { ENCRYPTION } from '../constants/AppConstants';
 import { DatabaseService } from './DatabaseService';
-
-// TODO : Utiliser une interface TypeScript au lieu d'utiliser 'any' partout.
 
 export class ServeurManager {
     private static readonly ENCRYPTION_KEY = ENCRYPTION.KEY;
@@ -42,6 +47,7 @@ export class ServeurManager {
      * @memberof ServeurManager
      */
     public async addServeur(serveurs: Omit<DatabaseServeur, 'id'>): Promise<boolean> {
+        console.log('dao serveurs :', serveurs);
         const testResult = await this.databaseService.testConnection(serveurs);
         // Créer le serveur finale avec le statut de connexion basé sur le test
         const newServeur: DatabaseServeur = {
@@ -110,20 +116,6 @@ export class ServeurManager {
     }
 
     /**
-     * Recherche et retourne un serveur spécifique par son identifiant unique.
-     * Cette méthode permet de récupérer toutes les informations d'un serveur
-     * particulier pour consultation ou modification.
-     *
-     * @param {string} id Identifiant unique du serveur recherché
-     * @return {(DatabaseServeur | undefined)} Objet DatabaseServeur complet si trouvé, undefined si l'ID n'existe pas
-     * @memberof ServeurManager
-     */
-    // TODO : Supprimer ou utiliser cette fonction
-    public getServeurById(id: string): DatabaseServeur | undefined {
-        return this.serveurs.find(serv => serv.id === id);
-    }
-
-    /**
      * Vérifie si un mot de passe est considéré comme valide selon les critères de sécurité.
      * Un mot de passe valide ne doit pas être null, undefined ou une chaîne vide/espaces.
      * Cette validation est utilisée avant le chiffrement et la sauvegarde.
@@ -146,10 +138,10 @@ export class ServeurManager {
      * @param {DatabaseServeur} serv Objet serveur complet à nettoyer
      * @param {boolean} [includeRuntimeProps=false] Si true, conserve les propriétés runtime comme isConnected (par défaut false)
      * @param {boolean} [forExport=false] Si true, prépare pour export externe en supprimant l'état de connexion (par défaut false)
-     * @return {*} Objet serveur nettoyé prêt pour la sauvegarde ou l'export
+     * @return {ServeurForStorage | ServeurForExport} Objet serveur nettoyé prêt pour la sauvegarde ou l'export
      * @memberof ServeurManager
      */
-    private cleanServeurForStorage(serv: DatabaseServeur, includeRuntimeProps = false, forExport = false): any {
+    private cleanServeurForStorage(serv: DatabaseServeur, includeRuntimeProps = false, forExport = false): ServeurForStorage | ServeurForExport {
         const cleaned = { ...serv };
 
         if (!includeRuntimeProps) {
@@ -173,15 +165,15 @@ export class ServeurManager {
      * @param {DatabaseServeur} serv Serveur dont le mot de passe doit être chiffré
      * @param {string} masterKey Clé maître utilisée pour le chiffrement AES
      * @param {boolean} [forExport=false] Si true, formate pour export (password chiffré), si false pour sauvegarde locale (encryptedPassword)
-     * @return {*} Objet serveur avec mot de passe chiffré ou sans mot de passe si chiffrement impossible
+     * @return {ServeurForStorage | ServeurForExport} Objet serveur avec mot de passe chiffré ou sans mot de passe si chiffrement impossible
      * @memberof ServeurManager
      */
     private encryptServeurPassword(
         serv: DatabaseServeur,
         masterKey: string,
         forExport: boolean = false
-    ): any {
-        const cleanServ = this.cleanServeurForStorage(serv, false, forExport);
+    ): ServeurForStorage | ServeurForExport {
+        const cleanServ = this.cleanServeurForStorage(serv, false, forExport) as any;
 
         // Si pas de mot de passe valide, retourner sans chiffrement
         if (!this.isValidPassword(serv.password)) {
@@ -317,8 +309,6 @@ export class ServeurManager {
      * @return {string} Identifiant unique au format "serv_[timestamp]_[chaîne_aléatoire]"
      * @memberof ServeurManager
      */
-    // TODO : vérifier l'utilisation de cette fonction lorsque Omit est utilisé
-    // TODO : La déclaration a été marquée ici comme étant dépréciée.
     private generateId(): string {
         return `serv_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
@@ -368,11 +358,11 @@ export class ServeurManager {
      * lors de l'export et informer l'utilisateur des risques de sécurité.
      *
      * @private
-     * @param {any[]} serveurs Tableau de serveurs à analyser (format peut varier selon le contexte)
+     * @param {DatabaseServeur[]} serveurs Tableau de serveurs à analyser
      * @return {number} Nombre total de serveurs ayant un mot de passe non vide et valide
      * @memberof ServeurManager
      */
-    private countServeursWithPasswords(serveurs: any[]): number {
+    private countServeursWithPasswords(serveurs: DatabaseServeur[]): number {
         return serveurs.filter(serv => this.isValidPassword(serv.password)).length;
     }
 
@@ -452,25 +442,25 @@ export class ServeurManager {
      * @private
      * @param {DatabaseServeur} serv Serveur à traiter pour l'export
      * @param {{ useEncryption: boolean; password?: string }} encryptionConfig Configuration de chiffrement incluant la stratégie et le mot de passe maître
-     * @return {*} Objet serveur formaté pour l'export (chiffré, en clair, ou sans mot de passe selon les cas)
+     * @return {ServeurForExport} Objet serveur formaté pour l'export (chiffré, en clair, ou sans mot de passe selon les cas)
      * @memberof ServeurManager
      */
     private processServeurForExport(
         serv: DatabaseServeur,
         encryptionConfig: { useEncryption: boolean; password?: string }
-    ): any {
+    ): ServeurForExport {
         // Si chiffrement demandé avec mot de passe valide
         if (encryptionConfig.useEncryption && encryptionConfig.password) {
-            return this.encryptServeurPassword(serv, encryptionConfig.password, true);
+            return this.encryptServeurPassword(serv, encryptionConfig.password, true) as ServeurForExport;
         }
 
         // Export en clair
-        const cleanServ = this.cleanServeurForStorage(serv, false, true);
+        const cleanServ = this.cleanServeurForStorage(serv, false, true) as ServeurForExport;
 
         // Si pas de mot de passe valide, retourner sans le champ password
         if (!this.isValidPassword(serv.password)) {
             const { password, ...servWithoutPassword } = cleanServ;
-            return servWithoutPassword;
+            return servWithoutPassword as ServeurForExport;
         }
 
         return cleanServ;
@@ -511,9 +501,8 @@ export class ServeurManager {
             const hasEncryptedData = processedServeurs.some(serv => serv.passwordIv);
 
             // Créer les données d'export
-            const exportData = {
+            const exportData: ExportData = {
                 exportDate: new Date().toISOString(),
-                // version: '1.0.0',
                 encrypted: hasEncryptedData,
                 serveurs: processedServeurs
             };
@@ -561,11 +550,11 @@ export class ServeurManager {
      * du type de serveur avec les systèmes supportés (MySQL/MariaDB).
      *
      * @private
-     * @param {*} serv Objet serveur à valider (format libre depuis fichier JSON externe)
+     * @param {ServeurForImport} serv Objet serveur à valider depuis fichier JSON externe
      * @return {boolean} true si la structure est valide et complète, false si des champs essentiels manquent
      * @memberof ServeurManager
      */
-    private validateImportedServeur(serv: any): boolean {
+    private validateImportedServeur(serv: ServeurForImport): boolean {
         return !!(serv.name && serv.host && serv.port && serv.username &&
             serv.type && ['mysql', 'mariadb'].includes(serv.type));
     }
@@ -576,19 +565,19 @@ export class ServeurManager {
      * et nettoie les données pour l'intégration dans le système local.
      *
      * @private
-     * @param {*} serv Serveur brut importé depuis fichier JSON (structure variable selon origine)
+     * @param {ServeurForImport} serv Serveur brut importé depuis fichier JSON
      * @param {string} [decryptionPassword] Mot de passe maître pour déchiffrer les mots de passe chiffrés (optionnel si non chiffré)
-     * @return {*} Serveur traité et nettoyé prêt pour intégration locale
+     * @return {Omit<DatabaseServeur, 'id' | 'isConnected' | 'lastConnected'>} Serveur traité et nettoyé prêt pour intégration locale
      * @memberof ServeurManager
      */
-    private processImportedServeur(serv: any, decryptionPassword?: string): any {
+    private processImportedServeur(serv: ServeurForImport, decryptionPassword?: string): Omit<DatabaseServeur, 'id' | 'isConnected' | 'lastConnected'> {
         // Validation de base
         if (!this.validateImportedServeur(serv)) {
             throw new Error(`Format du serveur invalide : ${serv.name || 'sans nom'}`);
         }
 
         // Gestion du déchiffrement
-        if (serv.passwordIv && decryptionPassword) {
+        if (serv.passwordIv && serv.password && decryptionPassword) {
             const decryptedPassword = EncryptionUtil.safeDecrypt(serv.password, serv.passwordIv, decryptionPassword);
             if (decryptedPassword === null) {
                 throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
@@ -635,9 +624,9 @@ export class ServeurManager {
                 const fileContent = await vscode.workspace.fs.readFile(fileUri);
                 const jsonContent = Buffer.from(fileContent).toString('utf8');
 
-                let importData: any;
+                let importData: ImportData;
                 try {
-                    importData = JSON.parse(jsonContent);
+                    importData = JSON.parse(jsonContent) as ImportData;
                 } catch (parseError) {
                     throw new Error('Format de fichier JSON invalide');
                 }
@@ -648,7 +637,7 @@ export class ServeurManager {
 
                 // Gestion du déchiffrement
                 const isEncrypted = importData.encrypted === true;
-                const hasEncryptedPasswords = importData.serveurs.some((serv: any) => serv.passwordIv);
+                const hasEncryptedPasswords = importData.serveurs.some((serv: ServeurForImport) => serv.passwordIv);
 
                 let decryptionPassword: string | undefined;
 

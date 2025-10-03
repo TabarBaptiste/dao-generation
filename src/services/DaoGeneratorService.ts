@@ -2,17 +2,12 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Connection';
+import { DaoGenerationOptions, DatabaseServeur, TableInfo, ColumnInfo } from '../types/Serveur';
 import { DatabaseService } from './DatabaseService';
 import { StringUtil } from '../utils/StringUtil';
 import { DateUtil } from '../utils/DateUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { DEFAULT_PATHS, FILE_EXTENSIONS, VERSION_PATTERN } from '../constants/AppConstants';
-
-interface DaoGenerationOptions {
-    mode: 'save' | 'overwrite';
-    outputPath?: string;
-}
 
 export class DaoGeneratorService {
     constructor(private databaseService: DatabaseService) { }

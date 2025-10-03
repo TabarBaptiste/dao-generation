@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { DatabaseServeur } from '../types/Connection';
+import { DatabaseServeur } from '../types/Serveur';
 import { ServeurManager } from '../services/ConnectionManager';
 import { ServeurFormPanel } from '../panels/ConnectionFormPanel';
 import { TableSelectionPanel } from '../panels/TableSelectionPanel';

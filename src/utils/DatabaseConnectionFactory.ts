@@ -1,4 +1,4 @@
-import { DatabaseServeur, ServeurFormData } from '../types/Connection';
+import { DatabaseServeur, ServeurFormData } from '../types/Serveur';
 
 /**
  * Classe factory pour la création d'objets de connexion de base de données (serveurs).
