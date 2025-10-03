@@ -117,9 +117,45 @@ function fuzzyMatchScore(searchTerm, text) {
     const normalizedSearch = normalizeString(searchTerm);
     const normalizedText = normalizeString(text);
 
-    // Correspondance exacte = score parfait
+    // Correspondance exacte avec bonus selon la position
     if (normalizedText.includes(normalizedSearch)) {
-        return 1;
+        const index = normalizedText.indexOf(normalizedSearch);
+        const textLength = normalizedText.length;
+
+        // Score de base pour correspondance exacte
+        let score = 1.0;
+
+        // Bonus si le terme est au début (après espaces/underscores)
+        if (index === 0) {
+            score += 0.5; // Commence exactement par le terme
+        } else {
+            // Vérifier si c'est le début d'un mot (après espace ou underscore)
+            const prevChar = normalizedText[index - 1];
+            if (prevChar === ' ' || prevChar === '_') {
+                score += 0.3; // Début de mot
+            }
+        }
+
+        // Bonus si le terme est un mot complet (entouré d'espaces/underscores ou fin de chaîne)
+        const nextIndex = index + normalizedSearch.length;
+        const isCompleteWord = (
+            (index === 0 || normalizedText[index - 1] === ' ') &&
+            (nextIndex === textLength || normalizedText[nextIndex] === ' ')
+        );
+
+        if (isCompleteWord) {
+            score += 0.3; // Mot complet
+        }
+
+        // Bonus selon la proportion du terme dans le texte
+        const proportionBonus = normalizedSearch.length / textLength * 0.2;
+        score += proportionBonus;
+
+        // Pénalité selon la distance du début (plus c'est loin, moins bon)
+        const positionPenalty = (index / textLength) * 0.3;
+        score -= positionPenalty;
+
+        return score;
     }
 
     // Vérifier si tous les caractères de la recherche apparaissent dans l'ordre
