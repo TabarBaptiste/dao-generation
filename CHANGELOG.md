@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.1...v1.7.2) (2025-10-03)
+
+
+### Performance Improvements
+
+* Amélioration du trie pour la recherche des tables ([ad0429f](https://github.com/TabarBaptiste/dao-generation/commit/ad0429fb520188aafd6b8989d554c761ee0abbe6))
+
 ## [1.7.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.0...v1.7.1) (2025-10-03)
 
 
