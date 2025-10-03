@@ -59,7 +59,7 @@ body {
 }
 
 .search-box:focus-within {
-    border-color: var(--vscode-focusBorder);
+    border-color: var(--vscode-button-background);
 }
 
 .search-box .codicon-search {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { DatabaseServeur } from '../types/Connection';
+import { DatabaseServeur } from '../types/Serveur';
 import { DatabaseService } from '../services/DatabaseService';
 import { DaoGeneratorService } from '../services/DaoGeneratorService';
 import { ErrorHandler } from '../utils/ErrorHandler';
