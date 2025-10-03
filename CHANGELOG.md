@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.0...v1.7.1) (2025-10-03)
+
+
+### Bug Fixes
+
+* refactoring + ajout de l'algorithme de Levenshtein dans la recherche des tables ([0ba7905](https://github.com/TabarBaptiste/dao-generation/commit/0ba79052c8ba0ee7f15d1cbe974eeb8492684042))
+
 # [1.7.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.6.4...v1.7.0) (2025-10-02)
 
 
