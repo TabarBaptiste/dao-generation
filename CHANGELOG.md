@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.2...v1.7.3) (2025-10-03)
+
+
+### Bug Fixes
+
+* Utilisation de testConnection lors du chargement automatique ([aa6b4a3](https://github.com/TabarBaptiste/dao-generation/commit/aa6b4a35cc2de8633550295bd4a85d4ecef70db9))
+
 ## [1.7.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.1...v1.7.2) (2025-10-03)
 
 
