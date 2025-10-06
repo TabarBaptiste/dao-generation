@@ -191,8 +191,8 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^16.18.126",
     "@types/vscode": "^1.74.0",
-    "@typescript-eslint/eslint-plugin": "^8.39.0",
-    "@typescript-eslint/parser": "^8.39.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.6.0",
     "esbuild": "^0.25.9",
@@ -202,6 +202,8 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsdoc": "^60.8.2",
     "mysql2": "^3.14.4"
   }
 }

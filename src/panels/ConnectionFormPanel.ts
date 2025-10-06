@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { ServeurFormData } from '../types/Serveur';
 import { DatabaseService } from '../services/DatabaseService';
-import { BaseWebviewPanel } from './BaseWebviewPanel';
 import { DatabaseServeurFactory } from '../utils/DatabaseConnectionFactory';
 import { ErrorHandler } from '../utils/ErrorHandler';
-import { VIEW_TITLES, BUTTON_LABELS, WEBVIEW_TYPES, WEBVIEW_FOLDERS, DEFAULT_PATHS } from '../constants/AppConstants';
+import { BUTTON_LABELS, DEFAULT_PATHS, VIEW_TITLES, WEBVIEW_FOLDERS, WEBVIEW_TYPES } from '../constants/AppConstants';
+import { BaseWebviewPanel } from './BaseWebviewPanel';
 
 /**
  * Panneau webview pour la gestion des formulaires de connexion aux serveurs de base de données.
@@ -52,7 +52,7 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      *
      * @protected
      * @param {*} message - Objet message contenant la commande et les données associées provenant du webview
-     * @return {Promise<void>} Promise qui se résout une fois l'action du message traitée complètement
+     * @return Promise qui se résout une fois l'action du message traitée complètement
      * @memberof ServeurFormPanel
      */
     protected async handleMessage(message: any): Promise<void> {
@@ -100,7 +100,7 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      *
      * @private
      * @param {*} data - Données de connexion à tester contenant host, port, username, password, etc.
-     * @return {Promise<void>} Promise qui se résout après avoir envoyé le résultat du test au webview
+     * @return Promise qui se résout après avoir envoyé le résultat du test au webview
      * @memberof ServeurFormPanel
      */
     private async handleTestConnection(data: any): Promise<void> {
@@ -137,7 +137,7 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      * @private
      * @param {*} data - Données de connexion utilisées pour se connecter au serveur et récupérer les bases
      * @param {boolean} [isAutoLoad=false] - Indique si le chargement est automatique (true) ou manuel (false), affectant les messages affichés
-     * @return {Promise<void>} Promise qui se résout après avoir envoyé la liste des bases de données ou un message d'erreur au webview
+     * @return Promise qui se résout après avoir envoyé la liste des bases de données ou un message d'erreur au webview
      * @memberof ServeurFormPanel
      */
     private async handleLoadDatabases(data: any, isAutoLoad: boolean = false): Promise<void> {
@@ -211,7 +211,7 @@ export class ServeurFormPanel extends BaseWebviewPanel {
      * en proposant par défaut le répertoire WAMP www comme point de départ.
      *
      * @private
-     * @return {Promise<void>} Promise qui se résout après avoir envoyé le chemin sélectionné au webview, ou ne rien envoyer si annulé
+     * @return Promise qui se résout après avoir envoyé le chemin sélectionné au webview, ou ne rien envoyer si annulé
      * @memberof ServeurFormPanel
      */
     private async handleSelectPath(): Promise<void> {

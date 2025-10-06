@@ -28,6 +28,7 @@ export const ENCRYPTION = {
 } as const;
 */
 
+
 export const WEBVIEW_TYPES = {
     CONNECTION_FORM: 'serveurForm',
     TABLE_SELECTION: 'tableSelection'

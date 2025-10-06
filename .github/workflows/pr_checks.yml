@@ -1,0 +1,79 @@
+name: PR Checks
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate PR title follows conventional commits
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add default labels
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'needs-review'
+
+  code-quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Comment PR with results
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: pr-checks
+          message: |
+            ❌ Les vérifications automatiques ont échoué.
+            Merci de corriger les erreurs avant de merge la PR.
+
+      # - name: Run tests (if present)
+      #   run: |
+      #     # S'il y a un script test défini dans package.json, il sera exécuté
+      #     if npm run | grep -q ' test'; then
+      #       npm test
+      #     else
+      #       echo "No npm test script found — skipping tests"
+      #     fi

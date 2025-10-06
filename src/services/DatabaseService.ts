@@ -1,5 +1,5 @@
 import * as mysql from 'mysql2/promise';
-import { DatabaseServeur, TableInfo, ColumnInfo } from '../types/Serveur';
+import { ColumnInfo, DatabaseServeur, TableInfo } from '../types/Serveur';
 import { DATABASE_SYSTEM_SCHEMAS } from '../constants/AppConstants';
 import { ErrorHandler } from '../utils/ErrorHandler';
 
@@ -45,7 +45,7 @@ export class DatabaseService {
      * puis établit une nouvelle connexion maintenue dans le pool interne.
      *
      * @param {DatabaseServeur} serveurs Configuration complète du serveur incluant l'ID unique pour le pool de connexions
-     * @return {Promise<void>} Promesse qui se résout une fois la connexion établie et stockée, ou rejette en cas d'échec
+     * @return Promesse qui se résout une fois la connexion établie et stockée, ou rejette en cas d'échec
      * @memberof DatabaseService
      */
     public async connect(serveurs: DatabaseServeur): Promise<void> {
@@ -78,7 +78,7 @@ export class DatabaseService {
      * les références internes même en cas d'échec de fermeture.
      *
      * @param {string} connectionId Identifiant unique de la connexion à fermer (correspond à l'ID du serveur)
-     * @return {Promise<void>} Promesse qui se résout une fois la déconnexion terminée (succès ou échec géré silencieusement)
+     * @return Promesse qui se résout une fois la déconnexion terminée (succès ou échec géré silencieusement)
      * @memberof DatabaseService
      */
     public async disconnect(connectionId: string): Promise<void> {
@@ -233,7 +233,7 @@ export class DatabaseService {
      * Cette méthode de nettoyage est généralement appelée lors de l'arrêt de l'extension
      * ou pour réinitialiser complètement l'état des connexions.
      *
-     * @return {Promise<void>} Promesse qui se résout une fois toutes les connexions fermées et le pool vidé
+     * @return Promesse qui se résout une fois toutes les connexions fermées et le pool vidé
      * @memberof DatabaseService
      */
     public async disconnectAll(): Promise<void> {

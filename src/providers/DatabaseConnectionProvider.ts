@@ -297,7 +297,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * Cette méthode ouvre le panneau de formulaire, attend les données saisies par l'utilisateur,
      * valide et sauvegarde la nouvelle connexion, puis rafraîchit l'affichage.
      *
-     * @return {Promise<void>} Promise qui se résout une fois le serveur ajouté et la vue rafraîchie, ou si l'opération est annulée
+     * @return Promise qui se résout une fois le serveur ajouté et la vue rafraîchie, ou si l'opération est annulée
      * @memberof DatabaseServeurProvider
      */
     public async addServeur(): Promise<void> {
@@ -325,7 +325,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * attend les modifications de l'utilisateur, puis sauvegarde et rafraîchit l'affichage.
      *
      * @param {DatabaseServeurTreeItem} item - Élément d'arbre représentant le serveur à modifier
-     * @return {Promise<void>} Promise qui se résout une fois les modifications sauvegardées et la vue rafraîchie
+     * @return Promise qui se résout une fois les modifications sauvegardées et la vue rafraîchie
      * @memberof DatabaseServeurProvider
      */
     public async editServeur(item: DatabaseServeurTreeItem): Promise<void> {
@@ -359,7 +359,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * puis procède à la suppression et rafraîchit l'affichage si confirmé.
      *
      * @param {DatabaseServeurTreeItem} item - Élément d'arbre représentant le serveur à supprimer
-     * @return {Promise<void>} Promise qui se résout une fois le serveur supprimé et la vue rafraîchie, ou si l'opération est annulée
+     * @return Promise qui se résout une fois le serveur supprimé et la vue rafraîchie, ou si l'opération est annulée
      * @memberof DatabaseServeurProvider
      */
     public async deleteServeur(item: DatabaseServeurTreeItem): Promise<void> {
@@ -383,11 +383,11 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * sauvegarde l'état et rafraîchit l'affichage avec gestion d'erreurs intégrée.
      *
      * @param {DatabaseServeurTreeItem} item - Élément d'arbre représentant le serveur auquel se connecter
-     * @return {Promise<void>} Promise qui se résout une fois la connexion établie et le statut mis à jour
+     * @return Promise qui se résout une fois la connexion établie et le statut mis à jour
      * @memberof DatabaseServeurProvider
      */
     public async connectToDatabase(item: DatabaseServeurTreeItem): Promise<void> {
-        const success = await ErrorHandler.handleAsync(
+        await ErrorHandler.handleAsync(
             `connexion à "${item.serveurs.name}"`,
             async () => {
                 await this.databaseService.connect(item.serveurs);
@@ -411,11 +411,11 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * de déconnexion et rafraîchit l'affichage pour refléter le changement.
      *
      * @param {DatabaseServeurTreeItem} item - Élément d'arbre représentant le serveur dont on veut fermer la connexion
-     * @return {Promise<void>} Promise qui se résout une fois la déconnexion effectuée et le statut mis à jour
+     * @return Promise qui se résout une fois la déconnexion effectuée et le statut mis à jour
      * @memberof DatabaseServeurProvider
      */
     public async disconnectFromDatabase(item: DatabaseServeurTreeItem): Promise<void> {
-        const success = await ErrorHandler.handleAsync(
+        await ErrorHandler.handleAsync(
             `déconnexion de "${item.serveurs.name}"`,
             async () => {
                 await this.databaseService.disconnect(item.serveurs.id);
@@ -438,7 +438,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * (base de données ou table) et lance l'interface de sélection appropriée.
      *
      * @param {DatabaseServeurTreeItem} item - Élément d'arbre représentant une base de données ou une table
-     * @return {Promise<void>} Promise qui se résout une fois le panneau de sélection ouvert ou en cas d'erreur
+     * @return Promise qui se résout une fois le panneau de sélection ouvert ou en cas d'erreur
      * @memberof DatabaseServeurProvider
      */
     public async openTableSelection(item: DatabaseServeurTreeItem): Promise<void> {
@@ -464,7 +464,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * Cette méthode délègue le traitement complet au ServeurManager qui gère la sérialisation,
      * la sélection du fichier de destination et la confirmation de l'export.
      *
-     * @return {Promise<void>} Promise qui se résout une fois l'export terminé ou annulé par l'utilisateur
+     * @return Promise qui se résout une fois l'export terminé ou annulé par l'utilisateur
      * @memberof DatabaseServeurProvider
      */
     public async exportServeurs(): Promise<void> {
@@ -476,7 +476,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * Cette méthode délègue le traitement au ServeurManager pour la désérialisation et la validation,
      * puis rafraîchit automatiquement la vue pour afficher les nouvelles connexions importées.
      *
-     * @return {Promise<void>} Promise qui se résout une fois l'import terminé et la vue rafraîchie
+     * @return Promise qui se résout une fois l'import terminé et la vue rafraîchie
      * @memberof DatabaseServeurProvider
      */
     public async importServeurs(): Promise<void> {

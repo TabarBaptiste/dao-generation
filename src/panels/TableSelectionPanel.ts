@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import { DatabaseServeur } from '../types/Serveur';
 import { DatabaseService } from '../services/DatabaseService';
 import { DaoGeneratorService } from '../services/DaoGeneratorService';
@@ -34,7 +34,7 @@ export class TableSelectionPanel {
      * @param {string} database - Nom de la base de données dont on veut afficher les tables
      * @param {DatabaseService} databaseService - Service pour les opérations de base de données (connexion, requêtes)
      * @param {vscode.Uri} extensionUri - URI de l'extension pour localiser les ressources webview
-     * @return {Promise<void>} Promise qui se résout une fois le panneau créé, configuré et affiché
+     * @return Promise qui se résout une fois le panneau créé, configuré et affiché
      * @memberof TableSelectionPanel
      */
     public static async createOrShow(
@@ -109,7 +109,7 @@ export class TableSelectionPanel {
      * configure les écouteurs d'événements et charge le contenu initial de l'interface.
      *
      * @private
-     * @return {Promise<void>} Promise qui se résout une fois le panneau entièrement configuré et prêt
+     * @return Promise qui se résout une fois le panneau entièrement configuré et prêt
      * @memberof TableSelectionPanel
      */
     private async _update() {
@@ -139,11 +139,11 @@ export class TableSelectionPanel {
      * puis récupère et transmet la liste complète des tables disponibles.
      *
      * @private
-     * @return {Promise<void>} Promise qui se résout après avoir envoyé toutes les données initiales ou un message d'erreur
+     * @return Promise qui se résout après avoir envoyé toutes les données initiales ou un message d'erreur
      * @memberof TableSelectionPanel
      */
     private async sendInitialData() {
-        const success = await ErrorHandler.handleAsync(
+        await ErrorHandler.handleAsync(
             'chargement des données initiales',
             async () => {
                 // Envoyer d'abord l'état de chargement
@@ -165,7 +165,7 @@ export class TableSelectionPanel {
                     tables: tables
                 });
             }
-        )
+        );
     }
 
     /**
@@ -176,7 +176,7 @@ export class TableSelectionPanel {
      * @private
      * @param {string[]} selectedTables - Tableau des noms de tables sélectionnées pour la génération des DAO
      * @param {('save' | 'overwrite')} mode - Mode de génération : 'save' pour éviter l'écrasement, 'overwrite' pour remplacer les fichiers existants
-     * @return {Promise<void>} Promise qui se résout une fois la génération terminée ou en cas d'erreur
+     * @return Promise qui se résout une fois la génération terminée ou en cas d'erreur
      * @memberof TableSelectionPanel
      */
     private async handleGenerate(selectedTables: string[], mode: 'save' | 'overwrite'): Promise<void> {

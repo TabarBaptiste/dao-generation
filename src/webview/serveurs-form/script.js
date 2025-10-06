@@ -68,7 +68,7 @@ function setupEventListeners() {
 
     // Auto-génération du nom de serveur basé sur l'hôte et la base de données
     formElements.host.addEventListener('input', updateServeurName);
-    formElements.database.addEventListener('change', function() {
+    formElements.database.addEventListener('change', function () {
         updateServeurName();
         toggleDaoPathVisibility();
     });
@@ -139,7 +139,7 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
             option.selected = true;
             formElements.database.appendChild(option);
         }
-        
+
         // Mettre à jour la visibilité du champ de répertoire par défaut
         toggleDaoPathVisibility();
     }
@@ -241,7 +241,7 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
 
     // Mettre à jour le nom du serveur si le champ est vide
     updateServeurName();
-    
+
     // Mettre à jour la visibilité du champ de répertoire par défaut
     toggleDaoPathVisibility();
 }
@@ -331,7 +331,7 @@ function cancel() {
 function toggleDaoPathVisibility() {
     const daoPathGroup = document.getElementById('defaultDaoPathGroup');
     const databaseValue = formElements.database.value.trim();
-    
+
     if (databaseValue) {
         daoPathGroup.classList.add('show');
     } else {
@@ -426,7 +426,7 @@ function saveState() {
 
 function restoreState() {
     const state = vscode.getState();
-    if (!state) return;
+    if (!state) { return; }
 
     if (state.formData) {
         loadFormData(state.formData, state.isEditMode, null);
