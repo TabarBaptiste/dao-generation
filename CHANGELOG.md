@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.4...v1.7.5) (2025-10-06)
+
+
+### Bug Fixes
+
+* supprimer la règle de longueur maximale de l'en-tête dans la configuration de commitlint ([af8984b](https://github.com/TabarBaptiste/dao-generation/commit/af8984b8d467935789d7aea037e2a6db62f93ab0))
+
 ## [1.7.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.3...v1.7.4) (2025-10-06)
 
 
