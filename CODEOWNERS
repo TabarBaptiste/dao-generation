@@ -1,0 +1,29 @@
+# Global ownership - Maintainers principaux
+* @TabarBaptiste
+
+# Configuration GitHub et CI/CD
+/.github/ @TabarBaptiste
+/.eslintrc.json @TabarBaptiste
+/.commitlintrc.json @TabarBaptiste
+/tsconfig.json @TabarBaptiste
+
+# Toute l'extension
+/src/
+
+<!-- # Backend et API
+/src/backend/ @TabarBaptiste
+/src/domain/ @TabarBaptiste
+/src/infrastructure/ @TabarBaptiste
+
+# Frontend et interfaces utilisateur
+/src/frontend/ @TabarBaptiste
+/src/components/ @TabarBaptiste
+
+# Tests et qualité
+/tests/ @TabarBaptiste
+/cypress/ @TabarBaptiste
+
+# Documentation
+/docs/ @TabarBaptiste
+README.md @TabarBaptiste
+CONTRIBUTING.md @TabarBaptiste -->
