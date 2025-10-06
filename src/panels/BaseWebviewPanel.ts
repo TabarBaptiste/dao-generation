@@ -1,6 +1,5 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import { ErrorHandler } from '../utils/ErrorHandler';
 
 /**
@@ -28,7 +27,7 @@ export abstract class BaseWebviewPanel {
      *
      * @protected
      * @param {vscode.ViewColumn} [column] Colonne de vue dans laquelle afficher le panneau. Si non spécifiée, utilise ViewColumn.One par défaut
-     * @return {Promise<void>} Promise qui se résout quand le panneau est entièrement configuré et prêt à être utilisé
+     * @return Promise qui se résout quand le panneau est entièrement configuré et prêt à être utilisé
      * @memberof BaseWebviewPanel
      */
     protected async createPanel(column?: vscode.ViewColumn): Promise<void> {
@@ -67,7 +66,7 @@ export abstract class BaseWebviewPanel {
      * @protected
      * @abstract
      * @param {*} message Objet message reçu du webview contenant au minimum une propriété 'command' et optionnellement des données associées
-     * @return {Promise<void>} Promise qui se résout une fois le message traité, permettant la gestion d'opérations asynchrones
+     * @return Promise qui se résout une fois le message traité, permettant la gestion d'opérations asynchrones
      * @memberof BaseWebviewPanel
      */
     protected abstract handleMessage(message: any): Promise<void>;

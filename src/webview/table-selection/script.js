@@ -77,8 +77,8 @@ function levenshteinDistance(a, b) {
         Array(a.length + 1).fill(null)
     );
 
-    for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
-    for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+    for (let i = 0; i <= a.length; i++) { matrix[0][i] = i; }
+    for (let j = 0; j <= b.length; j++) { matrix[j][0] = j; }
 
     for (let j = 1; j <= b.length; j++) {
         for (let i = 1; i <= a.length; i++) {
@@ -192,7 +192,7 @@ function fuzzyMatchScore(searchTerm, text) {
  * @param {string[]} tables - Liste des noms de tables
  */
 function detectCommonPrefix(tables) {
-    if (tables.length === 0) return '';
+    if (tables.length === 0) { return ''; }
 
     const firstTable = tables[0].toLowerCase();
     let commonPrefix = '';
@@ -463,7 +463,7 @@ function showError(errorMessage) {
  * Génère les DAOs pour les tables sélectionnées
  */
 function generateDao() {
-    if (state.selectedTables.size === 0) return;
+    if (state.selectedTables.size === 0) { return; }
 
     const mode = document.querySelector('input[name="mode"]:checked').value;
 
@@ -499,12 +499,12 @@ const saveState = debounce(() => {
  */
 function restoreState() {
     const savedState = vscode.getState();
-    if (!savedState) return;
+    if (!savedState) { return; }
 
     // Restaurer le mode
     if (savedState.mode) {
         const modeRadio = document.querySelector(`input[name="mode"][value="${savedState.mode}"]`);
-        if (modeRadio) modeRadio.checked = true;
+        if (modeRadio) { modeRadio.checked = true; }
     }
 
     // Restaurer la recherche

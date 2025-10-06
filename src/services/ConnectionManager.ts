@@ -1,13 +1,13 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { 
-    DatabaseServeur, 
-    ServeurForStorage, 
-    ServeurForExport, 
-    ServeurForImport, 
-    ExportData, 
-    ImportData 
+import * as vscode from 'vscode';
+import {
+    DatabaseServeur,
+    ExportData,
+    ImportData,
+    ServeurForExport,
+    ServeurForImport,
+    ServeurForStorage
 } from '../types/Serveur';
 import { EncryptionUtil } from '../utils/EncryptionUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
@@ -85,7 +85,7 @@ export class ServeurManager {
      *
      * @param {string} id Identifiant unique du serveur à mettre à jour
      * @param {Partial<DatabaseServeur>} serveurs Objet contenant uniquement les propriétés à modifier (mise à jour partielle)
-     * @return {Promise<void>} Promesse qui se résout une fois la mise à jour et la sauvegarde terminées
+     * @return Promesse qui se résout une fois la mise à jour et la sauvegarde terminées
      * @memberof ServeurManager
      */
     public async updateServeur(id: string, serveurs: Partial<DatabaseServeur>): Promise<void> {
@@ -107,7 +107,7 @@ export class ServeurManager {
      * associées au serveur spécifié.
      *
      * @param {string} id Identifiant unique du serveur à supprimer de façon permanente
-     * @return {Promise<void>} Promesse qui se résout une fois la suppression et la sauvegarde terminées
+     * @return Promesse qui se résout une fois la suppression et la sauvegarde terminées
      * @memberof ServeurManager
      */
     public async deleteServeur(id: string): Promise<void> {
@@ -213,7 +213,7 @@ export class ServeurManager {
      * les mots de passe et gère la rétrocompatibilité avec les anciens formats.
      *
      * @private
-     * @return {Promise<void>} Promesse qui se résout une fois tous les serveurs chargés et déchiffrés avec succès
+     * @return Promesse qui se résout une fois tous les serveurs chargés et déchiffrés avec succès
      * @memberof ServeurManager
      */
     private async loadServeurs(): Promise<void> {
@@ -279,7 +279,7 @@ export class ServeurManager {
      * et crée le répertoire de stockage si nécessaire.
      *
      * @private
-     * @return {Promise<void>} Promesse qui se résout une fois la sauvegarde chiffrée terminée avec succès
+     * @return Promesse qui se résout une fois la sauvegarde chiffrée terminée avec succès
      * @memberof ServeurManager
      */
     private async saveServeurs(): Promise<void> {
@@ -471,7 +471,7 @@ export class ServeurManager {
      * Cette méthode guide l'utilisateur à travers le choix de chiffrement, traite tous les serveurs,
      * et sauvegarde le fichier avec un résumé détaillé de l'opération.
      *
-     * @return {Promise<void>} Promesse qui se résout une fois l'export terminé ou annulé par l'utilisateur
+     * @return Promesse qui se résout une fois l'export terminé ou annulé par l'utilisateur
      * @memberof ServeurManager
      */
     public async exportServeurs(): Promise<void> {
@@ -597,7 +597,7 @@ export class ServeurManager {
      * Cette méthode guide l'utilisateur dans la sélection du fichier, gère les mots de passe chiffrés,
      * et importe uniquement les nouveaux serveurs en évitant les doublons.
      *
-     * @return {Promise<void>} Promesse qui se résout une fois l'import terminé avec un résumé des opérations effectuées
+     * @return Promesse qui se résout une fois l'import terminé avec un résumé des opérations effectuées
      * @memberof ServeurManager
      */
     public async importServeurs(): Promise<void> {
@@ -706,10 +706,10 @@ export class ServeurManager {
 
                 // Message de succès
                 let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
-                if (skippedCount > 0) message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`;
-                if (errors.length > 0) message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`;
-                if (hasEncryptedPasswords && decryptionPassword) message += ` | Mots de passe déchiffrés`;
-                else if (!isEncrypted) message += ` | Fichier non chiffré`;
+                if (skippedCount > 0) { message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`; }
+                if (errors.length > 0) { message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`; }
+                if (hasEncryptedPasswords && decryptionPassword) { message += ` | Mots de passe déchiffrés`; }
+                else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
 
                 vscode.window.showInformationMessage(message);
 

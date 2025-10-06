@@ -1,13 +1,13 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { DaoGenerationOptions, DatabaseServeur, TableInfo, ColumnInfo } from '../types/Serveur';
-import { DatabaseService } from './DatabaseService';
-import { StringUtil } from '../utils/StringUtil';
+import * as vscode from 'vscode';
+import { ColumnInfo, DaoGenerationOptions, DatabaseServeur, TableInfo } from '../types/Serveur';
 import { DateUtil } from '../utils/DateUtil';
+import { StringUtil } from '../utils/StringUtil';
 import { ErrorHandler } from '../utils/ErrorHandler';
 import { DEFAULT_PATHS, FILE_EXTENSIONS, VERSION_PATTERN } from '../constants/AppConstants';
+import { DatabaseService } from './DatabaseService';
 
 export class DaoGeneratorService {
     constructor(private databaseService: DatabaseService) { }
@@ -21,7 +21,7 @@ export class DaoGeneratorService {
      * @param {string} database Nom de la base de données contenant les tables à traiter
      * @param {string[]} tableNames Liste des noms de tables pour lesquelles générer les fichiers DAO
      * @param {DaoGenerationOptions} options Options de génération incluant le mode (save/overwrite) et le chemin de sortie optionnel
-     * @return {Promise<void>} Promesse qui se résout une fois la génération terminée (succès ou échec)
+     * @return Promesse qui se résout une fois la génération terminée (succès ou échec)
      * @memberof DaoGeneratorService
      */
     public async generateDaoFiles(
@@ -377,11 +377,11 @@ ${crudMethods}
      * @private
      * @param {string} tableName Nom complet de la table en base de données (avec préfixe éventuel)
      * @param {ColumnInfo[]} columns Tableau des métadonnées de toutes les colonnes de la table
-     * @param {string} database Nom de la base de données (utilisé pour les commentaires et la documentation)
+     * @param {string} _database Nom de la base de données (utilisé pour les commentaires et la documentation)
      * @return {string} Code PHP complet des quatre méthodes CRUD avec gestion d'erreurs et documentation
      * @memberof DaoGeneratorService
      */
-    private generateCrudMethods(tableName: string, columns: ColumnInfo[], database: string): string {
+    private generateCrudMethods(tableName: string, columns: ColumnInfo[], _database: string): string {
         const tableNameWithoutPrefix = StringUtil.removeTablePrefix(tableName);
         const primaryKey = this.findPrimaryKey(columns);
         const pkName = primaryKey ? primaryKey.name : 'id';
@@ -600,7 +600,7 @@ ${crudMethods}
      *
      * @private
      * @param {string} filePath Chemin absolu vers le fichier DAO existant à sauvegarder
-     * @return {Promise<void>} Promesse qui se résout une fois la sauvegarde créée avec succès
+     * @return Promesse qui se résout une fois la sauvegarde créée avec succès
      * @memberof DaoGeneratorService
      */
     private async createBackup(filePath: string): Promise<void> {
