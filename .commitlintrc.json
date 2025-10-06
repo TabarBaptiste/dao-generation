@@ -1,0 +1,101 @@
+{
+    "extends": [
+        "@commitlint/config-conventional"
+    ],
+    "rules": {
+        "type-enum": [
+            2,
+            "always",
+            [
+                "feat",
+                "fix", 
+                "docs",
+                "style",
+                "refactor",
+                "perf",
+                "test",
+                "build",
+                "ci",
+                "chore",
+                "revert"
+            ]
+        ],
+        "type-case": [
+            2,
+            "always",
+            "lower-case"
+        ],
+        "type-empty": [
+            2,
+            "never"
+        ],
+        "subject-empty": [
+            2,
+            "never"
+        ],
+        "subject-full-stop": [
+            2,
+            "never",
+            "."
+        ]
+    },
+    "helpUrl": "https://www.conventionalcommits.org/",
+    "prompt": {
+        "messages": {
+            "type": "Sélectionnez le type de changement que vous commitez:",
+            "scope": "Quelle est la portée de ce changement (optionnel):",
+            "customScope": "Indiquez une portée personnalisée:",
+            "subject": "Écrivez une description courte et impérative du changement:\n",
+            "body": "Fournissez une description plus détaillée du changement (optionnel):\n",
+            "breaking": "Listez les BREAKING CHANGES (optionnel):\n",
+            "footer": "Listez les issues fermées par ce changement (optionnel):\n",
+            "confirmCommit": "Êtes-vous sûr de vouloir procéder avec le commit ci-dessus?"
+        },
+        "types": [
+            {
+                "value": "feat",
+                "name": "feat:     ✨ Nouvelle fonctionnalité"
+            },
+            {
+                "value": "fix", 
+                "name": "fix:      🐛 Correction de bug"
+            },
+            {
+                "value": "docs",
+                "name": "docs:     📚 Documentation uniquement"
+            },
+            {
+                "value": "style",
+                "name": "style:    💎 Changements de style (formatage, etc.)"
+            },
+            {
+                "value": "refactor",
+                "name": "refactor: 📦 Refactorisation du code"
+            },
+            {
+                "value": "perf",
+                "name": "perf:     🚀 Amélioration des performances"
+            },
+            {
+                "value": "test",
+                "name": "test:     🚨 Ajout ou modification de tests"
+            },
+            {
+                "value": "build",
+                "name": "build:    🛠️ Changements du système de build"
+            },
+            {
+                "value": "ci",
+                "name": "ci:       ⚙️ Changements de l'intégration continue"
+            },
+            {
+                "value": "chore",
+                "name": "chore:    ♻️ Autres changements qui ne modifient pas src ou test"
+            },
+            {
+                "value": "revert",
+                "name": "revert:   🗑️ Annule un commit précédent"
+            }
+        ]
+    }
+}
