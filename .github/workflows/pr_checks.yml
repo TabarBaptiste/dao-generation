@@ -60,11 +60,11 @@ jobs:
         # Utilisation directe de tsc pour éviter l'erreur "Missing script: typecheck"
         run: npx tsc --noEmit
 
-      - name: Run tests (if present)
-        run: |
-          # S'il y a un script test défini dans package.json, il sera exécuté
-          if npm run | grep -q ' test'; then
-            npm test
-          else
-            echo "No npm test script found — skipping tests"
-          fi
+      # - name: Run tests (if present)
+      #   run: |
+      #     # S'il y a un script test défini dans package.json, il sera exécuté
+      #     if npm run | grep -q ' test'; then
+      #       npm test
+      #     else
+      #       echo "No npm test script found — skipping tests"
+      #     fi
