@@ -57,8 +57,17 @@ jobs:
         run: npm ci
 
       - name: Type check (TypeScript)
-        # Utilisation directe de tsc pour éviter l'erreur "Missing script: typecheck"
         run: npx tsc --noEmit
+
+      - name: Comment PR with results
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: pr-checks
+          message: |
+            ❌ Les vérifications automatiques ont échoué.
+            Merci de corriger les erreurs avant de merge la PR.
 
       # - name: Run tests (if present)
       #   run: |
