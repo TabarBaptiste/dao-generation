@@ -9,21 +9,3 @@
 
 # Toute l'extension
 /src/ @TabarBaptiste
-
-<!-- # Backend et API
-/src/backend/ @TabarBaptiste
-/src/domain/ @TabarBaptiste
-/src/infrastructure/ @TabarBaptiste
-
-# Frontend et interfaces utilisateur
-/src/frontend/ @TabarBaptiste
-/src/components/ @TabarBaptiste
-
-# Tests et qualité
-/tests/ @TabarBaptiste
-/cypress/ @TabarBaptiste
-
-# Documentation
-/docs/ @TabarBaptiste
-README.md @TabarBaptiste
-CONTRIBUTING.md @TabarBaptiste -->
