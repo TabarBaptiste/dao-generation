@@ -37,11 +37,6 @@
             2,
             "never",
             "."
-        ],
-        "header-max-length": [
-            2,
-            "always",
-            72
         ]
     },
     "helpUrl": "https://www.conventionalcommits.org/",
