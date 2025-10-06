@@ -73,7 +73,7 @@ jobs:
               - Vérifie la cohérence du nommage des variables et fonctions (lisibilité, convention .eslintrc.json).
               - Ajoute des commentaires ou **JSDoc sur les fonctions** publiques et les classes clés.
               - Vérifie les imports inutilisés ou redondants.
-              - Confirme que tous les types (TypeScript) sont explicites, (limiter les types `any`).
+              - Confirme que tous les types (TypeScript) sont explicites, (limiter les types \\\`any\\\`).
 
               *Ce rapport automatique aide à repérer les points d'amélioration et à garantir une base de code propre, cohérente et maintenable.*`
             });
