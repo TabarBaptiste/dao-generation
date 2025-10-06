@@ -181,8 +181,7 @@
     "test": "node ./out/test/runTest.js",
     "release": "semantic-release",
     "release:dry": "semantic-release --dry-run",
-    "vsce:package": "vsce package --no-update-package-json",
-    "prepare": "husky install"
+    "vsce:package": "vsce package --no-update-package-json"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
