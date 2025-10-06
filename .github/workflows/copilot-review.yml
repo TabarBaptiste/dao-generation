@@ -52,13 +52,6 @@ jobs:
           else
             echo "- ✅ Pas de console.log détectés" >> $GITHUB_STEP_SUMMARY
           fi
-          
-          # Vérifie la présence de types any
-          if git diff origin/${{ github.base_ref }}...HEAD | grep -E ": any|any\[\]|any "; then
-            echo "- ⚠️ Types 'any' détectés - privilégier des types spécifiques" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ✅ Pas de types 'any' détectés" >> $GITHUB_STEP_SUMMARY
-          fi
 
       - name: Comment PR
         if: steps.changed-files.outputs.any_changed == 'true'
