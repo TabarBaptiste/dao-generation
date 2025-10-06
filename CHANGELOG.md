@@ -1,3 +1,19 @@
+## [1.7.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.3...v1.7.4) (2025-10-06)
+
+
+### Bug Fixes
+
+* Ajout d'un commentaire sur la PR en cas d'échec des vérifications automatiques ([37b8e56](https://github.com/TabarBaptiste/dao-generation/commit/37b8e5698c2dd385c32274f7cafc36ed38e8eae5))
+* Correction de la version de Node.js et suppression de la condition d'exécution des tests ([1350363](https://github.com/TabarBaptiste/dao-generation/commit/1350363fded8cb2151cc90cfc31dff88e9a4f7df))
+* échappement des backticks dans le rapport de vérification de code ([a9b6e32](https://github.com/TabarBaptiste/dao-generation/commit/a9b6e3215142f086c076aacbe925486287c8dd45))
+* Erreur volontaire ([2f3e735](https://github.com/TabarBaptiste/dao-generation/commit/2f3e735d5a7d711ec88d3248cc6ba326fa22db7a))
+* mise à jour des commentaires de la revue automatique et amélioration des suggestions ([faf279c](https://github.com/TabarBaptiste/dao-generation/commit/faf279c9e152734b92a671a6d0dfd88291ec2b9b))
+* Mise à jour des vérifications de PR avec gestion de la concurrence et amélioration de la configuration des tests ([a4c4062](https://github.com/TabarBaptiste/dao-generation/commit/a4c40623514b74b6d2a3cb0216ddb8ad38217997))
+* simple test de workflow ([24e158e](https://github.com/TabarBaptiste/dao-generation/commit/24e158ed1be6eaa0032b1441c8ce2164df10565e))
+* Suppression de la condition d'exécution des tests ([9004598](https://github.com/TabarBaptiste/dao-generation/commit/9004598bc04be8f01fe9cc1d1f8b366df8f81f7d))
+* suppression de la vérification des types 'any' dans le workflow de révision de code ([6c4f107](https://github.com/TabarBaptiste/dao-generation/commit/6c4f107acf9634dcb8cb751098c719b9a3bf5dc2))
+* Suppression de npm run lint ([7c2dc15](https://github.com/TabarBaptiste/dao-generation/commit/7c2dc15e0a54977f0de93013d87f75671aab1373))
+
 ## [1.7.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.2...v1.7.3) (2025-10-03)
 
 
