@@ -8,7 +8,7 @@
 /tsconfig.json @TabarBaptiste
 
 # Toute l'extension
-/src/
+/src/ @TabarBaptiste
 
 <!-- # Backend et API
 /src/backend/ @TabarBaptiste
