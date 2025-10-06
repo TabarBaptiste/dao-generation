@@ -42,7 +42,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '122.x'
+          node-version: '22.x'
           cache: 'npm'
 
       - name: Restore npm cache
@@ -61,7 +61,6 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run tests (if present)
-        if: runTests == 'true' || (contains(fromJson('["package.json"]'), 'package.json') && (success()))
         run: |
           # S'il y a un script test défini dans package.json, il sera exécuté
           if npm run | grep -q ' test'; then
