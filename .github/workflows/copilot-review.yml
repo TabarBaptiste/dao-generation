@@ -67,20 +67,20 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8').slice(0, 5000);
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## 🤖 Review automatique Copilot
-              
+              body: `## 🔍 Revue automatique du code
+
               ${summary}
 
-              ### 💡 Suggestions d'optimisation Copilot
-              - Assure-toi que les noms de variables/fonctions sont explicites
-              - Ajoute des commentaires JSDoc pour guider Copilot
-              - Utilise des types TypeScript précis
-              - Structure le code en fonctions courtes et focused
+              ### 💡 Suggestions d'amélioration
+              - Vérifie la cohérence du nommage des variables et fonctions (lisibilité, convention .eslintrc.json).
+              - Ajoute des commentaires ou **JSDoc sur les fonctions** publiques et les classes clés.
+              - Vérifie les imports inutilisés ou redondants.
+              - Confirme que tous les types (TypeScript) sont explicites, (limiter les types `any`).
 
-              *Cette review automatique aide à maintenir la qualité du code pour optimiser les suggestions de Copilot.*`
+              *Ce rapport automatique aide à repérer les points d'amélioration et à garantir une base de code propre, cohérente et maintenable.*`
             });
