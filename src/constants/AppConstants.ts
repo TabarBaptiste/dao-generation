@@ -11,24 +11,6 @@ export const ENCRYPTION = {
     SALT: 'salt'
 } as const;
 
-/*
-export const ENCRYPTION = {
-    // ⚠️ DEPRECATED - Utilisé uniquement pour la migration des anciennes données
-    LEGACY_ALGORITHM: 'aes-256-cbc',
-    LEGACY_KEY: 'phpDaoGenerator_storage_key_v1',
-    LEGACY_SALT: 'salt',
-    
-    // Configuration sécurisée - Clé stockée dans VS Code Secret Storage
-    ALGORITHM: 'aes-256-gcm',
-    SCRYPT_PARAMS: {
-        N: 32768,  // 2^15 - résistant aux attaques GPU 2025
-        r: 8,
-        p: 1
-    }
-} as const;
-*/
-
-
 export const WEBVIEW_TYPES = {
     CONNECTION_FORM: 'serveurForm',
     TABLE_SELECTION: 'tableSelection'

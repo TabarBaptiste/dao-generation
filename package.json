@@ -199,13 +199,13 @@
     "@vscode/vsce": "^3.6.0",
     "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsdoc": "^60.8.2",
     "glob": "^11.0.3",
     "semantic-release": "^24.2.7",
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^60.8.2",
     "mysql2": "^3.14.4"
   }
 }
