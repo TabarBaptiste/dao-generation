@@ -34,6 +34,9 @@ jobs:
       - name: Package extension
         run: npm run vsce:package
 
+      - name: Publish to VSCode Marketplace
+        run: npx vsce publish -p ${{ secrets.VSCE_TOKEN }}
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

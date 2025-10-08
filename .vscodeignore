@@ -1,9 +1,28 @@
+# ================================
+# 📁 Dossiers à exclure
+# ================================
+
+# Configuration et environnement VS Code
 .vscode/**
 .vscode-test/**
-out/**
+
+# Git et GitHub
+.git/**
+.github/**
+
+# Source TypeScript (seulement le dist est nécessaire)
 src/**
-!src/webview/**
+!src/webview/**   # On garde les webviews statiques (HTML/CSS/JS)
+
+# Dossier de build (sauf dist final)
+out/**
 node_modules/**
+
+# ================================
+# 📦 Node modules - inclusions ciblées
+# ================================
+
+# On réinclut uniquement les dépendances runtime utilisées
 !node_modules/mysql2/**
 !node_modules/denque/**
 !node_modules/generate-function/**
@@ -15,21 +34,55 @@ node_modules/**
 !node_modules/sqlstring/**
 !node_modules/is-property/**
 !node_modules/safer-buffer/**
+
+# ================================
+# 🧹 Nettoyage des node_modules
+# ================================
+node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/example/**
+node_modules/**/examples/**
+node_modules/**/doc/**
+node_modules/**/docs/**
+node_modules/**/changelog/**
+node_modules/**/CHANGELOG.md
+node_modules/**/README.md
+node_modules/**/*.md
+!node_modules/**/LICENSE
+!node_modules/**/license*
+
+# ================================
+# 🛠️ Fichiers de build et config
+# ================================
 .gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-eslint.config.mjs
-*.vsix
-**/eslint.config.mjs
-**/*.map
+.eslintrc*
+eslint.config.*
+tsconfig.json
 **/*.ts
-**/.vscode-test.*
+**/*.map
+.releaserc
+esbuild.js
+package-lock.*
+.commitlintrc.json
+CODEOWNERS
+CHANGELOG.md
+README.md
+vsc-extension-quickstart.md
+
+# ================================
+# 📚 Autres fichiers inutiles
+# ================================
 docs/**
-.venv
+aide/**
+config.md
 assets/img/*
 !assets/img/logo.png
-config.md
-.github
-aide/*
+.venv
+php-dao-generator-*.vsix
+
+# ================================
+# ✅ Fichiers à garder
+# ================================
+!package.json
+!dist/**
+!LICENSE
