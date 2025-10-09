@@ -36,13 +36,13 @@ export class ErrorHandler {
     }
 
     /**
-     * Logs detailed error information to the console for debugging and troubleshooting.
-     * This method provides structured logging with context information to help developers
-     * diagnose issues without exposing technical details to end users.
+     * Enregistre les informations d'erreur détaillées dans la console pour le débogage et le dépannage.
+     * Cette méthode fournit un logging structuré avec des informations de contexte pour aider les développeurs
+     * à diagnostiquer les problèmes sans exposer les détails techniques aux utilisateurs finaux.
      *
      * @static
-     * @param {string} context Descriptive context about where/when the error occurred for debugging purposes
-     * @param {unknown} error The complete error object or information to log for developer analysis
+     * @param {string} context Contexte descriptif sur où/quand l'erreur s'est produite pour le débogage
+     * @param {unknown} error L'objet d'erreur complet ou les informations à enregistrer pour l'analyse par les développeurs
      * @memberof ErrorHandler
      */
     static logError(context: string, error: unknown): void {
@@ -50,13 +50,13 @@ export class ErrorHandler {
     }
 
     /**
-     * Formats error objects into consistent, user-friendly string messages.
-     * This method handles various error types (Error objects, strings, unknown values)
-     * and extracts meaningful messages while providing fallbacks for unexpected formats.
+     * Formate les objets d'erreur en messages de chaîne cohérents et conviviaux.
+     * Cette méthode gère différents types d'erreur (objets Error, chaînes, valeurs inconnues)
+     * et extrait des messages significatifs tout en fournissant des solutions de repli pour les formats inattendus.
      *
      * @static
-     * @param {unknown} error The error to format (can be Error object, string, or any other type)
-     * @return {string} Clean, user-readable error message suitable for display in UI
+     * @param {unknown} error L'erreur à formater (peut être un objet Error, une chaîne ou tout autre type)
+     * @return {string} Message d'erreur propre et lisible par l'utilisateur, adapté à l'affichage dans l'interface utilisateur
      * @memberof ErrorHandler
      */
     static formatErrorMessage(error: unknown): string {
@@ -70,16 +70,16 @@ export class ErrorHandler {
     }
 
     /**
-     * Wraps asynchronous operations with standardized error handling and logging.
-     * This method eliminates repetitive try-catch blocks throughout the codebase
-     * by providing a single point for async error management with optional user notification.
+     * Encapsule les opérations asynchrones avec une gestion et un logging d'erreur standardisés.
+     * Cette méthode élimine les blocs try-catch répétitifs dans tout le code
+     * en fournissant un point unique pour la gestion d'erreur asynchrone avec notification utilisateur optionnelle.
      *
      * @static
-     * @template T The return type of the async function being wrapped
-     * @param {string} operation Human-readable description of the operation for error messages and logging
-     * @param {() => Promise<T>} asyncFn The asynchronous function to execute with error protection
-     * @param {boolean} [showUserError=true] Whether to display error messages to the user (defaults to true)
-     * @return {Promise<T | undefined>} Promise resolving to the function result on success, or undefined on error
+     * @template T Le type de retour de la fonction async encapsulée
+     * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
+     * @param {() => Promise<T>} asyncFn La fonction asynchrone à exécuter avec protection d'erreur
+     * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
+     * @return {Promise<T | undefined>} Promise se résolvant au résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
     static async handleAsync<T>(
@@ -99,16 +99,16 @@ export class ErrorHandler {
     }
 
     /**
-     * Wraps synchronous operations with standardized error handling and optional user feedback.
-     * This method provides the same error management benefits as handleAsync but for
-     * synchronous operations that may throw exceptions.
+     * Encapsule les opérations synchrones avec une gestion d'erreur standardisée et un retour utilisateur optionnel.
+     * Cette méthode fournit les mêmes avantages de gestion d'erreur que handleAsync mais pour
+     * les opérations synchrones qui peuvent lever des exceptions.
      *
      * @static
-     * @template T The return type of the sync function being wrapped
-     * @param {string} operation Human-readable description of the operation for error messages and logging
-     * @param {() => T} syncFn The synchronous function to execute with error protection
-     * @param {boolean} [showUserError=true] Whether to display error messages to the user (defaults to true)
-     * @return {(T | undefined)} Function result on success, or undefined on error
+     * @template T Le type de retour de la fonction sync encapsulée
+     * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
+     * @param {() => T} syncFn La fonction synchrone à exécuter avec protection d'erreur
+     * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
+     * @return {(T | undefined)} Résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
     static handleSync<T>(
