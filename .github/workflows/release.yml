@@ -1,9 +1,10 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 11 * * 1-5" # 09:00 UTC, Monday-Friday
+    - cron: "0 17 * * 1-5" # 17:00 UTC, Monday-Friday
+  workflow_dispatch: {} # Permet de le lancer manuellement si besoin
 
 jobs:
   release:
@@ -12,8 +13,9 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -22,8 +24,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'npm'
+          node-version: "22.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -34,11 +36,31 @@ jobs:
       - name: Package extension
         run: npm run vsce:package
 
+      # 👇 Étape pour vérifier s’il y a eu des commits depuis la dernière exécution
+      - name: Check for new commits since last release
+        id: check_commits
+        run: |
+          LAST_RUN=$(gh run list --workflow=release.yml --limit 1 --json createdAt --jq '.[0].createdAt' || echo "")
+          echo "Last run: $LAST_RUN"
+          if [ -n "$LAST_RUN" ]; then
+            if git log --since="$LAST_RUN" --oneline | grep .; then
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 👇 Étape de publication conditionnelle
       - name: Publish to VSCode Marketplace
+        if: steps.check_commits.outputs.has_changes == 'true'
         run: npx vsce publish -p ${{ secrets.VSCE_TOKEN }}
 
-      - name: Release
+      - name: Release (semantic-release)
+        if: steps.check_commits.outputs.has_changes == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run release
-        # run: npx semantic-release
