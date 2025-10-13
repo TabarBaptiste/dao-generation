@@ -136,13 +136,22 @@ export class DaoGeneratorService {
                     database.replace(/^[a-zA-Z]+_/, '').toUpperCase()
                 ];
 
-                // Chercher le premier dossier qui existe
+                // Chercher le premier dossier qui existe (correspondance exacte)
                 for (const folderName of possibleFolderNames) {
                     const projectPath = path.join(defaultWampPath, folderName);
                     if (fs.existsSync(projectPath)) {
                         defaultUri = vscode.Uri.file(projectPath);
                         vscode.window.showInformationMessage(`Projet détecté automatiquement: ${folderName}`);
                         break;
+                    }
+                }
+
+                // Si aucune correspondance exacte, utiliser la distance de Levenshtein pour trouver le meilleur match
+                if (!defaultUri) {
+                    const bestMatch = this.findBestFolderMatch(database, defaultWampPath);
+                    if (bestMatch) {
+                        defaultUri = vscode.Uri.file(bestMatch.path);
+                        vscode.window.showInformationMessage(`Projet détecté par similarité: ${bestMatch.name}`);
                     }
                 }
 
@@ -191,7 +200,7 @@ export class DaoGeneratorService {
      */
     private processSelectedPath(selectedPath: string): string | undefined {
         // Vérifier si le dossier sélectionné est dans wamp64\www
-        if (selectedPath.toLowerCase().startsWith(DEFAULT_PATHS.WAMP_WWW)) {
+        if (selectedPath.toLowerCase().startsWith(DEFAULT_PATHS.WAMP_WWW) && selectedPath.toLowerCase() !== DEFAULT_PATHS.WAMP_WWW.toLowerCase()) {
             // Créer la structure local/__classes/DAO pour les projets wamp
             const daoPath = path.join(selectedPath, ...DEFAULT_PATHS.LOCAL_CLASSES.split('/'));
 
@@ -732,5 +741,110 @@ ${originalContent.replace(/^<\?php\s*/, '')}`;
                 vscode.window.showInformationMessage(message);
             }
         }
+    }
+
+    /**
+     * Calcule la distance de Levenshtein entre deux chaînes de caractères.
+     * Utilisée pour mesurer la similarité entre le nom de la base de données
+     * et les noms des dossiers disponibles dans le répertoire WAMP.
+     *
+     * @private
+     * @param {string} a Première chaîne à comparer
+     * @param {string} b Deuxième chaîne à comparer  
+     * @return {number} Distance de Levenshtein (nombre minimum d'opérations pour transformer a en b)
+     * @memberof DaoGeneratorService
+     */
+    private levenshteinDistance(a: string, b: string): number {
+        const matrix: number[][] = Array(b.length + 1).fill(null).map(() =>
+            Array(a.length + 1).fill(null)
+        );
+
+        for (let i = 0; i <= a.length; i++) { matrix[0][i] = i; }
+        for (let j = 0; j <= b.length; j++) { matrix[j][0] = j; }
+
+        for (let j = 1; j <= b.length; j++) {
+            for (let i = 1; i <= a.length; i++) {
+                const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+                matrix[j][i] = Math.min(
+                    matrix[j][i - 1] + 1,     // insertion
+                    matrix[j - 1][i] + 1,     // suppression
+                    matrix[j - 1][i - 1] + indicator // substitution
+                );
+            }
+        }
+
+        return matrix[b.length][a.length];
+    }
+
+    /**
+     * Trouve le dossier le plus similaire au nom de la base de données en utilisant la distance de Levenshtein.
+     * Cette méthode scanne tous les sous-dossiers du répertoire WAMP et calcule leur similarité
+     * avec le nom de la base de données et ses variations (sans préfixe, minuscules, etc.).
+     *
+     * @private
+     * @param {string} database Nom de la base de données à rechercher
+     * @param {string} wampPath Chemin vers le répertoire WAMP (D:\wamp64\www)
+     * @return {({name: string, path: string, distance: number} | null)} Meilleur match trouvé avec son nom, chemin complet et distance, ou null si aucun match acceptable
+     * @memberof DaoGeneratorService
+     */
+    private findBestFolderMatch(database: string, wampPath: string): { name: string, path: string, distance: number } | null {
+        const success = ErrorHandler.handleSync(
+            'Trouver un dossier similaire au nom de la BDD',
+            () => {                
+                // Lire tous les dossiers dans le répertoire WAMP
+                const folders = fs.readdirSync(wampPath, { withFileTypes: true })
+                    .filter(dirent => dirent.isDirectory())
+                    .map(dirent => dirent.name);
+
+                if (folders.length === 0) {
+                    return null;
+                }
+
+                // Préparer les variations du nom de la base de données pour la comparaison
+                const searchTerms = [
+                    database.toLowerCase(),
+                    database.replace(/^[a-zA-Z]+_/, '').toLowerCase(), // Sans préfixe
+                    database.replace(/^[a-zA-Z]+_/, ''), // Sans préfixe, casse originale
+                ].filter((term, index, array) => array.indexOf(term) === index); // Supprimer les doublons
+
+                let bestMatch: { name: string, path: string, distance: number } | null = null;
+                let minDistance = Infinity;
+
+                // Tester chaque dossier contre chaque terme de recherche
+                for (const folderName of folders) {
+                    for (const searchTerm of searchTerms) {
+                        // Calculer la distance avec le nom du dossier en minuscules
+                        const distance = this.levenshteinDistance(searchTerm, folderName.toLowerCase());
+
+                        // Seuil adaptatif : plus tolérant pour les noms courts, plus strict pour les longs
+                        const maxAcceptableDistance = Math.max(
+                            2, // Distance minimum de 2
+                            Math.min(
+                                Math.floor(searchTerm.length * 0.5), // 50% de la longueur du terme
+                                6 // Distance maximum de 6
+                            )
+                        );
+
+                        // Bonus pour les correspondances qui commencent par le même préfixe
+                        let adjustedDistance = distance;
+                        if (folderName.toLowerCase().startsWith(searchTerm.toLowerCase().substring(0, Math.min(3, searchTerm.length)))) {
+                            adjustedDistance = Math.max(0, distance - 1); // Réduire la distance de 1
+                        }
+
+                        if (adjustedDistance < minDistance && adjustedDistance <= maxAcceptableDistance) {
+                            minDistance = adjustedDistance;
+                            bestMatch = {
+                                name: folderName,
+                                path: path.join(wampPath, folderName),
+                                distance: adjustedDistance
+                            };
+                        }
+                    }
+                }
+
+                return bestMatch;
+            });
+        // En cas d'erreur lors de la lecture du répertoire, retourner null silencieusement
+        return success || null;
     }
 }
