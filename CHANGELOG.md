@@ -1,3 +1,10 @@
+## [1.7.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.5...v1.7.6) (2025-10-13)
+
+
+### Bug Fixes
+
+* ajout de la correspondance de dossiers par similarité et amélioration de la gestion des chemins ([0745f6a](https://github.com/TabarBaptiste/dao-generation/commit/0745f6a44734ee7af9bee2a8ee72508678ecc6ea))
+
 ## [1.7.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.4...v1.7.5) (2025-10-06)
 
 
