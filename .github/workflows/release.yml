@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publier la version sur le Marketplace (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   release:
@@ -35,13 +41,10 @@ jobs:
         run: npm run vsce:package
 
       - name: Publish to VS Code Marketplace
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
-        run: |
-          # Installer la dernière version de vsce pour éviter les problèmes de certificat
-          npm install -g @vscode/vsce@latest
-          # Publier avec gestion d'erreur
-          npx @vscode/vsce publish --pat $VSCE_PAT
+        run: npx @vscode/vsce publish --pat $VSCE_PAT
 
       - name: Release
         env:
