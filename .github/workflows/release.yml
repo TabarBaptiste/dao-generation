@@ -34,6 +34,15 @@ jobs:
       - name: Package extension
         run: npm run vsce:package
 
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          # Installer la dernière version de vsce pour éviter les problèmes de certificat
+          npm install -g @vscode/vsce@latest
+          # Publier avec gestion d'erreur
+          npx @vscode/vsce publish --pat $VSCE_PAT
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
