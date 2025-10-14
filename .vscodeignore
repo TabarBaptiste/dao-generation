@@ -12,7 +12,8 @@
 
 # Source TypeScript (seulement le dist est nécessaire)
 src/**
-!src/webview/**   # On garde les webviews statiques (HTML/CSS/JS)
+!src/webview/**
+!src/webview/**/*
 
 # Dossier de build (sauf dist final)
 out/**
