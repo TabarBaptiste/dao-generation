@@ -40,7 +40,7 @@ commands:
     description: "Install and setup VS Code Extension CLI"
     steps:
       - run:
-          name: Install VSCE globally
+          name: Install VSCE
           command: npm install @vscode/vsce@latest
 
 # ============================================================================
