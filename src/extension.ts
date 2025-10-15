@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Sentry } from './instrument';
 import { DatabaseServeurProvider } from './providers/DatabaseConnectionProvider';
 import { ServeurManager } from './services/ConnectionManager';
 import { DatabaseService } from './services/DatabaseService';

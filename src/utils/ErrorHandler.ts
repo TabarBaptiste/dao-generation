@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Sentry } from '../instrument';
 
 /**
  * Utilitaire centralisé de gestion des erreurs pour standardiser le traitement des erreurs dans l'extension
@@ -79,18 +80,35 @@ export class ErrorHandler {
      * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
      * @param {() => Promise<T>} asyncFn La fonction asynchrone à exécuter avec protection d'erreur
      * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
+     * @param {boolean} [captureToSentry=false]
+     * @param {(Record<string, unknown> | undefined)} [extra=undefined]
      * @return {Promise<T | undefined>} Promise se résolvant au résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
     static async handleAsync<T>(
         operation: string,
         asyncFn: () => Promise<T>,
-        showUserError: boolean = true
+        showUserError: boolean = true,
+        captureToSentry: boolean = true,
+        extra: Record<string, unknown> | undefined = undefined
     ): Promise<T | undefined> {
         try {
             return await asyncFn();
         } catch (error) {
             this.logError(operation, error);
+            // Optionnel : envoyer l'erreur à Sentry si demandé
+            if (captureToSentry && Sentry && typeof Sentry.captureException === 'function') {
+                try {
+                    Sentry.captureException(error, {
+                        level: 'error',
+                        tags: { operation },
+                        extra: extra || {}
+                    });
+                } catch (sentryError) {
+                    // Ne pas faire échouer la remontée d'erreur si Sentry plante
+                    console.error('[ErrorHandler][Sentry] failed to capture exception', sentryError);
+                }
+            }
             if (showUserError) {
                 this.showError(operation, error);
             }
@@ -108,18 +126,33 @@ export class ErrorHandler {
      * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
      * @param {() => T} syncFn La fonction synchrone à exécuter avec protection d'erreur
      * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
+     * @param {boolean} [captureToSentry=false]
+     * @param {(Record<string, unknown> | undefined)} [extra=undefined]
      * @return {(T | undefined)} Résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
     static handleSync<T>(
         operation: string,
         syncFn: () => T,
-        showUserError: boolean = true
+        showUserError: boolean = true, 
+        captureToSentry: boolean = true,
+        extra: Record<string, unknown> | undefined = undefined
     ): T | undefined {
         try {
             return syncFn();
         } catch (error) {
             this.logError(operation, error);
+            if (captureToSentry && Sentry && typeof Sentry.captureException === 'function') {
+                try {
+                    Sentry.captureException(error, {
+                        level: 'error',
+                        tags: { operation },
+                        extra: extra || {}
+                    });
+                } catch (sentryError) {
+                    console.error('[ErrorHandler][Sentry] failed to capture exception', sentryError);
+                }
+            }
             if (showUserError) {
                 this.showError(operation, error);
             }
