@@ -1,10 +1,3 @@
-# [1.8.0](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.6...v1.8.0) (2025-10-15)
-
-
-### Features
-
-* refonte complète de la configuration CircleCI avec ajout de jobs, commandes et workflows pour le build, test, packaging et publication de l'extension VS Code ([1582c42](https://github.com/TabarBaptiste/dao-generation/commit/1582c420f5523590cb642cc3e0bb9b632ee503c4))
-
 ## [1.7.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.5...v1.7.6) (2025-10-13)
 
 
