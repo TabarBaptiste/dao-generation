@@ -80,8 +80,8 @@ export class ErrorHandler {
      * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
      * @param {() => Promise<T>} asyncFn La fonction asynchrone à exécuter avec protection d'erreur
      * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
-     * @param {boolean} [captureToSentry=false]
-     * @param {(Record<string, unknown> | undefined)} [extra=undefined]
+     * @param {boolean} [captureToSentry=false] Si true, envoie l'erreur à Sentry via `captureException`.
+     * @param {(Record<string, unknown> | undefined)} [extra=undefined] Objet optionnel de métadonnées supplémentaires
      * @return {Promise<T | undefined>} Promise se résolvant au résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
@@ -126,15 +126,15 @@ export class ErrorHandler {
      * @param {string} operation Description lisible de l'opération pour les messages d'erreur et le logging
      * @param {() => T} syncFn La fonction synchrone à exécuter avec protection d'erreur
      * @param {boolean} [showUserError=true] Indique s'il faut afficher les messages d'erreur à l'utilisateur (par défaut true)
-     * @param {boolean} [captureToSentry=false]
-     * @param {(Record<string, unknown> | undefined)} [extra=undefined]
+     * @param {boolean} [captureToSentry=false] Si true, envoie l'erreur à Sentry via `captureException`.
+     * @param {(Record<string, unknown> | undefined)} [extra=undefined] Objet optionnel de métadonnées supplémentaires
      * @return {(T | undefined)} Résultat de la fonction en cas de succès, ou undefined en cas d'erreur
      * @memberof ErrorHandler
      */
     static handleSync<T>(
         operation: string,
         syncFn: () => T,
-        showUserError: boolean = true, 
+        showUserError: boolean = true,
         captureToSentry: boolean = true,
         extra: Record<string, unknown> | undefined = undefined
     ): T | undefined {
