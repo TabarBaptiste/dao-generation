@@ -34,14 +34,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Release (semantic-release)
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Running release (semantic-release) before packaging/publish"
-          npm run release
-
       - name: Build extension
         run: npm run build:esbuild
 
@@ -52,13 +44,10 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
-        run: |
-          echo "Publishing to Marketplace"
-          npx @vscode/vsce publish --pat $VSCE_PAT
+        run: npx @vscode/vsce publish --pat $VSCE_PAT
 
-      - name: Release step (commented fallback)
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.publish != 'true' }}
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Release step skipped (not a manual publish dispatch with publish=true)"
+        run: npm run release
+        # run: npx semantic-release
