@@ -95,25 +95,7 @@ jobs:
             - node_modules
 
   # Tests de l'extension
-  test:
-    executor: node-executor
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ~/project
-      - run:
-          name: Run tests
-          command: |
-            if npm run | grep -q ' test'; then
-              # VS Code tests need a display - use xvfb for headless testing
-              export DISPLAY=:99
-              Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-              npm test
-            else
-              echo "No test script found - skipping tests"
-            fi
-          environment:
-            CI: true
+  # (Tests retirés) Aucune suite de tests définie dans ce projet
 
   # Package de l'extension
   package:
@@ -159,7 +141,7 @@ jobs:
               echo "❌ VSCE_TOKEN not set - skipping publish"
               exit 1
             fi
-            
+
             echo "🚀 Publishing to VS Code Marketplace..."
             npx @vscode/vsce publish --pat $VSCE_TOKEN
             echo "✅ Extension published successfully!"
@@ -194,31 +176,23 @@ workflows:
       - code-quality:
           filters:
             branches:
-              ignore: 
+              ignore:
                 - gh-pages
-      
+
       - build:
           requires:
             - code-quality
           filters:
             branches:
-              ignore: 
+              ignore:
                 - gh-pages
-      
-      - test:
+
+      - package:
           requires:
             - build
           filters:
             branches:
-              ignore: 
-                - gh-pages
-      
-      - package:
-          requires:
-            - test
-          filters:
-            branches:
-              ignore: 
+              ignore:
                 - gh-pages
 
   # Workflow de publication (main branch uniquement)
@@ -228,28 +202,21 @@ workflows:
           filters:
             branches:
               only: main
-      
+
       - build:
           requires:
             - code-quality
           filters:
             branches:
               only: main
-      
-      - test:
+
+      - package:
           requires:
             - build
           filters:
             branches:
               only: main
-      
-      - package:
-          requires:
-            - test
-          filters:
-            branches:
-              only: main
-      
+
       # Publication manuelle - nécessite approbation
       - hold-for-approval:
           type: approval
@@ -258,14 +225,14 @@ workflows:
           filters:
             branches:
               only: main
-      
+
       - publish:
           requires:
             - hold-for-approval
           filters:
             branches:
               only: main
-      
+
       - release:
           requires:
             - publish
@@ -277,7 +244,7 @@ workflows:
   nightly-build:
     triggers:
       - schedule:
-          cron: "0 2 * * *"  # 2h du matin tous les jours
+          cron: "0 2 * * *" # 2h du matin tous les jours
           filters:
             branches:
               only: main
@@ -286,9 +253,6 @@ workflows:
       - build:
           requires:
             - code-quality
-      - test:
-          requires:
-            - build
       - package:
           requires:
-            - test
+            - build
