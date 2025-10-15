@@ -6,11 +6,12 @@ import * as Sentry from "@sentry/node";
 function getReleaseFromPackage(): string {
     try {
         // essayer de lire le package.json depuis la racine du projet
-        const pkgPath = path.resolve(__dirname, '..', '..', 'package.json');
+        const pkgPath = path.resolve(__dirname, '..', 'package.json');
         const raw = fs.readFileSync(pkgPath, 'utf8');
         const pkg = JSON.parse(raw);
         if (pkg && pkg.name && pkg.version) {
-            return `${pkg.name}@${pkg.version}`;
+            return `${pkg.version}`;
+            // return `${pkg.name}@${pkg.version}`;
         }
     } catch (err) {
         // fallback silencieux
