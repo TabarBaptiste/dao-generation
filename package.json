@@ -181,7 +181,10 @@
     "test": "node ./out/test/runTest.js",
     "release": "semantic-release",
     "release:dry": "semantic-release --dry-run",
-    "vsce:package": "vsce package --no-update-package-json"
+    "vsce:package": "vsce package --no-update-package-json",
+    "ci:status": "node scripts/ci.js status",
+    "ci:validate": "node scripts/ci.js validate",
+    "ci:build": "node scripts/ci.js build"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
