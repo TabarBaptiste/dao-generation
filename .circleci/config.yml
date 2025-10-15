@@ -41,7 +41,7 @@ commands:
     steps:
       - run:
           name: Install VSCE globally
-          command: npm install -g @vscode/vsce@latest
+          command: npm install @vscode/vsce@latest
 
 # ============================================================================
 # Jobs - Tâches individuelles
