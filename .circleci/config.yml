@@ -154,12 +154,17 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run:
-          name: Semantic Release
+          name: Semantic Release (conditional)
           command: |
-            if npm run | grep -q ' release'; then
-              npm run release
+            if [ -z "$VSCE_TOKEN" ]; then
+              echo "VSCE_TOKEN not set - skipping semantic-release (publication not requested)"
             else
-              echo "No release script found - skipping"
+              if npm run | grep -q ' release'; then
+                echo "Running semantic-release..."
+                npm run release
+              else
+                echo "No release script found - skipping"
+              fi
             fi
           environment:
             GITHUB_TOKEN: $GITHUB_TOKEN
@@ -226,16 +231,16 @@ workflows:
             branches:
               only: main
 
-      - publish:
+      - release:
           requires:
             - hold-for-approval
           filters:
             branches:
               only: main
 
-      - release:
+      - publish:
           requires:
-            - publish
+            - release
           filters:
             branches:
               only: main
