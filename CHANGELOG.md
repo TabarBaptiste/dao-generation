@@ -1,3 +1,12 @@
+## [1.8.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.0...v1.8.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* ajustement du chemin d'accès au package.json pour Sentry ([ad134c5](https://github.com/TabarBaptiste/dao-generation/commit/ad134c594d413f6fa5073493c6d7171d7719d55e))
+* comment avant ([17be8a7](https://github.com/TabarBaptiste/dao-generation/commit/17be8a7430f2512aa79ec5a037698c88bdcb352c))
+* mise à jour de la logique de publication dans les workflows ([8d1d941](https://github.com/TabarBaptiste/dao-generation/commit/8d1d94108c553093bb764937a6d9d0f77ea85812))
+
 ## [1.7.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.7.5...v1.7.6) (2025-10-13)
 
 

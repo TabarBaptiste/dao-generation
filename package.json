@@ -3,7 +3,7 @@
   "displayName": "PHP DAO Generator",
   "publisher": "Baptiste-TABAR-LABONNE",
   "description": "Generate PHP DAO classes from SQL database tables",
-  "version": "1.7.8",
+  "version": "1.8.1",
   "license": "MIT",
   "engines": {
     "vscode": "^1.105.0"
