@@ -71,10 +71,12 @@ export class EncryptionUtil {
      */
     static safeEncrypt(data: string, masterKey: string): { encrypted: string; iv: string } | null {
         const success = ErrorHandler.handleSync(
-            'Encryption failed',
+            'chiffrement',
             () => {
                 return this.encrypt(data, masterKey);
-            });
+            },
+            false
+        );
         return success || null;
     }
 
@@ -92,10 +94,12 @@ export class EncryptionUtil {
      */
     static safeDecrypt(encryptedData: string, iv: string, masterKey: string): string | null {
         const success = ErrorHandler.handleSync(
-            'Decryption failed',
+            'décryptage',
             () => {
                 return this.decrypt(encryptedData, iv, masterKey);
-            });
+            },
+            false
+        );
         return success || null;
     }
 }
