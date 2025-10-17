@@ -249,8 +249,8 @@ export class ServeurManager {
                         );
 
                         if (decryptedPassword === null) {
-                            ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
                             // Retourner le serveur sans mot de passe en cas d'échec
+                            // Note: L'erreur est déjà loguée par safeDecrypt via ErrorHandler.handleSync
                             const { encryptedPassword, passwordIv, ...cleanServ } = serv;
                             return { ...cleanServ, password: '' };
                         }
@@ -573,14 +573,14 @@ export class ServeurManager {
     private processImportedServeur(serv: ServeurForImport, decryptionPassword?: string): Omit<DatabaseServeur, 'id' | 'isConnected' | 'lastConnected'> {
         // Validation de base
         if (!this.validateImportedServeur(serv)) {
-            throw new Error(`Format du serveur invalide : ${serv.name || 'sans nom'}`);
+            throw new Error(`Serveur invalide : ${serv.name || 'sans nom'}`);
         }
 
         // Gestion du déchiffrement
         if (serv.passwordIv && serv.password && decryptionPassword) {
             const decryptedPassword = EncryptionUtil.safeDecrypt(serv.password, serv.passwordIv, decryptionPassword);
             if (decryptedPassword === null) {
-                throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
+                throw new Error(`Mot de passe incorrect pour : ${serv.name}`);
             }
 
             const { passwordIv, ...cleanServ } = serv;
@@ -679,10 +679,7 @@ export class ServeurManager {
                 }
 
                 if (validServeurs.length === 0) {
-                    const errorMessage = errors.length > 0
-                        ? `Aucun serveur valide trouvé. Erreurs :\n${errors.join('\n')}`
-                        : 'Aucun serveur valide trouvé dans le fichier d\'importation';
-                    throw new Error(errorMessage);
+                    throw new Error(`Aucun serveur valide trouvé (${errors.length} erreur${errors.length > 1 ? 's' : ''})`);
                 }
 
                 // Importer uniquement les nouveaux serveurs
@@ -707,21 +704,20 @@ export class ServeurManager {
                 // Message de succès
                 let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
                 if (skippedCount > 0) { message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`; }
-                if (errors.length > 0) { message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`; }
                 if (hasEncryptedPasswords && decryptionPassword) { message += ` | Mots de passe déchiffrés`; }
                 else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
 
-                vscode.window.showInformationMessage(message);
-
-                // Afficher les erreurs si nécessaire
-                if (errors.length > 0 && errors.length < 10) {
-                    const showErrors = await vscode.window.showWarningMessage(
-                        `Certains serveurs n'ont pas pu être importés. Afficher les détails ?`,
+                if (errors.length > 0) {
+                    // Afficher le message de succès avec option de voir les erreurs
+                    const action = await vscode.window.showInformationMessage(
+                        `${message} (${errors.length} serveur${errors.length > 1 ? 's' : ''} ignoré${errors.length > 1 ? 's' : ''})`,
                         'Afficher les détails'
                     );
-                    if (showErrors) {
-                        vscode.window.showErrorMessage(`Erreurs d'importation :\n${errors.join('\n')}`);
+                    if (action === 'Afficher les détails') {
+                        vscode.window.showErrorMessage(`Serveurs non importés :\n${errors.join('\n')}`);
                     }
+                } else {
+                    vscode.window.showInformationMessage(message);
                 }
             }
         );
