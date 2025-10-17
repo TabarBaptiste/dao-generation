@@ -1,3 +1,10 @@
+## [1.8.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.2...v1.8.3) (2025-10-17)
+
+
+### Bug Fixes
+
+* suppression de la logique de filtrage des erreurs externes pour capturer que les erreurs internes ([b5ab210](https://github.com/TabarBaptiste/dao-generation/commit/b5ab2108709e766d32abce65036c90ec3f105825))
+
 ## [1.8.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.1...v1.8.2) (2025-10-17)
 
 
