@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.1...v1.8.2) (2025-10-17)
+
+
+### Bug Fixes
+
+* mise à jour de la version de la dépendance typescript, meilleur gestion des erreurs dans Sentry ([c407c6e](https://github.com/TabarBaptiste/dao-generation/commit/c407c6ebabcb8d1a6e5510f3b74dad5bb09ce795))
+
 ## [1.8.1](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.0...v1.8.1) (2025-10-15)
 
 
