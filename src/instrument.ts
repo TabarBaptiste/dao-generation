@@ -25,39 +25,27 @@ Sentry.init({
     environment: process.env.NODE_ENV || "development",
     release: getReleaseFromPackage(),
     sendDefaultPii: false,
-    tracesSampleRate: 1.0,
-
-    // 🎯 Filtrer les erreurs qui ne viennent pas de ton code
-    beforeSend(event, hint) {
-        const frames = event.exception?.values?.[0]?.stacktrace?.frames || [];
-        const isExternal = frames.some((frame) =>
-            [
-                "vscode",
-                "copilot",
-                "node_modules",
-                "extensions",
-                "typescript",
-            ].some((kw) => frame.filename?.includes(kw))
-        );
-
-        // Ignore les erreurs externes ou "Canceled"
-        if (isExternal || event.exception?.values?.[0]?.type?.includes("Canceled")) {
-            return null;
-        }
-
-        return event;
-    },
+    tracesSampleRate: 0,
+    integrations: (defaultIntegrations) =>
+        defaultIntegrations.filter(
+            (i) =>
+                ![
+                    "OnUncaughtException",
+                    "OnUnhandledRejection",
+                    "LinkedErrors",
+                ].includes(i.name)
+        ),
 });
 
-// 🧠 Associer le nom d'utilisateur à l'événement
+// 👤 Associer le nom d’utilisateur courant
 try {
     const username = os.userInfo().username;
     if (username) {
         Sentry.setUser({ username });
     }
 } catch {
-    // Si os.userInfo() échoue (rare), on ignore
+    // Silencieux si os.userInfo échoue
 }
 
-// ✅ Export de Sentry pour le reste de ton projet
+// ✅ Export de Sentry pour ton ErrorHandler
 export { Sentry };
