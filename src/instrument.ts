@@ -26,15 +26,15 @@ Sentry.init({
     release: getReleaseFromPackage(),
     sendDefaultPii: false,
     tracesSampleRate: 0,
-    integrations: (defaultIntegrations) =>
-        defaultIntegrations.filter(
-            (i) =>
-                ![
-                    "OnUncaughtException",
-                    "OnUnhandledRejection",
-                    "LinkedErrors",
-                ].includes(i.name)
-        ),
+    integrations: [],
+    beforeSend(event) {
+        // Filtrer pour ne garder que les erreurs avec le tag 'operation' (venant de nos ErrorHandler)
+        if (event.tags && event.tags.operation) {
+            return event;
+        }
+        // Rejeter toutes les autres erreurs automatiques
+        return null;
+    },
 });
 
 // 👤 Associer le nom d’utilisateur courant
