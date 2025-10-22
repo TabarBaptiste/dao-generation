@@ -1,3 +1,10 @@
+## [1.8.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.3...v1.8.4) (2025-10-22)
+
+
+### Bug Fixes
+
+* Ajustement des intégrations Sentry ([a60c2f6](https://github.com/TabarBaptiste/dao-generation/commit/a60c2f639d6eca740e540fb3249189d41f27db4b))
+
 ## [1.8.3](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.2...v1.8.3) (2025-10-17)
 
 
