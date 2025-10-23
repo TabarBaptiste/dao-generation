@@ -19,7 +19,7 @@ function getReleaseFromPackage(): string {
     return "php-dao-generator@unknown";
 }
 
-// 🧩 Initialisation de Sentry
+// 🧩 Initialisation de Sentry avec capture manuelle uniquement
 Sentry.init({
     dsn: "https://fec769f488edb06ab03507cfa62396ed@o4510193562091520.ingest.de.sentry.io/4510193596170320",
     environment: process.env.NODE_ENV || "development",
@@ -28,11 +28,14 @@ Sentry.init({
     tracesSampleRate: 0,
     integrations: [],
     beforeSend(event) {
-        // Filtrer pour ne garder que les erreurs avec le tag 'operation' (venant de nos ErrorHandler)
-        if (event.tags && event.tags.operation) {
+        // SEULES les erreurs avec le tag 'dao-generator-error' passent
+        // Ce tag sera ajouté uniquement par nos fonctions ErrorHandler
+        if (event.tags && event.tags['dao-generator-error'] === true && event.tags.operation) {
             return event;
         }
-        // Rejeter toutes les autres erreurs automatiques
+        
+        // Rejeter TOUTES les autres erreurs (VS Code, Electron, extensions, etc.)
+        console.debug('[Sentry] Erreur automatique rejetée:', event.exception?.values?.[0]?.value || 'unknown');
         return null;
     },
 });

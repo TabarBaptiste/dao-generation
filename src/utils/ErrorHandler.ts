@@ -101,7 +101,10 @@ export class ErrorHandler {
                 try {
                     Sentry.captureException(error, {
                         level: 'error',
-                        tags: { operation },
+                        tags: { 
+                            operation,
+                            'dao-generator-error': true  // Tag spécifique pour filtrer nos erreurs
+                        },
                         extra: extra || {}
                     });
                 } catch (sentryError) {
@@ -146,7 +149,10 @@ export class ErrorHandler {
                 try {
                     Sentry.captureException(error, {
                         level: 'error',
-                        tags: { operation },
+                        tags: { 
+                            operation,
+                            'dao-generator-error': true  // Tag spécifique pour filtrer nos erreurs
+                        },
                         extra: extra || {}
                     });
                 } catch (sentryError) {
