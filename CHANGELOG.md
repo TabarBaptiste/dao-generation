@@ -1,3 +1,10 @@
+## [1.8.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.4...v1.8.5) (2025-10-23)
+
+
+### Bug Fixes
+
+* amélioration de l'initialisation de Sentry et ajout de tags pour le filtrage des erreurs ([e21477f](https://github.com/TabarBaptiste/dao-generation/commit/e21477f88903611e8e714f379f6cf758ddf477a6))
+
 ## [1.8.4](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.3...v1.8.4) (2025-10-22)
 
 
