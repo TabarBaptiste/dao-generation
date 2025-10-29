@@ -1,3 +1,11 @@
+## [1.8.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.5...v1.8.6) (2025-10-29)
+
+
+### Bug Fixes
+
+* Amélioration de la gestion des erreurs lors de l'import des serveurs avec détection des mots de passe incorrects ([2cb0dae](https://github.com/TabarBaptiste/dao-generation/commit/2cb0dae7ec39a24febee52e2f4e4cc06bd878b5f))
+* Mise à jour de la validation des serveurs importés pour inclure PostgreSQL ([8257adc](https://github.com/TabarBaptiste/dao-generation/commit/8257adc40e09b61284e79af6f1fcf976318bffc2))
+
 ## [1.8.5](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.4...v1.8.5) (2025-10-23)
 
 
