@@ -547,7 +547,7 @@ export class ServeurManager {
     /**
      * Valide la structure et les champs obligatoires d'un serveur importé depuis un fichier externe.
      * Cette validation vérifie la présence des champs essentiels et la compatibilité
-     * du type de serveur avec les systèmes supportés (MySQL/MariaDB).
+     * du type de serveur avec les systèmes supportés (MySQL/MariaDB/PostgreSQL).
      *
      * @private
      * @param {ServeurForImport} serv Objet serveur à valider depuis fichier JSON externe
@@ -556,7 +556,7 @@ export class ServeurManager {
      */
     private validateImportedServeur(serv: ServeurForImport): boolean {
         return !!(serv.name && serv.host && serv.port && serv.username &&
-            serv.type && ['mysql', 'mariadb'].includes(serv.type));
+            serv.type && ['mysql', 'mariadb', 'postgresql'].includes(serv.type));
     }
 
     /**
