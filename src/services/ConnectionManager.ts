@@ -249,8 +249,8 @@ export class ServeurManager {
                         );
 
                         if (decryptedPassword === null) {
-                            ErrorHandler.logError('déchiffrement serveur', `Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
                             // Retourner le serveur sans mot de passe en cas d'échec
+                            // Note: L'erreur est déjà loguée par safeDecrypt via ErrorHandler.handleSync
                             const { encryptedPassword, passwordIv, ...cleanServ } = serv;
                             return { ...cleanServ, password: '' };
                         }
@@ -547,7 +547,7 @@ export class ServeurManager {
     /**
      * Valide la structure et les champs obligatoires d'un serveur importé depuis un fichier externe.
      * Cette validation vérifie la présence des champs essentiels et la compatibilité
-     * du type de serveur avec les systèmes supportés (MySQL/MariaDB).
+     * du type de serveur avec les systèmes supportés (MySQL/MariaDB/PostgreSQL).
      *
      * @private
      * @param {ServeurForImport} serv Objet serveur à valider depuis fichier JSON externe
@@ -556,7 +556,7 @@ export class ServeurManager {
      */
     private validateImportedServeur(serv: ServeurForImport): boolean {
         return !!(serv.name && serv.host && serv.port && serv.username &&
-            serv.type && ['mysql', 'mariadb'].includes(serv.type));
+            serv.type && ['mysql', 'mariadb', 'postgresql'].includes(serv.type));
     }
 
     /**
@@ -573,14 +573,14 @@ export class ServeurManager {
     private processImportedServeur(serv: ServeurForImport, decryptionPassword?: string): Omit<DatabaseServeur, 'id' | 'isConnected' | 'lastConnected'> {
         // Validation de base
         if (!this.validateImportedServeur(serv)) {
-            throw new Error(`Format du serveur invalide : ${serv.name || 'sans nom'}`);
+            throw new Error(`Serveur invalide : ${serv.name || 'sans nom'}`);
         }
 
         // Gestion du déchiffrement
         if (serv.passwordIv && serv.password && decryptionPassword) {
             const decryptedPassword = EncryptionUtil.safeDecrypt(serv.password, serv.passwordIv, decryptionPassword);
             if (decryptedPassword === null) {
-                throw new Error(`Échec du déchiffrement du mot de passe pour le serveur : ${serv.name}`);
+                throw new Error(`Mot de passe incorrect pour : ${serv.name}`);
             }
 
             const { passwordIv, ...cleanServ } = serv;
@@ -663,6 +663,7 @@ export class ServeurManager {
                 // Traiter les serveurs
                 const validServeurs: DatabaseServeur[] = [];
                 const errors: string[] = [];
+                let decryptionErrorCount = 0;
 
                 for (const serv of importData.serveurs) {
                     try {
@@ -674,15 +675,21 @@ export class ServeurManager {
                             lastConnected: undefined
                         });
                     } catch (error) {
-                        errors.push(error instanceof Error ? error.message : 'Erreur inconnue');
+                        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+                        errors.push(errorMessage);
+                        // Détecter les erreurs de mot de passe incorrect
+                        if (errorMessage.includes('Mot de passe incorrect')) {
+                            decryptionErrorCount++;
+                        }
                     }
                 }
 
                 if (validServeurs.length === 0) {
-                    const errorMessage = errors.length > 0
-                        ? `Aucun serveur valide trouvé. Erreurs :\n${errors.join('\n')}`
-                        : 'Aucun serveur valide trouvé dans le fichier d\'importation';
-                    throw new Error(errorMessage);
+                    // Si tous les serveurs ont échoué à cause d'un mot de passe incorrect
+                    if (decryptionErrorCount > 0 && decryptionErrorCount === importData.serveurs.length) {
+                        throw new Error('Mot de passe maître incorrect');
+                    }
+                    throw new Error(`Aucun serveur valide trouvé (${errors.length} erreur${errors.length > 1 ? 's' : ''})`);
                 }
 
                 // Importer uniquement les nouveaux serveurs
@@ -707,21 +714,20 @@ export class ServeurManager {
                 // Message de succès
                 let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
                 if (skippedCount > 0) { message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`; }
-                if (errors.length > 0) { message += ` (${errors.length} erreur${errors.length > 1 ? 's' : ''})`; }
-                if (hasEncryptedPasswords && decryptionPassword) { message += ` | Mots de passe déchiffrés`; }
-                else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
+                // if (hasEncryptedPasswords && decryptionPassword) { message += ` Mots de passe déchiffrés`; }
+                // else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
 
-                vscode.window.showInformationMessage(message);
-
-                // Afficher les erreurs si nécessaire
-                if (errors.length > 0 && errors.length < 10) {
-                    const showErrors = await vscode.window.showWarningMessage(
-                        `Certains serveurs n'ont pas pu être importés. Afficher les détails ?`,
+                if (errors.length > 0) {
+                    // Afficher le message de succès avec option de voir les erreurs
+                    const action = await vscode.window.showInformationMessage(
+                        `${message} \n\n( erreur${errors.length > 1 ? 's' : ''} sur ${errors.length} serveur${errors.length > 1 ? 's' : ''} ignoré)`,
                         'Afficher les détails'
                     );
-                    if (showErrors) {
-                        vscode.window.showErrorMessage(`Erreurs d'importation :\n${errors.join('\n')}`);
+                    if (action === 'Afficher les détails') {
+                        vscode.window.showErrorMessage(`Serveurs non importés :\n${errors.join('\n')}`);
                     }
+                } else {
+                    vscode.window.showInformationMessage(message);
                 }
             }
         );
