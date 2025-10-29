@@ -37,6 +37,7 @@
                 <select id="type" name="type" required>
                     <option value="mysql">MySQL</option>
                     <option value="mariadb">MariaDB</option>
+                    <option value="postgresql">PostgreSQL</option>
                 </select>
             </div>
 
@@ -88,15 +89,13 @@
                     Database
                 </label>
                 <div class="database-input-group">
-                    <select id="database" name="database">
-                        <option value="">Sélectionner une base de données...</option>
-                    </select>
+                    <input type="text" id="database" name="database" list="databaseList" placeholder="Saisir ou sélectionner une base de données...">
+                    <datalist id="databaseList"></datalist>
                     <button type="button" id="loadDbBtn" class="btn-load-db" title="Charger les bases de données">
                         <i class="codicon codicon-refresh"></i>
                     </button>
                 </div>
-                <div class="help-text">Cliquez sur le bouton de rafraîchissement pour charger les bases de données
-                    disponibles</div>
+                <div class="help-text">Saisissez le nom de la base ou cliquez sur le bouton de rafraîchissement pour charger les bases disponibles (obligatoire pour PostgreSQL)</div>
             </div>
 
             <div class="form-group" id="defaultDaoPathGroup">
@@ -112,6 +111,76 @@
                     </button>
                 </div>
                 <div class="help-text">Si défini, les DAO seront générés automatiquement dans ce répertoire</div>
+            </div>
+
+            <!-- Section SSL/TLS -->
+            <div class="ssl-section">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="ssl" name="ssl">
+                        <label for="ssl">
+                            <i class="codicon codicon-lock"></i>
+                            Activer SSL/TLS
+                        </label>
+                    </div>
+                    <div class="help-text">Utiliser une connexion sécurisée SSL/TLS</div>
+                </div>
+
+                <div id="sslOptionsGroup" class="ssl-options" style="display: none;">
+                    <div class="form-group">
+                        <label for="sslCa">
+                            <i class="codicon codicon-file-code"></i>
+                            Certificat CA (optionnel)
+                        </label>
+                        <div class="path-input-group">
+                            <input type="text" id="sslCa" name="sslCa" placeholder="Chemin du certificat CA...">
+                            <button type="button" id="selectCaBtn" class="btn-select-path"
+                                title="Sélectionner le certificat CA">
+                                <i class="codicon codicon-file"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sslCert">
+                            <i class="codicon codicon-file-code"></i>
+                            Certificat client (optionnel)
+                        </label>
+                        <div class="path-input-group">
+                            <input type="text" id="sslCert" name="sslCert"
+                                placeholder="Chemin du certificat client...">
+                            <button type="button" id="selectCertBtn" class="btn-select-path"
+                                title="Sélectionner le certificat client">
+                                <i class="codicon codicon-file"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sslKey">
+                            <i class="codicon codicon-key"></i>
+                            Clé privée (optionnel)
+                        </label>
+                        <div class="path-input-group">
+                            <input type="text" id="sslKey" name="sslKey" placeholder="Chemin de la clé privée...">
+                            <button type="button" id="selectKeyBtn" class="btn-select-path"
+                                title="Sélectionner la clé privée">
+                                <i class="codicon codicon-file"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="rejectUnauthorized" name="rejectUnauthorized" checked>
+                            <label for="rejectUnauthorized">
+                                Vérifier le certificat du serveur
+                            </label>
+                        </div>
+                        <div class="help-text">Décochez cette option pour accepter les certificats auto-signés (non
+                            recommandé en production)</div>
+                    </div>
+                </div>
             </div>
 
             <div class="test-serveurs">

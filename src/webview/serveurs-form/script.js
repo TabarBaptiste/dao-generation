@@ -40,7 +40,17 @@ function initializeElements() {
         togglePasswordBtn: document.getElementById('togglePasswordBtn'),
         cancelBtn: document.getElementById('cancelBtn'),
         submitBtn: document.getElementById('submitBtn'),
-        statusMessage: document.getElementById('statusMessage')
+        statusMessage: document.getElementById('statusMessage'),
+        // Éléments SSL
+        ssl: document.getElementById('ssl'),
+        sslOptionsGroup: document.getElementById('sslOptionsGroup'),
+        sslCa: document.getElementById('sslCa'),
+        sslCert: document.getElementById('sslCert'),
+        sslKey: document.getElementById('sslKey'),
+        rejectUnauthorized: document.getElementById('rejectUnauthorized'),
+        selectCaBtn: document.getElementById('selectCaBtn'),
+        selectCertBtn: document.getElementById('selectCertBtn'),
+        selectKeyBtn: document.getElementById('selectKeyBtn')
     };
 }
 
@@ -77,7 +87,17 @@ function setupEventListeners() {
     ['host', 'port', 'username', 'password'].forEach(field => {
         formElements[field].addEventListener('input', scheduleAutoLoadDatabases);
     });
-    formElements.type.addEventListener('change', scheduleAutoLoadDatabases);
+    formElements.type.addEventListener('change', function() {
+        updateDefaultPort();
+        updateDatabaseRequirement();
+        scheduleAutoLoadDatabases();
+    });
+
+    // Gestion SSL
+    formElements.ssl.addEventListener('change', toggleSslOptions);
+    formElements.selectCaBtn.addEventListener('click', () => selectSslFile('ca'));
+    formElements.selectCertBtn.addEventListener('click', () => selectSslFile('cert'));
+    formElements.selectKeyBtn.addEventListener('click', () => selectSslFile('key'));
 
     // Écouter les messages de l'extension
     window.addEventListener('message', event => {
@@ -95,6 +115,9 @@ function setupEventListeners() {
                 break;
             case 'pathSelected':
                 handlePathSelected(message.path);
+                break;
+            case 'sslFileSelected':
+                handleSslFileSelected(message.fileType, message.path);
                 break;
         }
     });
@@ -133,15 +156,26 @@ function loadFormData(data, editMode = false, titles = null, buttonLabels = null
 
         // Gérer la sélection de base de données
         if (data.database) {
-            const option = document.createElement('option');
-            option.value = data.database;
-            option.textContent = data.database;
-            option.selected = true;
-            formElements.database.appendChild(option);
+            formElements.database.value = data.database;
+        }
+
+        // Charger les données SSL
+        if (data.ssl !== undefined) {
+            formElements.ssl.checked = data.ssl;
+            toggleSslOptions();
+        }
+        if (data.sslCa) formElements.sslCa.value = data.sslCa;
+        if (data.sslCert) formElements.sslCert.value = data.sslCert;
+        if (data.sslKey) formElements.sslKey.value = data.sslKey;
+        if (data.rejectUnauthorized !== undefined) {
+            formElements.rejectUnauthorized.checked = data.rejectUnauthorized;
         }
 
         // Mettre à jour la visibilité du champ de répertoire par défaut
         toggleDaoPathVisibility();
+        
+        // Mettre à jour le caractère obligatoire du champ Database
+        updateDatabaseRequirement();
     }
 }
 
@@ -216,22 +250,23 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
     setIconButtonLoading(formElements.loadDbBtn, false, 'codicon-refresh');
     formElements.loadDbBtn.classList.remove('spinning');
 
+    const databaseList = document.getElementById('databaseList');
+
     if (!success) {
-        formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
+        databaseList.innerHTML = '';
         availableDatabases = [];
         showStatus(message, false);
         return;
     }
 
-    // Effacer les options existantes sauf la première
-    formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
+    // Effacer les options existantes
+    databaseList.innerHTML = '';
 
-    // Ajouter les options de base de données
+    // Ajouter les options de base de données au datalist
     databases.forEach(db => {
         const option = document.createElement('option');
         option.value = db;
-        option.textContent = db;
-        formElements.database.appendChild(option);
+        databaseList.appendChild(option);
     });
 
     availableDatabases = databases;
@@ -247,7 +282,7 @@ function handleDatabasesLoaded(databases, success, message, isAutoLoad = false) 
 }
 
 function getFormData() {
-    return {
+    const data = {
         name: formElements.name.value.trim(),
         type: formElements.type.value,
         host: formElements.host.value.trim(),
@@ -257,6 +292,17 @@ function getFormData() {
         database: formElements.database.value,
         defaultDaoPath: formElements.defaultDaoPath.value.trim()
     };
+
+    // Ajouter les données SSL si activé
+    if (formElements.ssl.checked) {
+        data.ssl = true;
+        data.sslCa = formElements.sslCa.value.trim() || undefined;
+        data.sslCert = formElements.sslCert.value.trim() || undefined;
+        data.sslKey = formElements.sslKey.value.trim() || undefined;
+        data.rejectUnauthorized = formElements.rejectUnauthorized.checked;
+    }
+
+    return data;
 }
 
 function validateRequiredFields(data) {
@@ -414,6 +460,76 @@ function validateForm() {
 // Ajouter une validation en temps réel
 document.addEventListener('input', validateForm);
 
+// Fonctions SSL
+function toggleSslOptions() {
+    const sslEnabled = formElements.ssl.checked;
+    formElements.sslOptionsGroup.style.display = sslEnabled ? 'block' : 'none';
+}
+
+function selectSslFile(fileType) {
+    vscode.postMessage({
+        command: 'selectSslFile',
+        fileType: fileType
+    });
+}
+
+function handleSslFileSelected(fileType, path) {
+    if (!path) return;
+
+    switch (fileType) {
+        case 'ca':
+            formElements.sslCa.value = path;
+            break;
+        case 'cert':
+            formElements.sslCert.value = path;
+            break;
+        case 'key':
+            formElements.sslKey.value = path;
+            break;
+    }
+}
+
+function updateDefaultPort() {
+    const type = formElements.type.value;
+    const currentPort = formElements.port.value;
+    
+    // Ne changer le port que s'il est vide ou s'il correspond à un port par défaut
+    const defaultPorts = { 'mysql': '3306', 'mariadb': '3306', 'postgresql': '5432' };
+    const isDefaultPort = Object.values(defaultPorts).includes(currentPort);
+    
+    if (!currentPort || isDefaultPort) {
+        formElements.port.value = defaultPorts[type] || '3306';
+    }
+}
+
+/**
+ * Met à jour le caractère obligatoire du champ Database selon le type de serveur.
+ * PostgreSQL requiert obligatoirement une base de données, contrairement à MySQL/MariaDB.
+ */
+function updateDatabaseRequirement() {
+    const type = formElements.type.value;
+    const databaseLabel = formElements.database.previousElementSibling;
+    
+    // PostgreSQL requiert une base de données
+    if (type === 'postgresql') {
+        formElements.database.required = true;
+        // Ajouter l'astérisque rouge si pas déjà présent
+        if (!databaseLabel.querySelector('.required')) {
+            const requiredSpan = document.createElement('span');
+            requiredSpan.className = 'required';
+            requiredSpan.textContent = ' *';
+            databaseLabel.appendChild(requiredSpan);
+        }
+    } else {
+        formElements.database.required = false;
+        // Retirer l'astérisque rouge si présent
+        const requiredSpan = databaseLabel.querySelector('.required');
+        if (requiredSpan) {
+            requiredSpan.remove();
+        }
+    }
+}
+
 // Gestion de l'état
 function saveState() {
     const data = getFormData();
@@ -435,15 +551,12 @@ function restoreState() {
     if (state.availableDatabases) {
         availableDatabases = state.availableDatabases;
         const currentDatabase = formElements.database.value;
-        formElements.database.innerHTML = '<option value="">Sélectionner une base de données...</option>';
+        const databaseList = document.getElementById('databaseList');
+        databaseList.innerHTML = '';
         state.availableDatabases.forEach(db => {
             const option = document.createElement('option');
             option.value = db;
-            option.textContent = db;
-            if (db === currentDatabase) {
-                option.selected = true;
-            }
-            formElements.database.appendChild(option);
+            databaseList.appendChild(option);
         });
     }
 }

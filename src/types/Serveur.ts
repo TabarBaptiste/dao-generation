@@ -6,10 +6,16 @@ export interface DatabaseServeur {
     username: string;
     password?: string;
     database?: string;
-    type: 'mysql' | 'mariadb';
+    type: 'mysql' | 'mariadb' | 'postgresql';
     isConnected?: boolean;
     lastConnected?: Date;
     defaultDaoPath?: string;
+    // Options SSL/TLS
+    ssl?: boolean;
+    sslCa?: string;
+    sslCert?: string;
+    sslKey?: string;
+    rejectUnauthorized?: boolean;
 }
 
 export interface ServeurFormData {
@@ -19,8 +25,14 @@ export interface ServeurFormData {
     username: string;
     password?: string;
     database: string;
-    type: 'mysql' | 'mariadb';
+    type: 'mysql' | 'mariadb' | 'postgresql';
     defaultDaoPath?: string;
+    // Options SSL/TLS
+    ssl?: boolean;
+    sslCa?: string;
+    sslCert?: string;
+    sslKey?: string;
+    rejectUnauthorized?: boolean;
 }
 
 export interface TableInfo {
@@ -68,7 +80,7 @@ export type ServeurForImport = {
     username: string;
     password?: string;
     database?: string;
-    type: 'mysql' | 'mariadb';
+    type: 'mysql' | 'mariadb' | 'postgresql';
     defaultDaoPath?: string;
     passwordIv?: string;
     encryptedPassword?: string;

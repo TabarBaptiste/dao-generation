@@ -39,7 +39,16 @@ export const DATABASE_SYSTEM_SCHEMAS = [
     'performance_schema',
     'mysql',
     'sys'
-] as const;
+];
+
+export const POSTGRES_SYSTEM_SCHEMAS = [
+    'pg_catalog',
+    'information_schema',
+    'pg_toast',
+    'postgres',
+    'template0',
+    'template1'
+];
 
 export const DEFAULT_PATHS = {
     WAMP_WWW: 'd:\\wamp64\\www',

@@ -90,6 +90,9 @@ export class ServeurFormPanel extends BaseWebviewPanel {
             case 'selectPath':
                 await this.handleSelectPath();
                 break;
+            case 'selectSslFile':
+                await this.handleSelectSslFile(message.fileType);
+                break;
         }
     }
 
@@ -233,6 +236,53 @@ export class ServeurFormPanel extends BaseWebviewPanel {
         if (result && result[0]) {
             this.sendMessage({
                 command: 'pathSelected',
+                path: result[0].fsPath
+            });
+        }
+    }
+
+    /**
+     * Ouvre une boîte de dialogue pour sélectionner un fichier de certificat SSL.
+     * Cette méthode permet à l'utilisateur de choisir des fichiers de certificat CA,
+     * de certificat client ou de clé privée pour les connexions SSL/TLS.
+     *
+     * @private
+     * @param {'ca' | 'cert' | 'key'} fileType - Type de fichier SSL à sélectionner
+     * @return Promise qui se résout après avoir envoyé le chemin du fichier sélectionné au webview
+     * @memberof ServeurFormPanel
+     */
+    private async handleSelectSslFile(fileType: 'ca' | 'cert' | 'key'): Promise<void> {
+        const filters: { [key: string]: string[] } = {
+            'Certificats': ['pem', 'crt', 'cer', 'der'],
+            'Clés privées': ['key', 'pem'],
+            'Tous les fichiers': ['*']
+        };
+
+        const titles: { [key: string]: string } = {
+            ca: 'Sélectionner le certificat CA',
+            cert: 'Sélectionner le certificat client',
+            key: 'Sélectionner la clé privée'
+        };
+
+        const result = await ErrorHandler.handleAsync(
+            'sélection du fichier SSL',
+            async () => {
+                return await vscode.window.showOpenDialog({
+                    canSelectFiles: true,
+                    canSelectFolders: false,
+                    canSelectMany: false,
+                    openLabel: 'Sélectionner',
+                    title: titles[fileType],
+                    filters: filters
+                });
+            },
+            true
+        );
+
+        if (result && result[0]) {
+            this.sendMessage({
+                command: 'sslFileSelected',
+                fileType: fileType,
                 path: result[0].fsPath
             });
         }
