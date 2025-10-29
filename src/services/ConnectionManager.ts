@@ -663,6 +663,7 @@ export class ServeurManager {
                 // Traiter les serveurs
                 const validServeurs: DatabaseServeur[] = [];
                 const errors: string[] = [];
+                let decryptionErrorCount = 0;
 
                 for (const serv of importData.serveurs) {
                     try {
@@ -674,11 +675,20 @@ export class ServeurManager {
                             lastConnected: undefined
                         });
                     } catch (error) {
-                        errors.push(error instanceof Error ? error.message : 'Erreur inconnue');
+                        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+                        errors.push(errorMessage);
+                        // Détecter les erreurs de mot de passe incorrect
+                        if (errorMessage.includes('Mot de passe incorrect')) {
+                            decryptionErrorCount++;
+                        }
                     }
                 }
 
                 if (validServeurs.length === 0) {
+                    // Si tous les serveurs ont échoué à cause d'un mot de passe incorrect
+                    if (decryptionErrorCount > 0 && decryptionErrorCount === importData.serveurs.length) {
+                        throw new Error('Mot de passe maître incorrect');
+                    }
                     throw new Error(`Aucun serveur valide trouvé (${errors.length} erreur${errors.length > 1 ? 's' : ''})`);
                 }
 
@@ -704,13 +714,13 @@ export class ServeurManager {
                 // Message de succès
                 let message = `Import réussi : ${addedCount} serveur${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''}`;
                 if (skippedCount > 0) { message += `, ${skippedCount} ignoré${skippedCount > 1 ? 's' : ''} (déjà existant${skippedCount > 1 ? 's' : ''})`; }
-                if (hasEncryptedPasswords && decryptionPassword) { message += ` | Mots de passe déchiffrés`; }
-                else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
+                // if (hasEncryptedPasswords && decryptionPassword) { message += ` Mots de passe déchiffrés`; }
+                // else if (!isEncrypted) { message += ` | Fichier non chiffré`; }
 
                 if (errors.length > 0) {
                     // Afficher le message de succès avec option de voir les erreurs
                     const action = await vscode.window.showInformationMessage(
-                        `${message} (${errors.length} serveur${errors.length > 1 ? 's' : ''} ignoré${errors.length > 1 ? 's' : ''})`,
+                        `${message} \n\n( erreur${errors.length > 1 ? 's' : ''} sur ${errors.length} serveur${errors.length > 1 ? 's' : ''} ignoré)`,
                         'Afficher les détails'
                     );
                     if (action === 'Afficher les détails') {
