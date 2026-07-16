@@ -1,3 +1,10 @@
+## [1.8.7](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.6...v1.8.7) (2026-07-16)
+
+
+### Bug Fixes
+
+* Amélioration de la gestion des doublons lors de la mise à jour des serveurs et mise à jour des messages d'état dans l'interface utilisateur ([faf71f7](https://github.com/TabarBaptiste/dao-generation/commit/faf71f70c9ff9174e8149b1c2042e77f9aa0909a))
+
 ## [1.8.6](https://github.com/TabarBaptiste/dao-generation/compare/v1.8.5...v1.8.6) (2025-10-29)
 
 
