@@ -301,12 +301,12 @@ function renderTables() {
     const tables = state.filteredTables;
 
     if (state.tablesData.length === 0) {
-        elements.tableList.innerHTML = '<div class="loading">Aucune table trouvée dans cette base de données.</div>';
+        elements.tableList.innerHTML = '<div class="void">Aucune table trouvée dans cette base de données.</div>';
         return;
     }
 
     if (tables.length === 0) {
-        elements.tableList.innerHTML = '<div class="loading">Aucune table ne correspond à votre recherche.</div>';
+        elements.tableList.innerHTML = '<div class="not-found">Aucune table ne correspond à votre recherche.</div>';
         return;
     }
 

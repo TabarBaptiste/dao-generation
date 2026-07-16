@@ -146,7 +146,7 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
      * @memberof DatabaseServeurProvider
      */
     public toggleSortMode(): void {
-        if (this.serveurManager.getServeurs().length === 0) {
+        if (this.serveurManager.getServeurs().length <= 1) {
             vscode.window.showInformationMessage('Aucun serveur à trier.');
             return;
         }
@@ -312,7 +312,6 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
                 this.refresh();
                 vscode.window.showInformationMessage(`Serveur "${formData.name}" ajoutée avec succès !`);
             } else {
-                // Utiliser la nouvelle fonction pour générer une description lisible
                 const serverInfo = this.serveurManager.getServeurDescription(connectionData);
                 vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos serveurs.`);
             }
@@ -344,6 +343,15 @@ export class DatabaseServeurProvider implements vscode.TreeDataProvider<Database
 
         if (formData) {
             const updateData = DatabaseServeurFactory.createServeurData(formData);
+
+            // Vérifier si un autre serveur existe déjà avec ces paramètres (en excluant le serveur actuel)
+            const duplicateCheck = await this.serveurManager.checkDuplicateForUpdate(serveurs.id, updateData);
+            if (duplicateCheck.isDuplicate) {
+                const serverInfo = this.serveurManager.getServeurDescription(updateData);
+                vscode.window.showWarningMessage(`Le serveur "${serverInfo}" existe déjà dans vos serveurs.`);
+                return;
+            }
+
             const testConnection = await this.databaseService.testConnection(updateData);
             updateData.isConnected = testConnection.success;
             await this.serveurManager.updateServeur(serveurs.id, updateData);

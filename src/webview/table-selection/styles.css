@@ -227,6 +227,32 @@ button:disabled {
     margin-bottom: 10px;
 }
 
+.void {
+    text-align: center;
+    padding: 40px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.void::before {
+    content: "(´。＿。｀)";
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.not-found {
+    text-align: center;
+    padding: 40px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.not-found::before {
+    content: "¯\\_(ツ)_/¯";
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+}
+
 /* Error state */
 .error {
     color: var(--vscode-errorForeground);

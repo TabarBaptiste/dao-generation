@@ -79,6 +79,32 @@ export class ServeurManager {
     }
 
     /**
+     * Vérifie si une mise à jour de serveur créerait un doublon avec un autre serveur existant.
+     * Cette méthode compare les nouvelles données avec tous les serveurs sauf celui en cours de modification.
+     * Utilisée pour empêcher la création de doublons lors de l'édition d'un serveur.
+     *
+     * @param {string} currentId Identifiant du serveur en cours de modification (à exclure de la vérification)
+     * @param {Omit<DatabaseServeur, 'id'>} newData Nouvelles données du serveur à vérifier
+     * @return {Promise<{ isDuplicate: boolean; existingServeur?: DatabaseServeur }>} Résultat de la vérification avec serveur en conflit si trouvé
+     * @memberof ServeurManager
+     */
+    public async checkDuplicateForUpdate(
+        currentId: string,
+        newData: Omit<DatabaseServeur, 'id'>
+    ): Promise<{ isDuplicate: boolean; existingServeur?: DatabaseServeur }> {
+        // Chercher un serveur identique en excluant le serveur actuel
+        const duplicateServeur = this.serveurs.find(serv =>
+            serv.id !== currentId && this.isSameServeur(serv, newData as DatabaseServeur)
+        );
+
+        if (duplicateServeur) {
+            return { isDuplicate: true, existingServeur: duplicateServeur };
+        }
+
+        return { isDuplicate: false };
+    }
+
+    /**
      * Met à jour les informations d'un serveur existant avec de nouvelles valeurs.
      * Cette méthode effectue une mise à jour partielle en fusionnant les nouvelles données
      * avec les données existantes, puis sauvegarde automatiquement les modifications.
